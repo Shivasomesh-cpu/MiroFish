@@ -1,12 +1,12 @@
 """
-MiroFish Backend - Flask应用工厂
+Posiedon Backend - Flaskåº”ç”¨å·¥åŽ‚
 """
 
 import os
 import warnings
 
-# 抑制 multiprocessing resource_tracker 的警告（来自第三方库如 transformers）
-# 需要在所有其他导入之前设置
+# æŠ‘åˆ¶ multiprocessing resource_tracker çš„è­¦å‘Šï¼ˆæ¥è‡ªç¬¬ä¸‰æ–¹åº“å¦‚ transformersï¼‰
+# éœ€è¦åœ¨æ‰€æœ‰å…¶ä»–å¯¼å…¥ä¹‹å‰è®¾ç½®
 warnings.filterwarnings("ignore", message=".*resource_tracker.*")
 
 from flask import Flask, request
@@ -17,36 +17,36 @@ from .utils.logger import setup_logger, get_logger
 
 
 def create_app(config_class=Config):
-    """Flask应用工厂函数"""
+    """Flaskåº”ç”¨å·¥åŽ‚å‡½æ•°"""
     app = Flask(__name__)
     app.config.from_object(config_class)
     
-    # 设置JSON编码：确保中文直接显示（而不是 \uXXXX 格式）
-    # Flask >= 2.3 使用 app.json.ensure_ascii，旧版本使用 JSON_AS_ASCII 配置
+    # è®¾ç½®JSONç¼–ç ï¼šç¡®ä¿ä¸­æ–‡ç›´æŽ¥æ˜¾ç¤ºï¼ˆè€Œä¸æ˜¯ \uXXXX æ ¼å¼ï¼‰
+    # Flask >= 2.3 ä½¿ç”¨ app.json.ensure_asciiï¼Œæ—§ç‰ˆæœ¬ä½¿ç”¨ JSON_AS_ASCII é…ç½®
     if hasattr(app, 'json') and hasattr(app.json, 'ensure_ascii'):
         app.json.ensure_ascii = False
     
-    # 设置日志
-    logger = setup_logger('mirofish')
+    # è®¾ç½®æ—¥å¿—
+    logger = setup_logger('posiedon')
     
-    # 只在 reloader 子进程中打印启动信息（避免 debug 模式下打印两次）
+    # åªåœ¨ reloader å­è¿›ç¨‹ä¸­æ‰“å°å¯åŠ¨ä¿¡æ¯ï¼ˆé¿å… debug æ¨¡å¼ä¸‹æ‰“å°ä¸¤æ¬¡ï¼‰
     is_reloader_process = os.environ.get('WERKZEUG_RUN_MAIN') == 'true'
     debug_mode = app.config.get('DEBUG', False)
     should_log_startup = not debug_mode or is_reloader_process
     
     if should_log_startup:
         logger.info("=" * 50)
-        logger.info("MiroFish Backend 启动中...")
+        logger.info("Posiedon Backend å¯åŠ¨ä¸­...")
         logger.info("=" * 50)
     
-    # 启用CORS
+    # å¯ç”¨CORS
     CORS(app, resources={r"/api/*": {"origins": "*"}})
     
-    # 注册模拟进程清理函数（确保服务器关闭时终止所有模拟进程）
+    # æ³¨å†Œæ¨¡æ‹Ÿè¿›ç¨‹æ¸…ç†å‡½æ•°ï¼ˆç¡®ä¿æœåŠ¡å™¨å…³é—­æ—¶ç»ˆæ­¢æ‰€æœ‰æ¨¡æ‹Ÿè¿›ç¨‹ï¼‰
     from .services.simulation_runner import SimulationRunner
     SimulationRunner.register_cleanup()
     if should_log_startup:
-        logger.info("已注册模拟进程清理函数")
+        logger.info("å·²æ³¨å†Œæ¨¡æ‹Ÿè¿›ç¨‹æ¸…ç†å‡½æ•°")
     
     # Check for interrupted jobs on startup
     from .services.job_queue import check_and_recover_interrupted_jobs
@@ -56,21 +56,21 @@ def create_app(config_class=Config):
             logger.warning(f"Found {len(interrupted)} interrupted jobs - "
                           "use /api/simulation/jobs/interrupted to view and restart them")
     
-    # 请求日志中间件
+    # è¯·æ±‚æ—¥å¿—ä¸­é—´ä»¶
     @app.before_request
     def log_request():
-        logger = get_logger('mirofish.request')
-        logger.debug(f"请求: {request.method} {request.path}")
+        logger = get_logger('posiedon.request')
+        logger.debug(f"è¯·æ±‚: {request.method} {request.path}")
         if request.content_type and 'json' in request.content_type:
-            logger.debug(f"请求体: {request.get_json(silent=True)}")
+            logger.debug(f"è¯·æ±‚ä½“: {request.get_json(silent=True)}")
     
     @app.after_request
     def log_response(response):
-        logger = get_logger('mirofish.request')
-        logger.debug(f"响应: {response.status_code}")
+        logger = get_logger('posiedon.request')
+        logger.debug(f"å“åº”: {response.status_code}")
         return response
     
-    # 注册蓝图
+    # æ³¨å†Œè“å›¾
     from .api import graph_bp, simulation_bp, report_bp
     from .api.stream import stream_bp, SimulationStatePoller
     app.register_blueprint(graph_bp, url_prefix='/api/graph')
@@ -83,13 +83,13 @@ def create_app(config_class=Config):
         SimulationStatePoller.start()
         logger.info("SSE state poller started")
     
-    # 健康检查
+    # å¥åº·æ£€æŸ¥
     @app.route('/health')
     def health():
-        return {'status': 'ok', 'service': 'MiroFish Backend'}
+        return {'status': 'ok', 'service': 'Posiedon Backend'}
     
     if should_log_startup:
-        logger.info("MiroFish Backend 启动完成")
+        logger.info("Posiedon Backend å¯åŠ¨å®Œæˆ")
     
     return app
 

@@ -24,7 +24,7 @@ from ..config import Config
 from ..utils.logger import get_logger
 from ..services.simulation_runner import SimulationRunner, RunnerStatus
 
-logger = get_logger('mirofish.api.stream')
+logger = get_logger('posiedon.api.stream')
 
 stream_bp = Blueprint('stream', __name__)
 

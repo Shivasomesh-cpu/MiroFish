@@ -24,7 +24,7 @@ from pathlib import Path
 from ..config import Config
 from ..utils.logger import get_logger
 
-logger = get_logger('mirofish.checkpoint_manager')
+logger = get_logger('posiedon.checkpoint_manager')
 
 
 @dataclass

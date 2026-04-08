@@ -23,7 +23,7 @@ from pathlib import Path
 from ..config import Config
 from ..utils.logger import get_logger
 
-logger = get_logger('mirofish.job_queue')
+logger = get_logger('posiedon.job_queue')
 
 
 class JobStatus(str, Enum):

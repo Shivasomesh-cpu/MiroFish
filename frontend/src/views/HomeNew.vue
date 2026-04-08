@@ -4,8 +4,8 @@
     <nav class="navbar glass">
       <div class="nav-content">
         <div class="nav-brand">
-          <span class="brand-icon">◆</span>
-          <span class="brand-text">MIROFISH</span>
+          <span class="brand-icon">Ã¢â€”â€ </span>
+          <span class="brand-text">POSIEDON</span>
         </div>
         
         <div class="nav-center">
@@ -17,11 +17,11 @@
         
         <div class="nav-links">
           <button class="nav-btn theme-toggle" @click="toggleTheme" :title="theme === 'dark' ? 'Light Mode' : 'Dark Mode'">
-            <span v-if="theme === 'dark'">☀️</span>
-            <span v-else>🌙</span>
+            <span v-if="theme === 'dark'">Ã¢Ëœâ‚¬Ã¯Â¸Â</span>
+            <span v-else>Ã°Å¸Å’â„¢</span>
           </button>
           <LanguageSwitcher />
-          <a href="https://github.com/666ghj/MiroFish" target="_blank" class="nav-btn github-btn">
+          <a href="https://github.com/Shivasomesh-cpu/MiroFish" target="_blank" class="nav-btn github-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
             </svg>
@@ -48,7 +48,7 @@
           </h1>
           
           <p class="hero-description">
-            {{ $t('home.heroDescFull') || 'MiroFish is a next-generation AI prediction engine powered by multi-agent technology. Upload seed materials, describe your prediction requirements, and watch thousands of intelligent agents simulate future outcomes.' }}
+            {{ $t('home.heroDescFull') || 'Posiedon is a next-generation AI prediction engine powered by multi-agent technology. Upload seed materials, describe your prediction requirements, and watch thousands of intelligent agents simulate future outcomes.' }}
           </p>
           
           <div class="hero-stats">
@@ -58,7 +58,7 @@
             </div>
             <div class="stat-divider"></div>
             <div class="stat-item">
-              <span class="stat-value">∞</span>
+              <span class="stat-value">Ã¢Ë†Å¾</span>
               <span class="stat-label">{{ $t('home.statScenarios') || 'Scenarios' }}</span>
             </div>
             <div class="stat-divider"></div>
@@ -72,7 +72,7 @@
         <div class="hero-right">
           <div class="logo-glow-container">
             <div class="logo-glow"></div>
-            <img src="../assets/logo/MiroFish_logo_left.jpeg" alt="MiroFish Logo" class="hero-logo" />
+            <img src="../assets/logo/MiroFish_logo_left.jpeg" alt="Posiedon Logo" class="hero-logo" />
           </div>
         </div>
       </div>
@@ -93,7 +93,7 @@
         <!-- Left Panel: Status & Workflow -->
         <div class="panel left-panel">
           <div class="panel-header">
-            <span class="panel-icon">◇</span>
+            <span class="panel-icon">Ã¢â€”â€¡</span>
             <span class="panel-title">{{ $t('home.systemStatus') || 'System Status' }}</span>
           </div>
           
@@ -105,14 +105,14 @@
             
             <div class="metrics-grid">
               <div class="metric-card">
-                <div class="metric-icon">⚡</div>
+                <div class="metric-icon">Ã¢Å¡Â¡</div>
                 <div class="metric-info">
                   <span class="metric-value">{{ $t('home.metricLowCost') || 'Low Cost' }}</span>
                   <span class="metric-label">{{ $t('home.metricLowCostDesc') || 'API Efficient' }}</span>
                 </div>
               </div>
               <div class="metric-card">
-                <div class="metric-icon">🔄</div>
+                <div class="metric-icon">Ã°Å¸â€â€ž</div>
                 <div class="metric-info">
                   <span class="metric-value">{{ $t('home.metricHighAvail') || '99.9%' }}</span>
                   <span class="metric-label">{{ $t('home.metricHighAvailDesc') || 'Uptime' }}</span>
@@ -124,7 +124,7 @@
           <!-- Workflow Steps -->
           <div class="workflow-card glass">
             <div class="workflow-header">
-              <span class="workflow-icon">▣</span>
+              <span class="workflow-icon">Ã¢â€“Â£</span>
               <span class="workflow-title">{{ $t('home.workflowSequence') || 'Workflow Sequence' }}</span>
             </div>
             
@@ -146,7 +146,7 @@
           <div class="console-card glass-strong">
             <div class="console-header">
               <div class="console-title">
-                <span class="console-icon">⬡</span>
+                <span class="console-icon">Ã¢Â¬Â¡</span>
                 <span>{{ $t('home.predictionConsole') || 'Prediction Console' }}</span>
               </div>
               <div class="console-badge">
@@ -157,7 +157,7 @@
             <!-- File Upload Area -->
             <div class="upload-section">
               <div class="section-label">
-                <span class="label-icon">📄</span>
+                <span class="label-icon">Ã°Å¸â€œâ€ž</span>
                 <span>{{ $t('home.realitySeed') || 'Reality Seed' }}</span>
                 <span class="label-hint">{{ $t('home.supportedFormats') || 'PDF, MD, TXT' }}</span>
               </div>
@@ -224,7 +224,7 @@
             <!-- Prediction Prompt -->
             <div class="prompt-section">
               <div class="section-label">
-                <span class="label-icon">💭</span>
+                <span class="label-icon">Ã°Å¸â€™Â­</span>
                 <span>{{ $t('home.simulationPrompt') || 'Prediction Prompt' }}</span>
               </div>
               
@@ -278,16 +278,16 @@
     <footer class="footer glass">
       <div class="footer-content">
         <div class="footer-brand">
-          <span class="brand-icon">◆</span>
-          <span>MiroFish</span>
+          <span class="brand-icon">Ã¢â€”â€ </span>
+          <span>Posiedon</span>
         </div>
         <div class="footer-links">
-          <a href="https://github.com/666ghj/MiroFish" target="_blank">GitHub</a>
+          <a href="https://github.com/Shivasomesh-cpu/MiroFish" target="_blank">GitHub</a>
           <a href="https://discord.gg/ePf5aPaHnA" target="_blank">Discord</a>
           <a href="https://x.com/mirofish_ai" target="_blank">Twitter</a>
         </div>
         <div class="footer-copy">
-          <span>© 2024 MiroFish. Powered by OASIS.</span>
+          <span>Ã‚Â© 2024 Posiedon. Powered by OASIS.</span>
         </div>
       </div>
     </footer>

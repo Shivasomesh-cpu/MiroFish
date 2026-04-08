@@ -4,8 +4,8 @@
     <header class="app-header glass">
       <div class="header-left">
         <div class="brand" @click="router.push('/')">
-          <span class="brand-icon">◆</span>
-          <span class="brand-text">MIROFISH</span>
+          <span class="brand-icon">â—†</span>
+          <span class="brand-text">POSIEDON</span>
         </div>
       </div>
       
@@ -18,7 +18,7 @@
             :class="{ active: viewMode === mode }"
             @click="viewMode = mode"
           >
-            <span class="switch-icon">{{ { graph: '◇', split: '⬡', workbench: '▣' }[mode] }}</span>
+            <span class="switch-icon">{{ { graph: 'â—‡', split: 'â¬¡', workbench: 'â–£' }[mode] }}</span>
             {{ { graph: $t('main.layoutGraph'), split: $t('main.layoutSplit'), workbench: $t('main.layoutWorkbench') }[mode] }}
           </button>
         </div>
@@ -54,7 +54,7 @@
 
       <!-- Right Panel: Step Components -->
       <div class="panel-wrapper right" :style="rightPanelStyle">
-        <!-- Step 1: 图谱构建 -->
+        <!-- Step 1: å›¾è°±æž„å»º -->
         <Step1GraphBuild 
           v-if="currentStep === 1"
           :currentPhase="currentPhase"
@@ -65,7 +65,7 @@
           :systemLogs="systemLogs"
           @next-step="handleNextStep"
         />
-        <!-- Step 2: 环境搭建 -->
+        <!-- Step 2: çŽ¯å¢ƒæ­å»º -->
         <Step2EnvSetup
           v-else-if="currentStep === 2"
           :projectData="projectData"
@@ -99,7 +99,7 @@ const { t, tm } = useI18n()
 const viewMode = ref('split') // graph | split | workbench
 
 // Step State
-const currentStep = ref(1) // 1: 图谱构建, 2: 环境搭建, 3: 开始模拟, 4: 报告生成, 5: 深度互动
+const currentStep = ref(1) // 1: å›¾è°±æž„å»º, 2: çŽ¯å¢ƒæ­å»º, 3: å¼€å§‹æ¨¡æ‹Ÿ, 4: æŠ¥å‘Šç”Ÿæˆ, 5: æ·±åº¦äº’åŠ¨
 const stepNames = computed(() => tm('main.stepNames'))
 
 // Data State
@@ -170,7 +170,7 @@ const handleNextStep = (params = {}) => {
     currentStep.value++
     addLog(t('log.enterStep', { step: currentStep.value, name: stepNames.value[currentStep.value - 1] }))
     
-    // 如果是从 Step 2 进入 Step 3，记录模拟轮数配置
+    // å¦‚æžœæ˜¯ä»Ž Step 2 è¿›å…¥ Step 3ï¼Œè®°å½•æ¨¡æ‹Ÿè½®æ•°é…ç½®
     if (currentStep.value === 3 && params.maxRounds) {
       addLog(t('log.customSimRounds', { rounds: params.maxRounds }))
     }

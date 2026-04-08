@@ -1,6 +1,6 @@
 """
-Zep图谱记忆更新服务
-将模拟中的Agent活动动态更新到Zep图谱中
+Zepå›¾è°±è®°å¿†æ›´æ–°æœåŠ¡
+å°†æ¨¡æ‹Ÿä¸­çš„Agentæ´»åŠ¨åŠ¨æ€æ›´æ–°åˆ°Zepå›¾è°±ä¸­
 """
 
 import os
@@ -18,12 +18,12 @@ from ..config import Config
 from ..utils.logger import get_logger
 from ..utils.locale import get_locale, set_locale
 
-logger = get_logger('mirofish.zep_graph_memory_updater')
+logger = get_logger('posiedon.zep_graph_memory_updater')
 
 
 @dataclass
 class AgentActivity:
-    """Agent活动记录"""
+    """Agentæ´»åŠ¨è®°å½•"""
     platform: str           # twitter / reddit
     agent_id: int
     agent_name: str
@@ -34,12 +34,12 @@ class AgentActivity:
     
     def to_episode_text(self) -> str:
         """
-        将活动转换为可以发送给Zep的文本描述
+        å°†æ´»åŠ¨è½¬æ¢ä¸ºå¯ä»¥å‘é€ç»™Zepçš„æ–‡æœ¬æè¿°
         
-        采用自然语言描述格式，让Zep能够从中提取实体和关系
-        不添加模拟相关的前缀，避免误导图谱更新
+        é‡‡ç”¨è‡ªç„¶è¯­è¨€æè¿°æ ¼å¼ï¼Œè®©Zepèƒ½å¤Ÿä»Žä¸­æå–å®žä½“å’Œå…³ç³»
+        ä¸æ·»åŠ æ¨¡æ‹Ÿç›¸å…³çš„å‰ç¼€ï¼Œé¿å…è¯¯å¯¼å›¾è°±æ›´æ–°
         """
-        # 根据不同的动作类型生成不同的描述
+        # æ ¹æ®ä¸åŒçš„åŠ¨ä½œç±»åž‹ç”Ÿæˆä¸åŒçš„æè¿°
         action_descriptions = {
             "CREATE_POST": self._describe_create_post,
             "LIKE_POST": self._describe_like_post,
@@ -58,222 +58,222 @@ class AgentActivity:
         describe_func = action_descriptions.get(self.action_type, self._describe_generic)
         description = describe_func()
         
-        # 直接返回 "agent名称: 活动描述" 格式，不添加模拟前缀
+        # ç›´æŽ¥è¿”å›ž "agentåç§°: æ´»åŠ¨æè¿°" æ ¼å¼ï¼Œä¸æ·»åŠ æ¨¡æ‹Ÿå‰ç¼€
         return f"{self.agent_name}: {description}"
     
     def _describe_create_post(self) -> str:
         content = self.action_args.get("content", "")
         if content:
-            return f"发布了一条帖子：「{content}」"
-        return "发布了一条帖子"
+            return f"å‘å¸ƒäº†ä¸€æ¡å¸–å­ï¼šã€Œ{content}ã€"
+        return "å‘å¸ƒäº†ä¸€æ¡å¸–å­"
     
     def _describe_like_post(self) -> str:
-        """点赞帖子 - 包含帖子原文和作者信息"""
+        """ç‚¹èµžå¸–å­ - åŒ…å«å¸–å­åŽŸæ–‡å’Œä½œè€…ä¿¡æ¯"""
         post_content = self.action_args.get("post_content", "")
         post_author = self.action_args.get("post_author_name", "")
         
         if post_content and post_author:
-            return f"点赞了{post_author}的帖子：「{post_content}」"
+            return f"ç‚¹èµžäº†{post_author}çš„å¸–å­ï¼šã€Œ{post_content}ã€"
         elif post_content:
-            return f"点赞了一条帖子：「{post_content}」"
+            return f"ç‚¹èµžäº†ä¸€æ¡å¸–å­ï¼šã€Œ{post_content}ã€"
         elif post_author:
-            return f"点赞了{post_author}的一条帖子"
-        return "点赞了一条帖子"
+            return f"ç‚¹èµžäº†{post_author}çš„ä¸€æ¡å¸–å­"
+        return "ç‚¹èµžäº†ä¸€æ¡å¸–å­"
     
     def _describe_dislike_post(self) -> str:
-        """踩帖子 - 包含帖子原文和作者信息"""
+        """è¸©å¸–å­ - åŒ…å«å¸–å­åŽŸæ–‡å’Œä½œè€…ä¿¡æ¯"""
         post_content = self.action_args.get("post_content", "")
         post_author = self.action_args.get("post_author_name", "")
         
         if post_content and post_author:
-            return f"踩了{post_author}的帖子：「{post_content}」"
+            return f"è¸©äº†{post_author}çš„å¸–å­ï¼šã€Œ{post_content}ã€"
         elif post_content:
-            return f"踩了一条帖子：「{post_content}」"
+            return f"è¸©äº†ä¸€æ¡å¸–å­ï¼šã€Œ{post_content}ã€"
         elif post_author:
-            return f"踩了{post_author}的一条帖子"
-        return "踩了一条帖子"
+            return f"è¸©äº†{post_author}çš„ä¸€æ¡å¸–å­"
+        return "è¸©äº†ä¸€æ¡å¸–å­"
     
     def _describe_repost(self) -> str:
-        """转发帖子 - 包含原帖内容和作者信息"""
+        """è½¬å‘å¸–å­ - åŒ…å«åŽŸå¸–å†…å®¹å’Œä½œè€…ä¿¡æ¯"""
         original_content = self.action_args.get("original_content", "")
         original_author = self.action_args.get("original_author_name", "")
         
         if original_content and original_author:
-            return f"转发了{original_author}的帖子：「{original_content}」"
+            return f"è½¬å‘äº†{original_author}çš„å¸–å­ï¼šã€Œ{original_content}ã€"
         elif original_content:
-            return f"转发了一条帖子：「{original_content}」"
+            return f"è½¬å‘äº†ä¸€æ¡å¸–å­ï¼šã€Œ{original_content}ã€"
         elif original_author:
-            return f"转发了{original_author}的一条帖子"
-        return "转发了一条帖子"
+            return f"è½¬å‘äº†{original_author}çš„ä¸€æ¡å¸–å­"
+        return "è½¬å‘äº†ä¸€æ¡å¸–å­"
     
     def _describe_quote_post(self) -> str:
-        """引用帖子 - 包含原帖内容、作者信息和引用评论"""
+        """å¼•ç”¨å¸–å­ - åŒ…å«åŽŸå¸–å†…å®¹ã€ä½œè€…ä¿¡æ¯å’Œå¼•ç”¨è¯„è®º"""
         original_content = self.action_args.get("original_content", "")
         original_author = self.action_args.get("original_author_name", "")
         quote_content = self.action_args.get("quote_content", "") or self.action_args.get("content", "")
         
         base = ""
         if original_content and original_author:
-            base = f"引用了{original_author}的帖子「{original_content}」"
+            base = f"å¼•ç”¨äº†{original_author}çš„å¸–å­ã€Œ{original_content}ã€"
         elif original_content:
-            base = f"引用了一条帖子「{original_content}」"
+            base = f"å¼•ç”¨äº†ä¸€æ¡å¸–å­ã€Œ{original_content}ã€"
         elif original_author:
-            base = f"引用了{original_author}的一条帖子"
+            base = f"å¼•ç”¨äº†{original_author}çš„ä¸€æ¡å¸–å­"
         else:
-            base = "引用了一条帖子"
+            base = "å¼•ç”¨äº†ä¸€æ¡å¸–å­"
         
         if quote_content:
-            base += f"，并评论道：「{quote_content}」"
+            base += f"ï¼Œå¹¶è¯„è®ºé“ï¼šã€Œ{quote_content}ã€"
         return base
     
     def _describe_follow(self) -> str:
-        """关注用户 - 包含被关注用户的名称"""
+        """å…³æ³¨ç”¨æˆ· - åŒ…å«è¢«å…³æ³¨ç”¨æˆ·çš„åç§°"""
         target_user_name = self.action_args.get("target_user_name", "")
         
         if target_user_name:
-            return f"关注了用户「{target_user_name}」"
-        return "关注了一个用户"
+            return f"å…³æ³¨äº†ç”¨æˆ·ã€Œ{target_user_name}ã€"
+        return "å…³æ³¨äº†ä¸€ä¸ªç”¨æˆ·"
     
     def _describe_create_comment(self) -> str:
-        """发表评论 - 包含评论内容和所评论的帖子信息"""
+        """å‘è¡¨è¯„è®º - åŒ…å«è¯„è®ºå†…å®¹å’Œæ‰€è¯„è®ºçš„å¸–å­ä¿¡æ¯"""
         content = self.action_args.get("content", "")
         post_content = self.action_args.get("post_content", "")
         post_author = self.action_args.get("post_author_name", "")
         
         if content:
             if post_content and post_author:
-                return f"在{post_author}的帖子「{post_content}」下评论道：「{content}」"
+                return f"åœ¨{post_author}çš„å¸–å­ã€Œ{post_content}ã€ä¸‹è¯„è®ºé“ï¼šã€Œ{content}ã€"
             elif post_content:
-                return f"在帖子「{post_content}」下评论道：「{content}」"
+                return f"åœ¨å¸–å­ã€Œ{post_content}ã€ä¸‹è¯„è®ºé“ï¼šã€Œ{content}ã€"
             elif post_author:
-                return f"在{post_author}的帖子下评论道：「{content}」"
-            return f"评论道：「{content}」"
-        return "发表了评论"
+                return f"åœ¨{post_author}çš„å¸–å­ä¸‹è¯„è®ºé“ï¼šã€Œ{content}ã€"
+            return f"è¯„è®ºé“ï¼šã€Œ{content}ã€"
+        return "å‘è¡¨äº†è¯„è®º"
     
     def _describe_like_comment(self) -> str:
-        """点赞评论 - 包含评论内容和作者信息"""
+        """ç‚¹èµžè¯„è®º - åŒ…å«è¯„è®ºå†…å®¹å’Œä½œè€…ä¿¡æ¯"""
         comment_content = self.action_args.get("comment_content", "")
         comment_author = self.action_args.get("comment_author_name", "")
         
         if comment_content and comment_author:
-            return f"点赞了{comment_author}的评论：「{comment_content}」"
+            return f"ç‚¹èµžäº†{comment_author}çš„è¯„è®ºï¼šã€Œ{comment_content}ã€"
         elif comment_content:
-            return f"点赞了一条评论：「{comment_content}」"
+            return f"ç‚¹èµžäº†ä¸€æ¡è¯„è®ºï¼šã€Œ{comment_content}ã€"
         elif comment_author:
-            return f"点赞了{comment_author}的一条评论"
-        return "点赞了一条评论"
+            return f"ç‚¹èµžäº†{comment_author}çš„ä¸€æ¡è¯„è®º"
+        return "ç‚¹èµžäº†ä¸€æ¡è¯„è®º"
     
     def _describe_dislike_comment(self) -> str:
-        """踩评论 - 包含评论内容和作者信息"""
+        """è¸©è¯„è®º - åŒ…å«è¯„è®ºå†…å®¹å’Œä½œè€…ä¿¡æ¯"""
         comment_content = self.action_args.get("comment_content", "")
         comment_author = self.action_args.get("comment_author_name", "")
         
         if comment_content and comment_author:
-            return f"踩了{comment_author}的评论：「{comment_content}」"
+            return f"è¸©äº†{comment_author}çš„è¯„è®ºï¼šã€Œ{comment_content}ã€"
         elif comment_content:
-            return f"踩了一条评论：「{comment_content}」"
+            return f"è¸©äº†ä¸€æ¡è¯„è®ºï¼šã€Œ{comment_content}ã€"
         elif comment_author:
-            return f"踩了{comment_author}的一条评论"
-        return "踩了一条评论"
+            return f"è¸©äº†{comment_author}çš„ä¸€æ¡è¯„è®º"
+        return "è¸©äº†ä¸€æ¡è¯„è®º"
     
     def _describe_search(self) -> str:
-        """搜索帖子 - 包含搜索关键词"""
+        """æœç´¢å¸–å­ - åŒ…å«æœç´¢å…³é”®è¯"""
         query = self.action_args.get("query", "") or self.action_args.get("keyword", "")
-        return f"搜索了「{query}」" if query else "进行了搜索"
+        return f"æœç´¢äº†ã€Œ{query}ã€" if query else "è¿›è¡Œäº†æœç´¢"
     
     def _describe_search_user(self) -> str:
-        """搜索用户 - 包含搜索关键词"""
+        """æœç´¢ç”¨æˆ· - åŒ…å«æœç´¢å…³é”®è¯"""
         query = self.action_args.get("query", "") or self.action_args.get("username", "")
-        return f"搜索了用户「{query}」" if query else "搜索了用户"
+        return f"æœç´¢äº†ç”¨æˆ·ã€Œ{query}ã€" if query else "æœç´¢äº†ç”¨æˆ·"
     
     def _describe_mute(self) -> str:
-        """屏蔽用户 - 包含被屏蔽用户的名称"""
+        """å±è”½ç”¨æˆ· - åŒ…å«è¢«å±è”½ç”¨æˆ·çš„åç§°"""
         target_user_name = self.action_args.get("target_user_name", "")
         
         if target_user_name:
-            return f"屏蔽了用户「{target_user_name}」"
-        return "屏蔽了一个用户"
+            return f"å±è”½äº†ç”¨æˆ·ã€Œ{target_user_name}ã€"
+        return "å±è”½äº†ä¸€ä¸ªç”¨æˆ·"
     
     def _describe_generic(self) -> str:
-        # 对于未知的动作类型，生成通用描述
-        return f"执行了{self.action_type}操作"
+        # å¯¹äºŽæœªçŸ¥çš„åŠ¨ä½œç±»åž‹ï¼Œç”Ÿæˆé€šç”¨æè¿°
+        return f"æ‰§è¡Œäº†{self.action_type}æ“ä½œ"
 
 
 class ZepGraphMemoryUpdater:
     """
-    Zep图谱记忆更新器
+    Zepå›¾è°±è®°å¿†æ›´æ–°å™¨
     
-    监控模拟的actions日志文件，将新的agent活动实时更新到Zep图谱中。
-    按平台分组，每累积BATCH_SIZE条活动后批量发送到Zep。
+    ç›‘æŽ§æ¨¡æ‹Ÿçš„actionsæ—¥å¿—æ–‡ä»¶ï¼Œå°†æ–°çš„agentæ´»åŠ¨å®žæ—¶æ›´æ–°åˆ°Zepå›¾è°±ä¸­ã€‚
+    æŒ‰å¹³å°åˆ†ç»„ï¼Œæ¯ç´¯ç§¯BATCH_SIZEæ¡æ´»åŠ¨åŽæ‰¹é‡å‘é€åˆ°Zepã€‚
     
-    所有有意义的行为都会被更新到Zep，action_args中会包含完整的上下文信息：
-    - 点赞/踩的帖子原文
-    - 转发/引用的帖子原文
-    - 关注/屏蔽的用户名
-    - 点赞/踩的评论原文
+    æ‰€æœ‰æœ‰æ„ä¹‰çš„è¡Œä¸ºéƒ½ä¼šè¢«æ›´æ–°åˆ°Zepï¼Œaction_argsä¸­ä¼šåŒ…å«å®Œæ•´çš„ä¸Šä¸‹æ–‡ä¿¡æ¯ï¼š
+    - ç‚¹èµž/è¸©çš„å¸–å­åŽŸæ–‡
+    - è½¬å‘/å¼•ç”¨çš„å¸–å­åŽŸæ–‡
+    - å…³æ³¨/å±è”½çš„ç”¨æˆ·å
+    - ç‚¹èµž/è¸©çš„è¯„è®ºåŽŸæ–‡
     """
     
-    # 批量发送大小（每个平台累积多少条后发送）
+    # æ‰¹é‡å‘é€å¤§å°ï¼ˆæ¯ä¸ªå¹³å°ç´¯ç§¯å¤šå°‘æ¡åŽå‘é€ï¼‰
     BATCH_SIZE = 5
     
-    # 平台名称映射（用于控制台显示）
+    # å¹³å°åç§°æ˜ å°„ï¼ˆç”¨äºŽæŽ§åˆ¶å°æ˜¾ç¤ºï¼‰
     PLATFORM_DISPLAY_NAMES = {
-        'twitter': '世界1',
-        'reddit': '世界2',
+        'twitter': 'ä¸–ç•Œ1',
+        'reddit': 'ä¸–ç•Œ2',
     }
     
-    # 发送间隔（秒），避免请求过快
+    # å‘é€é—´éš”ï¼ˆç§’ï¼‰ï¼Œé¿å…è¯·æ±‚è¿‡å¿«
     SEND_INTERVAL = 0.5
     
-    # 重试配置
+    # é‡è¯•é…ç½®
     MAX_RETRIES = 3
-    RETRY_DELAY = 2  # 秒
+    RETRY_DELAY = 2  # ç§’
     
     def __init__(self, graph_id: str, api_key: Optional[str] = None):
         """
-        初始化更新器
+        åˆå§‹åŒ–æ›´æ–°å™¨
         
         Args:
-            graph_id: Zep图谱ID
-            api_key: Zep API Key（可选，默认从配置读取）
+            graph_id: Zepå›¾è°±ID
+            api_key: Zep API Keyï¼ˆå¯é€‰ï¼Œé»˜è®¤ä»Žé…ç½®è¯»å–ï¼‰
         """
         self.graph_id = graph_id
         self.api_key = api_key or Config.ZEP_API_KEY
         
         if not self.api_key:
-            raise ValueError("ZEP_API_KEY未配置")
+            raise ValueError("ZEP_API_KEYæœªé…ç½®")
         
         self.client = Zep(api_key=self.api_key)
         
-        # 活动队列
+        # æ´»åŠ¨é˜Ÿåˆ—
         self._activity_queue: Queue = Queue()
         
-        # 按平台分组的活动缓冲区（每个平台各自累积到BATCH_SIZE后批量发送）
+        # æŒ‰å¹³å°åˆ†ç»„çš„æ´»åŠ¨ç¼“å†²åŒºï¼ˆæ¯ä¸ªå¹³å°å„è‡ªç´¯ç§¯åˆ°BATCH_SIZEåŽæ‰¹é‡å‘é€ï¼‰
         self._platform_buffers: Dict[str, List[AgentActivity]] = {
             'twitter': [],
             'reddit': [],
         }
         self._buffer_lock = threading.Lock()
         
-        # 控制标志
+        # æŽ§åˆ¶æ ‡å¿—
         self._running = False
         self._worker_thread: Optional[threading.Thread] = None
         
-        # 统计
-        self._total_activities = 0  # 实际添加到队列的活动数
-        self._total_sent = 0        # 成功发送到Zep的批次数
-        self._total_items_sent = 0  # 成功发送到Zep的活动条数
-        self._failed_count = 0      # 发送失败的批次数
-        self._skipped_count = 0     # 被过滤跳过的活动数（DO_NOTHING）
+        # ç»Ÿè®¡
+        self._total_activities = 0  # å®žé™…æ·»åŠ åˆ°é˜Ÿåˆ—çš„æ´»åŠ¨æ•°
+        self._total_sent = 0        # æˆåŠŸå‘é€åˆ°Zepçš„æ‰¹æ¬¡æ•°
+        self._total_items_sent = 0  # æˆåŠŸå‘é€åˆ°Zepçš„æ´»åŠ¨æ¡æ•°
+        self._failed_count = 0      # å‘é€å¤±è´¥çš„æ‰¹æ¬¡æ•°
+        self._skipped_count = 0     # è¢«è¿‡æ»¤è·³è¿‡çš„æ´»åŠ¨æ•°ï¼ˆDO_NOTHINGï¼‰
         
-        logger.info(f"ZepGraphMemoryUpdater 初始化完成: graph_id={graph_id}, batch_size={self.BATCH_SIZE}")
+        logger.info(f"ZepGraphMemoryUpdater åˆå§‹åŒ–å®Œæˆ: graph_id={graph_id}, batch_size={self.BATCH_SIZE}")
     
     def _get_platform_display_name(self, platform: str) -> str:
-        """获取平台的显示名称"""
+        """èŽ·å–å¹³å°çš„æ˜¾ç¤ºåç§°"""
         return self.PLATFORM_DISPLAY_NAMES.get(platform.lower(), platform)
     
     def start(self):
-        """启动后台工作线程"""
+        """å¯åŠ¨åŽå°å·¥ä½œçº¿ç¨‹"""
         if self._running:
             return
 
@@ -288,19 +288,19 @@ class ZepGraphMemoryUpdater:
             name=f"ZepMemoryUpdater-{self.graph_id[:8]}"
         )
         self._worker_thread.start()
-        logger.info(f"ZepGraphMemoryUpdater 已启动: graph_id={self.graph_id}")
+        logger.info(f"ZepGraphMemoryUpdater å·²å¯åŠ¨: graph_id={self.graph_id}")
     
     def stop(self):
-        """停止后台工作线程"""
+        """åœæ­¢åŽå°å·¥ä½œçº¿ç¨‹"""
         self._running = False
         
-        # 发送剩余的活动
+        # å‘é€å‰©ä½™çš„æ´»åŠ¨
         self._flush_remaining()
         
         if self._worker_thread and self._worker_thread.is_alive():
             self._worker_thread.join(timeout=10)
         
-        logger.info(f"ZepGraphMemoryUpdater 已停止: graph_id={self.graph_id}, "
+        logger.info(f"ZepGraphMemoryUpdater å·²åœæ­¢: graph_id={self.graph_id}, "
                    f"total_activities={self._total_activities}, "
                    f"batches_sent={self._total_sent}, "
                    f"items_sent={self._total_items_sent}, "
@@ -309,43 +309,43 @@ class ZepGraphMemoryUpdater:
     
     def add_activity(self, activity: AgentActivity):
         """
-        添加一个agent活动到队列
+        æ·»åŠ ä¸€ä¸ªagentæ´»åŠ¨åˆ°é˜Ÿåˆ—
         
-        所有有意义的行为都会被添加到队列，包括：
-        - CREATE_POST（发帖）
-        - CREATE_COMMENT（评论）
-        - QUOTE_POST（引用帖子）
-        - SEARCH_POSTS（搜索帖子）
-        - SEARCH_USER（搜索用户）
-        - LIKE_POST/DISLIKE_POST（点赞/踩帖子）
-        - REPOST（转发）
-        - FOLLOW（关注）
-        - MUTE（屏蔽）
-        - LIKE_COMMENT/DISLIKE_COMMENT（点赞/踩评论）
+        æ‰€æœ‰æœ‰æ„ä¹‰çš„è¡Œä¸ºéƒ½ä¼šè¢«æ·»åŠ åˆ°é˜Ÿåˆ—ï¼ŒåŒ…æ‹¬ï¼š
+        - CREATE_POSTï¼ˆå‘å¸–ï¼‰
+        - CREATE_COMMENTï¼ˆè¯„è®ºï¼‰
+        - QUOTE_POSTï¼ˆå¼•ç”¨å¸–å­ï¼‰
+        - SEARCH_POSTSï¼ˆæœç´¢å¸–å­ï¼‰
+        - SEARCH_USERï¼ˆæœç´¢ç”¨æˆ·ï¼‰
+        - LIKE_POST/DISLIKE_POSTï¼ˆç‚¹èµž/è¸©å¸–å­ï¼‰
+        - REPOSTï¼ˆè½¬å‘ï¼‰
+        - FOLLOWï¼ˆå…³æ³¨ï¼‰
+        - MUTEï¼ˆå±è”½ï¼‰
+        - LIKE_COMMENT/DISLIKE_COMMENTï¼ˆç‚¹èµž/è¸©è¯„è®ºï¼‰
         
-        action_args中会包含完整的上下文信息（如帖子原文、用户名等）。
+        action_argsä¸­ä¼šåŒ…å«å®Œæ•´çš„ä¸Šä¸‹æ–‡ä¿¡æ¯ï¼ˆå¦‚å¸–å­åŽŸæ–‡ã€ç”¨æˆ·åç­‰ï¼‰ã€‚
         
         Args:
-            activity: Agent活动记录
+            activity: Agentæ´»åŠ¨è®°å½•
         """
-        # 跳过DO_NOTHING类型的活动
+        # è·³è¿‡DO_NOTHINGç±»åž‹çš„æ´»åŠ¨
         if activity.action_type == "DO_NOTHING":
             self._skipped_count += 1
             return
         
         self._activity_queue.put(activity)
         self._total_activities += 1
-        logger.debug(f"添加活动到Zep队列: {activity.agent_name} - {activity.action_type}")
+        logger.debug(f"æ·»åŠ æ´»åŠ¨åˆ°Zepé˜Ÿåˆ—: {activity.agent_name} - {activity.action_type}")
     
     def add_activity_from_dict(self, data: Dict[str, Any], platform: str):
         """
-        从字典数据添加活动
+        ä»Žå­—å…¸æ•°æ®æ·»åŠ æ´»åŠ¨
         
         Args:
-            data: 从actions.jsonl解析的字典数据
-            platform: 平台名称 (twitter/reddit)
+            data: ä»Žactions.jsonlè§£æžçš„å­—å…¸æ•°æ®
+            platform: å¹³å°åç§° (twitter/reddit)
         """
-        # 跳过事件类型的条目
+        # è·³è¿‡äº‹ä»¶ç±»åž‹çš„æ¡ç›®
         if "event_type" in data:
             return
         
@@ -362,53 +362,53 @@ class ZepGraphMemoryUpdater:
         self.add_activity(activity)
     
     def _worker_loop(self, locale: str = 'zh'):
-        """后台工作循环 - 按平台批量发送活动到Zep"""
+        """åŽå°å·¥ä½œå¾ªçŽ¯ - æŒ‰å¹³å°æ‰¹é‡å‘é€æ´»åŠ¨åˆ°Zep"""
         set_locale(locale)
         while self._running or not self._activity_queue.empty():
             try:
-                # 尝试从队列获取活动（超时1秒）
+                # å°è¯•ä»Žé˜Ÿåˆ—èŽ·å–æ´»åŠ¨ï¼ˆè¶…æ—¶1ç§’ï¼‰
                 try:
                     activity = self._activity_queue.get(timeout=1)
                     
-                    # 将活动添加到对应平台的缓冲区
+                    # å°†æ´»åŠ¨æ·»åŠ åˆ°å¯¹åº”å¹³å°çš„ç¼“å†²åŒº
                     platform = activity.platform.lower()
                     with self._buffer_lock:
                         if platform not in self._platform_buffers:
                             self._platform_buffers[platform] = []
                         self._platform_buffers[platform].append(activity)
                         
-                        # 检查该平台是否达到批量大小
+                        # æ£€æŸ¥è¯¥å¹³å°æ˜¯å¦è¾¾åˆ°æ‰¹é‡å¤§å°
                         if len(self._platform_buffers[platform]) >= self.BATCH_SIZE:
                             batch = self._platform_buffers[platform][:self.BATCH_SIZE]
                             self._platform_buffers[platform] = self._platform_buffers[platform][self.BATCH_SIZE:]
-                            # 释放锁后再发送
+                            # é‡Šæ”¾é”åŽå†å‘é€
                             self._send_batch_activities(batch, platform)
-                            # 发送间隔，避免请求过快
+                            # å‘é€é—´éš”ï¼Œé¿å…è¯·æ±‚è¿‡å¿«
                             time.sleep(self.SEND_INTERVAL)
                     
                 except Empty:
                     pass
                     
             except Exception as e:
-                logger.error(f"工作循环异常: {e}")
+                logger.error(f"å·¥ä½œå¾ªçŽ¯å¼‚å¸¸: {e}")
                 time.sleep(1)
     
     def _send_batch_activities(self, activities: List[AgentActivity], platform: str):
         """
-        批量发送活动到Zep图谱（合并为一条文本）
+        æ‰¹é‡å‘é€æ´»åŠ¨åˆ°Zepå›¾è°±ï¼ˆåˆå¹¶ä¸ºä¸€æ¡æ–‡æœ¬ï¼‰
         
         Args:
-            activities: Agent活动列表
-            platform: 平台名称
+            activities: Agentæ´»åŠ¨åˆ—è¡¨
+            platform: å¹³å°åç§°
         """
         if not activities:
             return
         
-        # 将多条活动合并为一条文本，用换行分隔
+        # å°†å¤šæ¡æ´»åŠ¨åˆå¹¶ä¸ºä¸€æ¡æ–‡æœ¬ï¼Œç”¨æ¢è¡Œåˆ†éš”
         episode_texts = [activity.to_episode_text() for activity in activities]
         combined_text = "\n".join(episode_texts)
         
-        # 带重试的发送
+        # å¸¦é‡è¯•çš„å‘é€
         for attempt in range(self.MAX_RETRIES):
             try:
                 self.client.graph.add(
@@ -420,21 +420,21 @@ class ZepGraphMemoryUpdater:
                 self._total_sent += 1
                 self._total_items_sent += len(activities)
                 display_name = self._get_platform_display_name(platform)
-                logger.info(f"成功批量发送 {len(activities)} 条{display_name}活动到图谱 {self.graph_id}")
-                logger.debug(f"批量内容预览: {combined_text[:200]}...")
+                logger.info(f"æˆåŠŸæ‰¹é‡å‘é€ {len(activities)} æ¡{display_name}æ´»åŠ¨åˆ°å›¾è°± {self.graph_id}")
+                logger.debug(f"æ‰¹é‡å†…å®¹é¢„è§ˆ: {combined_text[:200]}...")
                 return
                 
             except Exception as e:
                 if attempt < self.MAX_RETRIES - 1:
-                    logger.warning(f"批量发送到Zep失败 (尝试 {attempt + 1}/{self.MAX_RETRIES}): {e}")
+                    logger.warning(f"æ‰¹é‡å‘é€åˆ°Zepå¤±è´¥ (å°è¯• {attempt + 1}/{self.MAX_RETRIES}): {e}")
                     time.sleep(self.RETRY_DELAY * (attempt + 1))
                 else:
-                    logger.error(f"批量发送到Zep失败，已重试{self.MAX_RETRIES}次: {e}")
+                    logger.error(f"æ‰¹é‡å‘é€åˆ°Zepå¤±è´¥ï¼Œå·²é‡è¯•{self.MAX_RETRIES}æ¬¡: {e}")
                     self._failed_count += 1
     
     def _flush_remaining(self):
-        """发送队列和缓冲区中剩余的活动"""
-        # 首先处理队列中剩余的活动，添加到缓冲区
+        """å‘é€é˜Ÿåˆ—å’Œç¼“å†²åŒºä¸­å‰©ä½™çš„æ´»åŠ¨"""
+        # é¦–å…ˆå¤„ç†é˜Ÿåˆ—ä¸­å‰©ä½™çš„æ´»åŠ¨ï¼Œæ·»åŠ åˆ°ç¼“å†²åŒº
         while not self._activity_queue.empty():
             try:
                 activity = self._activity_queue.get_nowait()
@@ -446,41 +446,41 @@ class ZepGraphMemoryUpdater:
             except Empty:
                 break
         
-        # 然后发送各平台缓冲区中剩余的活动（即使不足BATCH_SIZE条）
+        # ç„¶åŽå‘é€å„å¹³å°ç¼“å†²åŒºä¸­å‰©ä½™çš„æ´»åŠ¨ï¼ˆå³ä½¿ä¸è¶³BATCH_SIZEæ¡ï¼‰
         with self._buffer_lock:
             for platform, buffer in self._platform_buffers.items():
                 if buffer:
                     display_name = self._get_platform_display_name(platform)
-                    logger.info(f"发送{display_name}平台剩余的 {len(buffer)} 条活动")
+                    logger.info(f"å‘é€{display_name}å¹³å°å‰©ä½™çš„ {len(buffer)} æ¡æ´»åŠ¨")
                     self._send_batch_activities(buffer, platform)
-            # 清空所有缓冲区
+            # æ¸…ç©ºæ‰€æœ‰ç¼“å†²åŒº
             for platform in self._platform_buffers:
                 self._platform_buffers[platform] = []
     
     def get_stats(self) -> Dict[str, Any]:
-        """获取统计信息"""
+        """èŽ·å–ç»Ÿè®¡ä¿¡æ¯"""
         with self._buffer_lock:
             buffer_sizes = {p: len(b) for p, b in self._platform_buffers.items()}
         
         return {
             "graph_id": self.graph_id,
             "batch_size": self.BATCH_SIZE,
-            "total_activities": self._total_activities,  # 添加到队列的活动总数
-            "batches_sent": self._total_sent,            # 成功发送的批次数
-            "items_sent": self._total_items_sent,        # 成功发送的活动条数
-            "failed_count": self._failed_count,          # 发送失败的批次数
-            "skipped_count": self._skipped_count,        # 被过滤跳过的活动数（DO_NOTHING）
+            "total_activities": self._total_activities,  # æ·»åŠ åˆ°é˜Ÿåˆ—çš„æ´»åŠ¨æ€»æ•°
+            "batches_sent": self._total_sent,            # æˆåŠŸå‘é€çš„æ‰¹æ¬¡æ•°
+            "items_sent": self._total_items_sent,        # æˆåŠŸå‘é€çš„æ´»åŠ¨æ¡æ•°
+            "failed_count": self._failed_count,          # å‘é€å¤±è´¥çš„æ‰¹æ¬¡æ•°
+            "skipped_count": self._skipped_count,        # è¢«è¿‡æ»¤è·³è¿‡çš„æ´»åŠ¨æ•°ï¼ˆDO_NOTHINGï¼‰
             "queue_size": self._activity_queue.qsize(),
-            "buffer_sizes": buffer_sizes,                # 各平台缓冲区大小
+            "buffer_sizes": buffer_sizes,                # å„å¹³å°ç¼“å†²åŒºå¤§å°
             "running": self._running,
         }
 
 
 class ZepGraphMemoryManager:
     """
-    管理多个模拟的Zep图谱记忆更新器
+    ç®¡ç†å¤šä¸ªæ¨¡æ‹Ÿçš„Zepå›¾è°±è®°å¿†æ›´æ–°å™¨
     
-    每个模拟可以有自己的更新器实例
+    æ¯ä¸ªæ¨¡æ‹Ÿå¯ä»¥æœ‰è‡ªå·±çš„æ›´æ–°å™¨å®žä¾‹
     """
     
     _updaters: Dict[str, ZepGraphMemoryUpdater] = {}
@@ -489,17 +489,17 @@ class ZepGraphMemoryManager:
     @classmethod
     def create_updater(cls, simulation_id: str, graph_id: str) -> ZepGraphMemoryUpdater:
         """
-        为模拟创建图谱记忆更新器
+        ä¸ºæ¨¡æ‹Ÿåˆ›å»ºå›¾è°±è®°å¿†æ›´æ–°å™¨
         
         Args:
-            simulation_id: 模拟ID
-            graph_id: Zep图谱ID
+            simulation_id: æ¨¡æ‹ŸID
+            graph_id: Zepå›¾è°±ID
             
         Returns:
-            ZepGraphMemoryUpdater实例
+            ZepGraphMemoryUpdaterå®žä¾‹
         """
         with cls._lock:
-            # 如果已存在，先停止旧的
+            # å¦‚æžœå·²å­˜åœ¨ï¼Œå…ˆåœæ­¢æ—§çš„
             if simulation_id in cls._updaters:
                 cls._updaters[simulation_id].stop()
             
@@ -507,30 +507,30 @@ class ZepGraphMemoryManager:
             updater.start()
             cls._updaters[simulation_id] = updater
             
-            logger.info(f"创建图谱记忆更新器: simulation_id={simulation_id}, graph_id={graph_id}")
+            logger.info(f"åˆ›å»ºå›¾è°±è®°å¿†æ›´æ–°å™¨: simulation_id={simulation_id}, graph_id={graph_id}")
             return updater
     
     @classmethod
     def get_updater(cls, simulation_id: str) -> Optional[ZepGraphMemoryUpdater]:
-        """获取模拟的更新器"""
+        """èŽ·å–æ¨¡æ‹Ÿçš„æ›´æ–°å™¨"""
         return cls._updaters.get(simulation_id)
     
     @classmethod
     def stop_updater(cls, simulation_id: str):
-        """停止并移除模拟的更新器"""
+        """åœæ­¢å¹¶ç§»é™¤æ¨¡æ‹Ÿçš„æ›´æ–°å™¨"""
         with cls._lock:
             if simulation_id in cls._updaters:
                 cls._updaters[simulation_id].stop()
                 del cls._updaters[simulation_id]
-                logger.info(f"已停止图谱记忆更新器: simulation_id={simulation_id}")
+                logger.info(f"å·²åœæ­¢å›¾è°±è®°å¿†æ›´æ–°å™¨: simulation_id={simulation_id}")
     
-    # 防止 stop_all 重复调用的标志
+    # é˜²æ­¢ stop_all é‡å¤è°ƒç”¨çš„æ ‡å¿—
     _stop_all_done = False
     
     @classmethod
     def stop_all(cls):
-        """停止所有更新器"""
-        # 防止重复调用
+        """åœæ­¢æ‰€æœ‰æ›´æ–°å™¨"""
+        # é˜²æ­¢é‡å¤è°ƒç”¨
         if cls._stop_all_done:
             return
         cls._stop_all_done = True
@@ -541,13 +541,13 @@ class ZepGraphMemoryManager:
                     try:
                         updater.stop()
                     except Exception as e:
-                        logger.error(f"停止更新器失败: simulation_id={simulation_id}, error={e}")
+                        logger.error(f"åœæ­¢æ›´æ–°å™¨å¤±è´¥: simulation_id={simulation_id}, error={e}")
                 cls._updaters.clear()
-            logger.info("已停止所有图谱记忆更新器")
+            logger.info("å·²åœæ­¢æ‰€æœ‰å›¾è°±è®°å¿†æ›´æ–°å™¨")
     
     @classmethod
     def get_all_stats(cls) -> Dict[str, Dict[str, Any]]:
-        """获取所有更新器的统计信息"""
+        """èŽ·å–æ‰€æœ‰æ›´æ–°å™¨çš„ç»Ÿè®¡ä¿¡æ¯"""
         return {
             sim_id: updater.get_stats() 
             for sim_id, updater in cls._updaters.items()

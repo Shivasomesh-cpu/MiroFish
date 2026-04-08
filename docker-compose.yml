@@ -1,9 +1,9 @@
 services:
-  mirofish:
+  posiedon:
     image: ghcr.io/666ghj/mirofish:latest
-    # 加速镜像（如拉取缓慢可替换上方地址）
+    # Ã¥Å Â Ã©â‚¬Å¸Ã©â€¢Å“Ã¥Æ’ÂÃ¯Â¼Ë†Ã¥Â¦â€šÃ¦â€¹â€°Ã¥Ââ€“Ã§Â¼â€œÃ¦â€¦Â¢Ã¥ÂÂ¯Ã¦â€ºÂ¿Ã¦ÂÂ¢Ã¤Â¸Å Ã¦â€“Â¹Ã¥Å“Â°Ã¥Ââ‚¬Ã¯Â¼â€°
     # image: ghcr.nju.edu.cn/666ghj/mirofish:latest
-    container_name: mirofish
+    container_name: posiedon
     env_file:
       - .env
     ports:

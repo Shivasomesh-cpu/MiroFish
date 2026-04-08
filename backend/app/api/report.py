@@ -1,6 +1,6 @@
 """
-Report API路由
-提供模拟报告生成、获取、对话等接口
+Report APIè·¯ç”±
+æä¾›æ¨¡æ‹ŸæŠ¥å‘Šç”Ÿæˆã€èŽ·å–ã€å¯¹è¯ç­‰æŽ¥å£
 """
 
 import os
@@ -17,33 +17,33 @@ from ..models.task import TaskManager, TaskStatus
 from ..utils.logger import get_logger
 from ..utils.locale import t, get_locale, set_locale
 
-logger = get_logger('mirofish.api.report')
+logger = get_logger('posiedon.api.report')
 
 
-# ============== 报告生成接口 ==============
+# ============== æŠ¥å‘Šç”ŸæˆæŽ¥å£ ==============
 
 @report_bp.route('/generate', methods=['POST'])
 def generate_report():
     """
-    生成模拟分析报告（异步任务）
+    ç”Ÿæˆæ¨¡æ‹Ÿåˆ†æžæŠ¥å‘Šï¼ˆå¼‚æ­¥ä»»åŠ¡ï¼‰
     
-    这是一个耗时操作，接口会立即返回task_id，
-    使用 GET /api/report/generate/status 查询进度
+    è¿™æ˜¯ä¸€ä¸ªè€—æ—¶æ“ä½œï¼ŒæŽ¥å£ä¼šç«‹å³è¿”å›žtask_idï¼Œ
+    ä½¿ç”¨ GET /api/report/generate/status æŸ¥è¯¢è¿›åº¦
     
-    请求（JSON）：
+    è¯·æ±‚ï¼ˆJSONï¼‰ï¼š
         {
-            "simulation_id": "sim_xxxx",    // 必填，模拟ID
-            "force_regenerate": false        // 可选，强制重新生成
+            "simulation_id": "sim_xxxx",    // å¿…å¡«ï¼Œæ¨¡æ‹ŸID
+            "force_regenerate": false        // å¯é€‰ï¼Œå¼ºåˆ¶é‡æ–°ç”Ÿæˆ
         }
     
-    返回：
+    è¿”å›žï¼š
         {
             "success": true,
             "data": {
                 "simulation_id": "sim_xxxx",
                 "task_id": "task_xxxx",
                 "status": "generating",
-                "message": "报告生成任务已启动"
+                "message": "æŠ¥å‘Šç”Ÿæˆä»»åŠ¡å·²å¯åŠ¨"
             }
         }
     """
@@ -59,7 +59,7 @@ def generate_report():
 
         force_regenerate = data.get('force_regenerate', False)
         
-        # 获取模拟信息
+        # èŽ·å–æ¨¡æ‹Ÿä¿¡æ¯
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
         
@@ -69,7 +69,7 @@ def generate_report():
                 "error": t('api.simulationNotFound', id=simulation_id)
             }), 404
 
-        # 检查是否已有报告
+        # æ£€æŸ¥æ˜¯å¦å·²æœ‰æŠ¥å‘Š
         if not force_regenerate:
             existing_report = ReportManager.get_report_by_simulation(simulation_id)
             if existing_report and existing_report.status == ReportStatus.COMPLETED:
@@ -84,7 +84,7 @@ def generate_report():
                     }
                 })
         
-        # 获取项目信息
+        # èŽ·å–é¡¹ç›®ä¿¡æ¯
         project = ProjectManager.get_project(state.project_id)
         if not project:
             return jsonify({
@@ -106,11 +106,11 @@ def generate_report():
                 "error": t('api.missingSimRequirement')
             }), 400
         
-        # 提前生成 report_id，以便立即返回给前端
+        # æå‰ç”Ÿæˆ report_idï¼Œä»¥ä¾¿ç«‹å³è¿”å›žç»™å‰ç«¯
         import uuid
         report_id = f"report_{uuid.uuid4().hex[:12]}"
         
-        # 创建异步任务
+        # åˆ›å»ºå¼‚æ­¥ä»»åŠ¡
         task_manager = TaskManager()
         task_id = task_manager.create_task(
             task_type="report_generate",
@@ -124,7 +124,7 @@ def generate_report():
         # Capture locale before spawning background thread
         current_locale = get_locale()
 
-        # 定义后台任务
+        # å®šä¹‰åŽå°ä»»åŠ¡
         def run_generate():
             set_locale(current_locale)
             try:
@@ -135,14 +135,14 @@ def generate_report():
                     message=t('api.initReportAgent')
                 )
                 
-                # 创建Report Agent
+                # åˆ›å»ºReport Agent
                 agent = ReportAgent(
                     graph_id=graph_id,
                     simulation_id=simulation_id,
                     simulation_requirement=simulation_requirement
                 )
                 
-                # 进度回调
+                # è¿›åº¦å›žè°ƒ
                 def progress_callback(stage, progress, message):
                     task_manager.update_task(
                         task_id,
@@ -150,13 +150,13 @@ def generate_report():
                         message=f"[{stage}] {message}"
                     )
                 
-                # 生成报告（传入预先生成的 report_id）
+                # ç”ŸæˆæŠ¥å‘Šï¼ˆä¼ å…¥é¢„å…ˆç”Ÿæˆçš„ report_idï¼‰
                 report = agent.generate_report(
                     progress_callback=progress_callback,
                     report_id=report_id
                 )
                 
-                # 保存报告
+                # ä¿å­˜æŠ¥å‘Š
                 ReportManager.save_report(report)
                 
                 if report.status == ReportStatus.COMPLETED:
@@ -172,10 +172,10 @@ def generate_report():
                     task_manager.fail_task(task_id, report.error or t('api.reportGenerateFailed'))
                 
             except Exception as e:
-                logger.error(f"报告生成失败: {str(e)}")
+                logger.error(f"æŠ¥å‘Šç”Ÿæˆå¤±è´¥: {str(e)}")
                 task_manager.fail_task(task_id, str(e))
         
-        # 启动后台线程
+        # å¯åŠ¨åŽå°çº¿ç¨‹
         thread = threading.Thread(target=run_generate, daemon=True)
         thread.start()
         
@@ -192,7 +192,7 @@ def generate_report():
         })
         
     except Exception as e:
-        logger.error(f"启动报告生成任务失败: {str(e)}")
+        logger.error(f"å¯åŠ¨æŠ¥å‘Šç”Ÿæˆä»»åŠ¡å¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -203,15 +203,15 @@ def generate_report():
 @report_bp.route('/generate/status', methods=['POST'])
 def get_generate_status():
     """
-    查询报告生成任务进度
+    æŸ¥è¯¢æŠ¥å‘Šç”Ÿæˆä»»åŠ¡è¿›åº¦
     
-    请求（JSON）：
+    è¯·æ±‚ï¼ˆJSONï¼‰ï¼š
         {
-            "task_id": "task_xxxx",         // 可选，generate返回的task_id
-            "simulation_id": "sim_xxxx"     // 可选，模拟ID
+            "task_id": "task_xxxx",         // å¯é€‰ï¼Œgenerateè¿”å›žçš„task_id
+            "simulation_id": "sim_xxxx"     // å¯é€‰ï¼Œæ¨¡æ‹ŸID
         }
     
-    返回：
+    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -228,7 +228,7 @@ def get_generate_status():
         task_id = data.get('task_id')
         simulation_id = data.get('simulation_id')
         
-        # 如果提供了simulation_id，先检查是否已有完成的报告
+        # å¦‚æžœæä¾›äº†simulation_idï¼Œå…ˆæ£€æŸ¥æ˜¯å¦å·²æœ‰å®Œæˆçš„æŠ¥å‘Š
         if simulation_id:
             existing_report = ReportManager.get_report_by_simulation(simulation_id)
             if existing_report and existing_report.status == ReportStatus.COMPLETED:
@@ -265,21 +265,21 @@ def get_generate_status():
         })
         
     except Exception as e:
-        logger.error(f"查询任务状态失败: {str(e)}")
+        logger.error(f"æŸ¥è¯¢ä»»åŠ¡çŠ¶æ€å¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e)
         }), 500
 
 
-# ============== 报告获取接口 ==============
+# ============== æŠ¥å‘ŠèŽ·å–æŽ¥å£ ==============
 
 @report_bp.route('/<report_id>', methods=['GET'])
 def get_report(report_id: str):
     """
-    获取报告详情
+    èŽ·å–æŠ¥å‘Šè¯¦æƒ…
     
-    返回：
+    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -308,7 +308,7 @@ def get_report(report_id: str):
         })
         
     except Exception as e:
-        logger.error(f"获取报告失败: {str(e)}")
+        logger.error(f"èŽ·å–æŠ¥å‘Šå¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -319,9 +319,9 @@ def get_report(report_id: str):
 @report_bp.route('/by-simulation/<simulation_id>', methods=['GET'])
 def get_report_by_simulation(simulation_id: str):
     """
-    根据模拟ID获取报告
+    æ ¹æ®æ¨¡æ‹ŸIDèŽ·å–æŠ¥å‘Š
     
-    返回：
+    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -347,7 +347,7 @@ def get_report_by_simulation(simulation_id: str):
         })
         
     except Exception as e:
-        logger.error(f"获取报告失败: {str(e)}")
+        logger.error(f"èŽ·å–æŠ¥å‘Šå¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -358,13 +358,13 @@ def get_report_by_simulation(simulation_id: str):
 @report_bp.route('/list', methods=['GET'])
 def list_reports():
     """
-    列出所有报告
+    åˆ—å‡ºæ‰€æœ‰æŠ¥å‘Š
     
-    Query参数：
-        simulation_id: 按模拟ID过滤（可选）
-        limit: 返回数量限制（默认50）
+    Queryå‚æ•°ï¼š
+        simulation_id: æŒ‰æ¨¡æ‹ŸIDè¿‡æ»¤ï¼ˆå¯é€‰ï¼‰
+        limit: è¿”å›žæ•°é‡é™åˆ¶ï¼ˆé»˜è®¤50ï¼‰
     
-    返回：
+    è¿”å›žï¼š
         {
             "success": true,
             "data": [...],
@@ -387,7 +387,7 @@ def list_reports():
         })
         
     except Exception as e:
-        logger.error(f"列出报告失败: {str(e)}")
+        logger.error(f"åˆ—å‡ºæŠ¥å‘Šå¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -398,9 +398,9 @@ def list_reports():
 @report_bp.route('/<report_id>/download', methods=['GET'])
 def download_report(report_id: str):
     """
-    下载报告（Markdown格式）
+    ä¸‹è½½æŠ¥å‘Šï¼ˆMarkdownæ ¼å¼ï¼‰
     
-    返回Markdown文件
+    è¿”å›žMarkdownæ–‡ä»¶
     """
     try:
         report = ReportManager.get_report(report_id)
@@ -414,7 +414,7 @@ def download_report(report_id: str):
         md_path = ReportManager._get_report_markdown_path(report_id)
         
         if not os.path.exists(md_path):
-            # 如果MD文件不存在，生成一个临时文件
+            # å¦‚æžœMDæ–‡ä»¶ä¸å­˜åœ¨ï¼Œç”Ÿæˆä¸€ä¸ªä¸´æ—¶æ–‡ä»¶
             import tempfile
             with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
                 f.write(report.markdown_content)
@@ -433,7 +433,7 @@ def download_report(report_id: str):
         )
         
     except Exception as e:
-        logger.error(f"下载报告失败: {str(e)}")
+        logger.error(f"ä¸‹è½½æŠ¥å‘Šå¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -443,7 +443,7 @@ def download_report(report_id: str):
 
 @report_bp.route('/<report_id>', methods=['DELETE'])
 def delete_report(report_id: str):
-    """删除报告"""
+    """åˆ é™¤æŠ¥å‘Š"""
     try:
         success = ReportManager.delete_report(report_id)
         
@@ -459,7 +459,7 @@ def delete_report(report_id: str):
         })
         
     except Exception as e:
-        logger.error(f"删除报告失败: {str(e)}")
+        logger.error(f"åˆ é™¤æŠ¥å‘Šå¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -467,32 +467,32 @@ def delete_report(report_id: str):
         }), 500
 
 
-# ============== Report Agent对话接口 ==============
+# ============== Report Agentå¯¹è¯æŽ¥å£ ==============
 
 @report_bp.route('/chat', methods=['POST'])
 def chat_with_report_agent():
     """
-    与Report Agent对话
+    ä¸ŽReport Agentå¯¹è¯
     
-    Report Agent可以在对话中自主调用检索工具来回答问题
+    Report Agentå¯ä»¥åœ¨å¯¹è¯ä¸­è‡ªä¸»è°ƒç”¨æ£€ç´¢å·¥å…·æ¥å›žç­”é—®é¢˜
     
-    请求（JSON）：
+    è¯·æ±‚ï¼ˆJSONï¼‰ï¼š
         {
-            "simulation_id": "sim_xxxx",        // 必填，模拟ID
-            "message": "请解释一下舆情走向",    // 必填，用户消息
-            "chat_history": [                   // 可选，对话历史
+            "simulation_id": "sim_xxxx",        // å¿…å¡«ï¼Œæ¨¡æ‹ŸID
+            "message": "è¯·è§£é‡Šä¸€ä¸‹èˆ†æƒ…èµ°å‘",    // å¿…å¡«ï¼Œç”¨æˆ·æ¶ˆæ¯
+            "chat_history": [                   // å¯é€‰ï¼Œå¯¹è¯åŽ†å²
                 {"role": "user", "content": "..."},
                 {"role": "assistant", "content": "..."}
             ]
         }
     
-    返回：
+    è¿”å›žï¼š
         {
             "success": true,
             "data": {
-                "response": "Agent回复...",
-                "tool_calls": [调用的工具列表],
-                "sources": [信息来源]
+                "response": "Agentå›žå¤...",
+                "tool_calls": [è°ƒç”¨çš„å·¥å…·åˆ—è¡¨],
+                "sources": [ä¿¡æ¯æ¥æº]
             }
         }
     """
@@ -515,7 +515,7 @@ def chat_with_report_agent():
                 "error": t('api.requireMessage')
             }), 400
         
-        # 获取模拟和项目信息
+        # èŽ·å–æ¨¡æ‹Ÿå’Œé¡¹ç›®ä¿¡æ¯
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
         
@@ -541,7 +541,7 @@ def chat_with_report_agent():
         
         simulation_requirement = project.simulation_requirement or ""
         
-        # 创建Agent并进行对话
+        # åˆ›å»ºAgentå¹¶è¿›è¡Œå¯¹è¯
         agent = ReportAgent(
             graph_id=graph_id,
             simulation_id=simulation_id,
@@ -556,7 +556,7 @@ def chat_with_report_agent():
         })
         
     except Exception as e:
-        logger.error(f"对话失败: {str(e)}")
+        logger.error(f"å¯¹è¯å¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -564,22 +564,22 @@ def chat_with_report_agent():
         }), 500
 
 
-# ============== 报告进度与分章节接口 ==============
+# ============== æŠ¥å‘Šè¿›åº¦ä¸Žåˆ†ç« èŠ‚æŽ¥å£ ==============
 
 @report_bp.route('/<report_id>/progress', methods=['GET'])
 def get_report_progress(report_id: str):
     """
-    获取报告生成进度（实时）
+    èŽ·å–æŠ¥å‘Šç”Ÿæˆè¿›åº¦ï¼ˆå®žæ—¶ï¼‰
     
-    返回：
+    è¿”å›žï¼š
         {
             "success": true,
             "data": {
                 "status": "generating",
                 "progress": 45,
-                "message": "正在生成章节: 关键发现",
-                "current_section": "关键发现",
-                "completed_sections": ["执行摘要", "模拟背景"],
+                "message": "æ­£åœ¨ç”Ÿæˆç« èŠ‚: å…³é”®å‘çŽ°",
+                "current_section": "å…³é”®å‘çŽ°",
+                "completed_sections": ["æ‰§è¡Œæ‘˜è¦", "æ¨¡æ‹ŸèƒŒæ™¯"],
                 "updated_at": "2025-12-09T..."
             }
         }
@@ -599,7 +599,7 @@ def get_report_progress(report_id: str):
         })
         
     except Exception as e:
-        logger.error(f"获取报告进度失败: {str(e)}")
+        logger.error(f"èŽ·å–æŠ¥å‘Šè¿›åº¦å¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -610,11 +610,11 @@ def get_report_progress(report_id: str):
 @report_bp.route('/<report_id>/sections', methods=['GET'])
 def get_report_sections(report_id: str):
     """
-    获取已生成的章节列表（分章节输出）
+    èŽ·å–å·²ç”Ÿæˆçš„ç« èŠ‚åˆ—è¡¨ï¼ˆåˆ†ç« èŠ‚è¾“å‡ºï¼‰
     
-    前端可以轮询此接口获取已生成的章节内容，无需等待整个报告完成
+    å‰ç«¯å¯ä»¥è½®è¯¢æ­¤æŽ¥å£èŽ·å–å·²ç”Ÿæˆçš„ç« èŠ‚å†…å®¹ï¼Œæ— éœ€ç­‰å¾…æ•´ä¸ªæŠ¥å‘Šå®Œæˆ
     
-    返回：
+    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -623,7 +623,7 @@ def get_report_sections(report_id: str):
                     {
                         "filename": "section_01.md",
                         "section_index": 1,
-                        "content": "## 执行摘要\\n\\n..."
+                        "content": "## æ‰§è¡Œæ‘˜è¦\\n\\n..."
                     },
                     ...
                 ],
@@ -635,7 +635,7 @@ def get_report_sections(report_id: str):
     try:
         sections = ReportManager.get_generated_sections(report_id)
         
-        # 获取报告状态
+        # èŽ·å–æŠ¥å‘ŠçŠ¶æ€
         report = ReportManager.get_report(report_id)
         is_complete = report is not None and report.status == ReportStatus.COMPLETED
         
@@ -650,7 +650,7 @@ def get_report_sections(report_id: str):
         })
         
     except Exception as e:
-        logger.error(f"获取章节列表失败: {str(e)}")
+        logger.error(f"èŽ·å–ç« èŠ‚åˆ—è¡¨å¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -661,14 +661,14 @@ def get_report_sections(report_id: str):
 @report_bp.route('/<report_id>/section/<int:section_index>', methods=['GET'])
 def get_single_section(report_id: str, section_index: int):
     """
-    获取单个章节内容
+    èŽ·å–å•ä¸ªç« èŠ‚å†…å®¹
     
-    返回：
+    è¿”å›žï¼š
         {
             "success": true,
             "data": {
                 "filename": "section_01.md",
-                "content": "## 执行摘要\\n\\n..."
+                "content": "## æ‰§è¡Œæ‘˜è¦\\n\\n..."
             }
         }
     """
@@ -694,7 +694,7 @@ def get_single_section(report_id: str, section_index: int):
         })
         
     except Exception as e:
-        logger.error(f"获取章节内容失败: {str(e)}")
+        logger.error(f"èŽ·å–ç« èŠ‚å†…å®¹å¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -702,16 +702,16 @@ def get_single_section(report_id: str, section_index: int):
         }), 500
 
 
-# ============== 报告状态检查接口 ==============
+# ============== æŠ¥å‘ŠçŠ¶æ€æ£€æŸ¥æŽ¥å£ ==============
 
 @report_bp.route('/check/<simulation_id>', methods=['GET'])
 def check_report_status(simulation_id: str):
     """
-    检查模拟是否有报告，以及报告状态
+    æ£€æŸ¥æ¨¡æ‹Ÿæ˜¯å¦æœ‰æŠ¥å‘Šï¼Œä»¥åŠæŠ¥å‘ŠçŠ¶æ€
     
-    用于前端判断是否解锁Interview功能
+    ç”¨äºŽå‰ç«¯åˆ¤æ–­æ˜¯å¦è§£é”InterviewåŠŸèƒ½
     
-    返回：
+    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -730,7 +730,7 @@ def check_report_status(simulation_id: str):
         report_status = report.status.value if report else None
         report_id = report.report_id if report else None
         
-        # 只有报告完成后才解锁interview
+        # åªæœ‰æŠ¥å‘Šå®ŒæˆåŽæ‰è§£é”interview
         interview_unlocked = has_report and report.status == ReportStatus.COMPLETED
         
         return jsonify({
@@ -745,7 +745,7 @@ def check_report_status(simulation_id: str):
         })
         
     except Exception as e:
-        logger.error(f"检查报告状态失败: {str(e)}")
+        logger.error(f"æ£€æŸ¥æŠ¥å‘ŠçŠ¶æ€å¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -753,22 +753,22 @@ def check_report_status(simulation_id: str):
         }), 500
 
 
-# ============== Agent 日志接口 ==============
+# ============== Agent æ—¥å¿—æŽ¥å£ ==============
 
 @report_bp.route('/<report_id>/agent-log', methods=['GET'])
 def get_agent_log(report_id: str):
     """
-    获取 Report Agent 的详细执行日志
+    èŽ·å– Report Agent çš„è¯¦ç»†æ‰§è¡Œæ—¥å¿—
     
-    实时获取报告生成过程中的每一步动作，包括：
-    - 报告开始、规划开始/完成
-    - 每个章节的开始、工具调用、LLM响应、完成
-    - 报告完成或失败
+    å®žæ—¶èŽ·å–æŠ¥å‘Šç”Ÿæˆè¿‡ç¨‹ä¸­çš„æ¯ä¸€æ­¥åŠ¨ä½œï¼ŒåŒ…æ‹¬ï¼š
+    - æŠ¥å‘Šå¼€å§‹ã€è§„åˆ’å¼€å§‹/å®Œæˆ
+    - æ¯ä¸ªç« èŠ‚çš„å¼€å§‹ã€å·¥å…·è°ƒç”¨ã€LLMå“åº”ã€å®Œæˆ
+    - æŠ¥å‘Šå®Œæˆæˆ–å¤±è´¥
     
-    Query参数：
-        from_line: 从第几行开始读取（可选，默认0，用于增量获取）
+    Queryå‚æ•°ï¼š
+        from_line: ä»Žç¬¬å‡ è¡Œå¼€å§‹è¯»å–ï¼ˆå¯é€‰ï¼Œé»˜è®¤0ï¼Œç”¨äºŽå¢žé‡èŽ·å–ï¼‰
     
-    返回：
+    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -779,7 +779,7 @@ def get_agent_log(report_id: str):
                         "report_id": "report_xxxx",
                         "action": "tool_call",
                         "stage": "generating",
-                        "section_title": "执行摘要",
+                        "section_title": "æ‰§è¡Œæ‘˜è¦",
                         "section_index": 1,
                         "details": {
                             "tool_name": "insight_forge",
@@ -806,7 +806,7 @@ def get_agent_log(report_id: str):
         })
         
     except Exception as e:
-        logger.error(f"获取Agent日志失败: {str(e)}")
+        logger.error(f"èŽ·å–Agentæ—¥å¿—å¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -817,9 +817,9 @@ def get_agent_log(report_id: str):
 @report_bp.route('/<report_id>/agent-log/stream', methods=['GET'])
 def stream_agent_log(report_id: str):
     """
-    获取完整的 Agent 日志（一次性获取全部）
+    èŽ·å–å®Œæ•´çš„ Agent æ—¥å¿—ï¼ˆä¸€æ¬¡æ€§èŽ·å–å…¨éƒ¨ï¼‰
     
-    返回：
+    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -840,7 +840,7 @@ def stream_agent_log(report_id: str):
         })
         
     except Exception as e:
-        logger.error(f"获取Agent日志失败: {str(e)}")
+        logger.error(f"èŽ·å–Agentæ—¥å¿—å¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -848,27 +848,27 @@ def stream_agent_log(report_id: str):
         }), 500
 
 
-# ============== 控制台日志接口 ==============
+# ============== æŽ§åˆ¶å°æ—¥å¿—æŽ¥å£ ==============
 
 @report_bp.route('/<report_id>/console-log', methods=['GET'])
 def get_console_log(report_id: str):
     """
-    获取 Report Agent 的控制台输出日志
+    èŽ·å– Report Agent çš„æŽ§åˆ¶å°è¾“å‡ºæ—¥å¿—
     
-    实时获取报告生成过程中的控制台输出（INFO、WARNING等），
-    这与 agent-log 接口返回的结构化 JSON 日志不同，
-    是纯文本格式的控制台风格日志。
+    å®žæ—¶èŽ·å–æŠ¥å‘Šç”Ÿæˆè¿‡ç¨‹ä¸­çš„æŽ§åˆ¶å°è¾“å‡ºï¼ˆINFOã€WARNINGç­‰ï¼‰ï¼Œ
+    è¿™ä¸Ž agent-log æŽ¥å£è¿”å›žçš„ç»“æž„åŒ– JSON æ—¥å¿—ä¸åŒï¼Œ
+    æ˜¯çº¯æ–‡æœ¬æ ¼å¼çš„æŽ§åˆ¶å°é£Žæ ¼æ—¥å¿—ã€‚
     
-    Query参数：
-        from_line: 从第几行开始读取（可选，默认0，用于增量获取）
+    Queryå‚æ•°ï¼š
+        from_line: ä»Žç¬¬å‡ è¡Œå¼€å§‹è¯»å–ï¼ˆå¯é€‰ï¼Œé»˜è®¤0ï¼Œç”¨äºŽå¢žé‡èŽ·å–ï¼‰
     
-    返回：
+    è¿”å›žï¼š
         {
             "success": true,
             "data": {
                 "logs": [
-                    "[19:46:14] INFO: 搜索完成: 找到 15 条相关事实",
-                    "[19:46:14] INFO: 图谱搜索: graph_id=xxx, query=...",
+                    "[19:46:14] INFO: æœç´¢å®Œæˆ: æ‰¾åˆ° 15 æ¡ç›¸å…³äº‹å®ž",
+                    "[19:46:14] INFO: å›¾è°±æœç´¢: graph_id=xxx, query=...",
                     ...
                 ],
                 "total_lines": 100,
@@ -888,7 +888,7 @@ def get_console_log(report_id: str):
         })
         
     except Exception as e:
-        logger.error(f"获取控制台日志失败: {str(e)}")
+        logger.error(f"èŽ·å–æŽ§åˆ¶å°æ—¥å¿—å¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -899,9 +899,9 @@ def get_console_log(report_id: str):
 @report_bp.route('/<report_id>/console-log/stream', methods=['GET'])
 def stream_console_log(report_id: str):
     """
-    获取完整的控制台日志（一次性获取全部）
+    èŽ·å–å®Œæ•´çš„æŽ§åˆ¶å°æ—¥å¿—ï¼ˆä¸€æ¬¡æ€§èŽ·å–å…¨éƒ¨ï¼‰
     
-    返回：
+    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -922,7 +922,7 @@ def stream_console_log(report_id: str):
         })
         
     except Exception as e:
-        logger.error(f"获取控制台日志失败: {str(e)}")
+        logger.error(f"èŽ·å–æŽ§åˆ¶å°æ—¥å¿—å¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -930,17 +930,17 @@ def stream_console_log(report_id: str):
         }), 500
 
 
-# ============== 工具调用接口（供调试使用）==============
+# ============== å·¥å…·è°ƒç”¨æŽ¥å£ï¼ˆä¾›è°ƒè¯•ä½¿ç”¨ï¼‰==============
 
 @report_bp.route('/tools/search', methods=['POST'])
 def search_graph_tool():
     """
-    图谱搜索工具接口（供调试使用）
+    å›¾è°±æœç´¢å·¥å…·æŽ¥å£ï¼ˆä¾›è°ƒè¯•ä½¿ç”¨ï¼‰
     
-    请求（JSON）：
+    è¯·æ±‚ï¼ˆJSONï¼‰ï¼š
         {
-            "graph_id": "mirofish_xxxx",
-            "query": "搜索查询",
+            "graph_id": "posiedon_xxxx",
+            "query": "æœç´¢æŸ¥è¯¢",
             "limit": 10
         }
     """
@@ -972,7 +972,7 @@ def search_graph_tool():
         })
         
     except Exception as e:
-        logger.error(f"图谱搜索失败: {str(e)}")
+        logger.error(f"å›¾è°±æœç´¢å¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -983,11 +983,11 @@ def search_graph_tool():
 @report_bp.route('/tools/statistics', methods=['POST'])
 def get_graph_statistics_tool():
     """
-    图谱统计工具接口（供调试使用）
+    å›¾è°±ç»Ÿè®¡å·¥å…·æŽ¥å£ï¼ˆä¾›è°ƒè¯•ä½¿ç”¨ï¼‰
     
-    请求（JSON）：
+    è¯·æ±‚ï¼ˆJSONï¼‰ï¼š
         {
-            "graph_id": "mirofish_xxxx"
+            "graph_id": "posiedon_xxxx"
         }
     """
     try:
@@ -1012,7 +1012,7 @@ def get_graph_statistics_tool():
         })
         
     except Exception as e:
-        logger.error(f"获取图谱统计失败: {str(e)}")
+        logger.error(f"èŽ·å–å›¾è°±ç»Ÿè®¡å¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),

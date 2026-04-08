@@ -1,18 +1,18 @@
 <template>
   <div class="home-container">
-    <!-- 顶部导航栏 -->
+    <!-- Ã©Â¡Â¶Ã©Æ’Â¨Ã¥Â¯Â¼Ã¨Ë†ÂªÃ¦Â Â -->
     <nav class="navbar">
-      <div class="nav-brand">MIROFISH</div>
+      <div class="nav-brand">POSIEDON</div>
       <div class="nav-links">
         <LanguageSwitcher />
-        <a href="https://github.com/666ghj/MiroFish" target="_blank" class="github-link">
-          {{ $t('nav.visitGithub') }} <span class="arrow">↗</span>
+        <a href="https://github.com/Shivasomesh-cpu/MiroFish" target="_blank" class="github-link">
+          {{ $t('nav.visitGithub') }} <span class="arrow">Ã¢â€ â€”</span>
         </a>
       </div>
     </nav>
 
     <div class="main-content">
-      <!-- 上半部分：Hero 区域 -->
+      <!-- Ã¤Â¸Å Ã¥ÂÅ Ã©Æ’Â¨Ã¥Ë†â€ Ã¯Â¼Å¡Hero Ã¥Å’ÂºÃ¥Å¸Å¸ -->
       <section class="hero-section">
         <div class="hero-left">
           <div class="tag-row">
@@ -42,23 +42,23 @@
         </div>
         
         <div class="hero-right">
-          <!-- Logo 区域 -->
+          <!-- Logo Ã¥Å’ÂºÃ¥Å¸Å¸ -->
           <div class="logo-container">
-            <img src="../assets/logo/MiroFish_logo_left.jpeg" alt="MiroFish Logo" class="hero-logo" />
+            <img src="../assets/logo/MiroFish_logo_left.jpeg" alt="Posiedon Logo" class="hero-logo" />
           </div>
           
           <button class="scroll-down-btn" @click="scrollToBottom">
-            ↓
+            Ã¢â€ â€œ
           </button>
         </div>
       </section>
 
-      <!-- 下半部分：双栏布局 -->
+      <!-- Ã¤Â¸â€¹Ã¥ÂÅ Ã©Æ’Â¨Ã¥Ë†â€ Ã¯Â¼Å¡Ã¥ÂÅ’Ã¦Â ÂÃ¥Â¸Æ’Ã¥Â±â‚¬ -->
       <section class="dashboard-section">
-        <!-- 左栏：状态与步骤 -->
+        <!-- Ã¥Â·Â¦Ã¦Â ÂÃ¯Â¼Å¡Ã§Å Â¶Ã¦â‚¬ÂÃ¤Â¸Å½Ã¦Â­Â¥Ã©ÂªÂ¤ -->
         <div class="left-panel">
           <div class="panel-header">
-            <span class="status-dot">■</span> {{ $t('home.systemStatus') }}
+            <span class="status-dot">Ã¢â€“Â </span> {{ $t('home.systemStatus') }}
           </div>
           
           <h2 class="section-title">{{ $t('home.systemReady') }}</h2>
@@ -66,7 +66,7 @@
             {{ $t('home.systemReadyDesc') }}
           </p>
           
-          <!-- 数据指标卡片 -->
+          <!-- Ã¦â€¢Â°Ã¦ÂÂ®Ã¦Å’â€¡Ã¦Â â€¡Ã¥ÂÂ¡Ã§â€°â€¡ -->
           <div class="metrics-row">
             <div class="metric-card">
               <div class="metric-value">{{ $t('home.metricLowCost') }}</div>
@@ -78,10 +78,10 @@
             </div>
           </div>
 
-          <!-- 项目模拟步骤介绍 (新增区域) -->
+          <!-- Ã©Â¡Â¹Ã§â€ºÂ®Ã¦Â¨Â¡Ã¦â€¹Å¸Ã¦Â­Â¥Ã©ÂªÂ¤Ã¤Â»â€¹Ã§Â»Â (Ã¦â€“Â°Ã¥Â¢Å¾Ã¥Å’ÂºÃ¥Å¸Å¸) -->
           <div class="steps-container">
             <div class="steps-header">
-               <span class="diamond-icon">◇</span> {{ $t('home.workflowSequence') }}
+               <span class="diamond-icon">Ã¢â€”â€¡</span> {{ $t('home.workflowSequence') }}
             </div>
             <div class="workflow-list">
               <div class="workflow-item">
@@ -123,10 +123,10 @@
           </div>
         </div>
 
-        <!-- 右栏：交互控制台 -->
+        <!-- Ã¥ÂÂ³Ã¦Â ÂÃ¯Â¼Å¡Ã¤ÂºÂ¤Ã¤Âºâ€™Ã¦Å½Â§Ã¥Ë†Â¶Ã¥ÂÂ° -->
         <div class="right-panel">
           <div class="console-box">
-            <!-- 上传区域 -->
+            <!-- Ã¤Â¸Å Ã¤Â¼Â Ã¥Å’ÂºÃ¥Å¸Å¸ -->
             <div class="console-section">
               <div class="console-header">
                 <span class="console-label">{{ $t('home.realitySeed') }}</span>
@@ -152,27 +152,27 @@
                 />
                 
                 <div v-if="files.length === 0" class="upload-placeholder">
-                  <div class="upload-icon">↑</div>
+                  <div class="upload-icon">Ã¢â€ â€˜</div>
                   <div class="upload-title">{{ $t('home.dragToUpload') }}</div>
                   <div class="upload-hint">{{ $t('home.orBrowse') }}</div>
                 </div>
                 
                 <div v-else class="file-list">
                   <div v-for="(file, index) in files" :key="index" class="file-item">
-                    <span class="file-icon">📄</span>
+                    <span class="file-icon">Ã°Å¸â€œâ€ž</span>
                     <span class="file-name">{{ file.name }}</span>
-                    <button @click.stop="removeFile(index)" class="remove-btn">×</button>
+                    <button @click.stop="removeFile(index)" class="remove-btn">Ãƒâ€”</button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- 分割线 -->
+            <!-- Ã¥Ë†â€ Ã¥â€°Â²Ã§ÂºÂ¿ -->
             <div class="console-divider">
               <span>{{ $t('home.inputParams') }}</span>
             </div>
 
-            <!-- 输入区域 -->
+            <!-- Ã¨Â¾â€œÃ¥â€¦Â¥Ã¥Å’ÂºÃ¥Å¸Å¸ -->
             <div class="console-section">
               <div class="console-header">
                 <span class="console-label">{{ $t('home.simulationPrompt') }}</span>
@@ -189,7 +189,7 @@
               </div>
             </div>
 
-            <!-- 启动按钮 -->
+            <!-- Ã¥ÂÂ¯Ã¥Å Â¨Ã¦Å’â€°Ã©â€™Â® -->
             <div class="console-section btn-section">
               <button 
                 class="start-engine-btn"
@@ -198,14 +198,14 @@
               >
                 <span v-if="!loading">{{ $t('home.startEngine') }}</span>
                 <span v-else>{{ $t('home.initializing') }}</span>
-                <span class="btn-arrow">→</span>
+                <span class="btn-arrow">Ã¢â€ â€™</span>
               </button>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- 历史项目数据库 -->
+      <!-- Ã¥Å½â€ Ã¥ÂÂ²Ã©Â¡Â¹Ã§â€ºÂ®Ã¦â€¢Â°Ã¦ÂÂ®Ã¥Âºâ€œ -->
       <HistoryDatabase />
     </div>
   </div>
@@ -219,41 +219,41 @@ import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 
 const router = useRouter()
 
-// 表单数据
+// Ã¨Â¡Â¨Ã¥Ââ€¢Ã¦â€¢Â°Ã¦ÂÂ®
 const formData = ref({
   simulationRequirement: ''
 })
 
-// 文件列表
+// Ã¦â€“â€¡Ã¤Â»Â¶Ã¥Ë†â€”Ã¨Â¡Â¨
 const files = ref([])
 
-// 状态
+// Ã§Å Â¶Ã¦â‚¬Â
 const loading = ref(false)
 const error = ref('')
 const isDragOver = ref(false)
 
-// 文件输入引用
+// Ã¦â€“â€¡Ã¤Â»Â¶Ã¨Â¾â€œÃ¥â€¦Â¥Ã¥Â¼â€¢Ã§â€Â¨
 const fileInput = ref(null)
 
-// 计算属性:是否可以提交
+// Ã¨Â®Â¡Ã§Â®â€”Ã¥Â±Å¾Ã¦â‚¬Â§:Ã¦ËœÂ¯Ã¥ÂÂ¦Ã¥ÂÂ¯Ã¤Â»Â¥Ã¦ÂÂÃ¤ÂºÂ¤
 const canSubmit = computed(() => {
   return formData.value.simulationRequirement.trim() !== '' && files.value.length > 0
 })
 
-// 触发文件选择
+// Ã¨Â§Â¦Ã¥Ââ€˜Ã¦â€“â€¡Ã¤Â»Â¶Ã©â‚¬â€°Ã¦â€¹Â©
 const triggerFileInput = () => {
   if (!loading.value) {
     fileInput.value?.click()
   }
 }
 
-// 处理文件选择
+// Ã¥Â¤â€žÃ§Ââ€ Ã¦â€“â€¡Ã¤Â»Â¶Ã©â‚¬â€°Ã¦â€¹Â©
 const handleFileSelect = (event) => {
   const selectedFiles = Array.from(event.target.files)
   addFiles(selectedFiles)
 }
 
-// 处理拖拽相关
+// Ã¥Â¤â€žÃ§Ââ€ Ã¦â€¹â€“Ã¦â€¹Â½Ã§â€ºÂ¸Ã¥â€¦Â³
 const handleDragOver = (e) => {
   if (!loading.value) {
     isDragOver.value = true
@@ -272,7 +272,7 @@ const handleDrop = (e) => {
   addFiles(droppedFiles)
 }
 
-// 添加文件
+// Ã¦Â·Â»Ã¥Å Â Ã¦â€“â€¡Ã¤Â»Â¶
 const addFiles = (newFiles) => {
   const validFiles = newFiles.filter(file => {
     const ext = file.name.split('.').pop().toLowerCase()
@@ -281,12 +281,12 @@ const addFiles = (newFiles) => {
   files.value.push(...validFiles)
 }
 
-// 移除文件
+// Ã§Â§Â»Ã©â„¢Â¤Ã¦â€“â€¡Ã¤Â»Â¶
 const removeFile = (index) => {
   files.value.splice(index, 1)
 }
 
-// 滚动到底部
+// Ã¦Â»Å¡Ã¥Å Â¨Ã¥Ë†Â°Ã¥Âºâ€¢Ã©Æ’Â¨
 const scrollToBottom = () => {
   window.scrollTo({
     top: document.body.scrollHeight,
@@ -294,15 +294,15 @@ const scrollToBottom = () => {
   })
 }
 
-// 开始模拟 - 立即跳转，API调用在Process页面进行
+// Ã¥Â¼â‚¬Ã¥Â§â€¹Ã¦Â¨Â¡Ã¦â€¹Å¸ - Ã§Â«â€¹Ã¥ÂÂ³Ã¨Â·Â³Ã¨Â½Â¬Ã¯Â¼Å’APIÃ¨Â°Æ’Ã§â€Â¨Ã¥Å“Â¨ProcessÃ©Â¡ÂµÃ©ÂÂ¢Ã¨Â¿â€ºÃ¨Â¡Å’
 const startSimulation = () => {
   if (!canSubmit.value || loading.value) return
   
-  // 存储待上传的数据
+  // Ã¥Â­ËœÃ¥â€šÂ¨Ã¥Â¾â€¦Ã¤Â¸Å Ã¤Â¼Â Ã§Å¡â€žÃ¦â€¢Â°Ã¦ÂÂ®
   import('../store/pendingUpload.js').then(({ setPendingUpload }) => {
     setPendingUpload(files.value, formData.value.simulationRequirement)
     
-    // 立即跳转到Process页面（使用特殊标识表示新建项目）
+    // Ã§Â«â€¹Ã¥ÂÂ³Ã¨Â·Â³Ã¨Â½Â¬Ã¥Ë†Â°ProcessÃ©Â¡ÂµÃ©ÂÂ¢Ã¯Â¼Ë†Ã¤Â½Â¿Ã§â€Â¨Ã§â€°Â¹Ã¦Â®Å Ã¦Â â€¡Ã¨Â¯â€ Ã¨Â¡Â¨Ã§Â¤ÂºÃ¦â€“Â°Ã¥Â»ÂºÃ©Â¡Â¹Ã§â€ºÂ®Ã¯Â¼â€°
     router.push({
       name: 'Process',
       params: { projectId: 'new' }
@@ -312,7 +312,7 @@ const startSimulation = () => {
 </script>
 
 <style scoped>
-/* 全局变量与重置 */
+/* Ã¥â€¦Â¨Ã¥Â±â‚¬Ã¥ÂËœÃ©â€¡ÂÃ¤Â¸Å½Ã©â€¡ÂÃ§Â½Â® */
 :root {
   --black: #000000;
   --white: #FFFFFF;
@@ -321,8 +321,8 @@ const startSimulation = () => {
   --gray-text: #666666;
   --border: #E5E5E5;
   /* 
-    使用 Space Grotesk 作为主要标题字体，JetBrains Mono 作为代码/标签字体
-    确保已在 index.html 引入这些 Google Fonts 
+    Ã¤Â½Â¿Ã§â€Â¨ Space Grotesk Ã¤Â½Å“Ã¤Â¸ÂºÃ¤Â¸Â»Ã¨Â¦ÂÃ¦Â â€¡Ã©Â¢ËœÃ¥Â­â€”Ã¤Â½â€œÃ¯Â¼Å’JetBrains Mono Ã¤Â½Å“Ã¤Â¸ÂºÃ¤Â»Â£Ã§Â Â/Ã¦Â â€¡Ã§Â­Â¾Ã¥Â­â€”Ã¤Â½â€œ
+    Ã§Â¡Â®Ã¤Â¿ÂÃ¥Â·Â²Ã¥Å“Â¨ index.html Ã¥Â¼â€¢Ã¥â€¦Â¥Ã¨Â¿â„¢Ã¤Âºâ€º Google Fonts 
   */
   --font-mono: 'JetBrains Mono', monospace;
   --font-sans: 'Space Grotesk', 'Noto Sans SC', system-ui, sans-serif;
@@ -336,7 +336,7 @@ const startSimulation = () => {
   color: var(--black);
 }
 
-/* 顶部导航 */
+/* Ã©Â¡Â¶Ã©Æ’Â¨Ã¥Â¯Â¼Ã¨Ë†Âª */
 .navbar {
   height: 60px;
   background: var(--black);
@@ -380,14 +380,14 @@ const startSimulation = () => {
   font-family: sans-serif;
 }
 
-/* 主要内容区 */
+/* Ã¤Â¸Â»Ã¨Â¦ÂÃ¥â€ â€¦Ã¥Â®Â¹Ã¥Å’Âº */
 .main-content {
   max-width: 1400px;
   margin: 0 auto;
   padding: 60px 40px;
 }
 
-/* Hero 区域 */
+/* Hero Ã¥Å’ÂºÃ¥Å¸Å¸ */
 .hero-section {
   display: flex;
   justify-content: space-between;
@@ -518,7 +518,7 @@ const startSimulation = () => {
 }
 
 .hero-logo {
-  max-width: 500px; /* 调整logo大小 */
+  max-width: 500px; /* Ã¨Â°Æ’Ã¦â€¢Â´logoÃ¥Â¤Â§Ã¥Â°Â */
   width: 100%;
 }
 
@@ -540,7 +540,7 @@ const startSimulation = () => {
   border-color: var(--orange);
 }
 
-/* Dashboard 双栏布局 */
+/* Dashboard Ã¥ÂÅ’Ã¦Â ÂÃ¥Â¸Æ’Ã¥Â±â‚¬ */
 .dashboard-section {
   display: flex;
   gap: 60px;
@@ -555,7 +555,7 @@ const startSimulation = () => {
   flex-direction: column;
 }
 
-/* 左侧面板 */
+/* Ã¥Â·Â¦Ã¤Â¾Â§Ã©ÂÂ¢Ã¦ÂÂ¿ */
 .left-panel {
   flex: 0.8;
 }
@@ -611,7 +611,7 @@ const startSimulation = () => {
   color: #999;
 }
 
-/* 项目模拟步骤介绍 */
+/* Ã©Â¡Â¹Ã§â€ºÂ®Ã¦Â¨Â¡Ã¦â€¹Å¸Ã¦Â­Â¥Ã©ÂªÂ¤Ã¤Â»â€¹Ã§Â»Â */
 .steps-container {
   border: 1px solid var(--border);
   padding: 30px;
@@ -667,14 +667,14 @@ const startSimulation = () => {
   color: var(--gray-text);
 }
 
-/* 右侧交互控制台 */
+/* Ã¥ÂÂ³Ã¤Â¾Â§Ã¤ÂºÂ¤Ã¤Âºâ€™Ã¦Å½Â§Ã¥Ë†Â¶Ã¥ÂÂ° */
 .right-panel {
   flex: 1.2;
 }
 
 .console-box {
-  border: 1px solid #CCC; /* 外部实线 */
-  padding: 8px; /* 内边距形成双重边框感 */
+  border: 1px solid #CCC; /* Ã¥Â¤â€“Ã©Æ’Â¨Ã¥Â®Å¾Ã§ÂºÂ¿ */
+  padding: 8px; /* Ã¥â€ â€¦Ã¨Â¾Â¹Ã¨Â·ÂÃ¥Â½Â¢Ã¦Ë†ÂÃ¥ÂÅ’Ã©â€¡ÂÃ¨Â¾Â¹Ã¦Â¡â€ Ã¦â€žÅ¸ */
 }
 
 .console-section {
@@ -842,7 +842,7 @@ const startSimulation = () => {
   overflow: hidden;
 }
 
-/* 可点击状态（非禁用） */
+/* Ã¥ÂÂ¯Ã§â€šÂ¹Ã¥â€¡Â»Ã§Å Â¶Ã¦â‚¬ÂÃ¯Â¼Ë†Ã©ÂÅ¾Ã§Â¦ÂÃ§â€Â¨Ã¯Â¼â€° */
 .start-engine-btn:not(:disabled) {
   background: var(--black);
   border: 1px solid var(--black);
@@ -867,14 +867,14 @@ const startSimulation = () => {
   border: 1px solid #E5E5E5;
 }
 
-/* 引导动画：微妙的边框脉冲 */
+/* Ã¥Â¼â€¢Ã¥Â¯Â¼Ã¥Å Â¨Ã§â€Â»Ã¯Â¼Å¡Ã¥Â¾Â®Ã¥Â¦â„¢Ã§Å¡â€žÃ¨Â¾Â¹Ã¦Â¡â€ Ã¨â€žâ€°Ã¥â€ Â² */
 @keyframes pulse-border {
   0% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.2); }
   70% { box-shadow: 0 0 0 6px rgba(0, 0, 0, 0); }
   100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
 }
 
-/* 响应式适配 */
+/* Ã¥â€œÂÃ¥Âºâ€Ã¥Â¼ÂÃ©â‚¬â€šÃ©â€¦Â */
 @media (max-width: 1024px) {
   .dashboard-section {
     flex-direction: column;

@@ -1,6 +1,6 @@
 """
-日志配置模块
-提供统一的日志管理，同时输出到控制台和文件
+æ—¥å¿—é…ç½®æ¨¡å—
+æä¾›ç»Ÿä¸€çš„æ—¥å¿—ç®¡ç†ï¼ŒåŒæ—¶è¾“å‡ºåˆ°æŽ§åˆ¶å°å’Œæ–‡ä»¶
 """
 
 import os
@@ -12,47 +12,47 @@ from logging.handlers import RotatingFileHandler
 
 def _ensure_utf8_stdout():
     """
-    确保 stdout/stderr 使用 UTF-8 编码
-    解决 Windows 控制台中文乱码问题
+    ç¡®ä¿ stdout/stderr ä½¿ç”¨ UTF-8 ç¼–ç 
+    è§£å†³ Windows æŽ§åˆ¶å°ä¸­æ–‡ä¹±ç é—®é¢˜
     """
     if sys.platform == 'win32':
-        # Windows 下重新配置标准输出为 UTF-8
+        # Windows ä¸‹é‡æ–°é…ç½®æ ‡å‡†è¾“å‡ºä¸º UTF-8
         if hasattr(sys.stdout, 'reconfigure'):
             sys.stdout.reconfigure(encoding='utf-8', errors='replace')
         if hasattr(sys.stderr, 'reconfigure'):
             sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
 
-# 日志目录
+# æ—¥å¿—ç›®å½•
 LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
 
 
-def setup_logger(name: str = 'mirofish', level: int = logging.DEBUG) -> logging.Logger:
+def setup_logger(name: str = 'posiedon', level: int = logging.DEBUG) -> logging.Logger:
     """
-    设置日志器
+    è®¾ç½®æ—¥å¿—å™¨
     
     Args:
-        name: 日志器名称
-        level: 日志级别
+        name: æ—¥å¿—å™¨åç§°
+        level: æ—¥å¿—çº§åˆ«
         
     Returns:
-        配置好的日志器
+        é…ç½®å¥½çš„æ—¥å¿—å™¨
     """
-    # 确保日志目录存在
+    # ç¡®ä¿æ—¥å¿—ç›®å½•å­˜åœ¨
     os.makedirs(LOG_DIR, exist_ok=True)
     
-    # 创建日志器
+    # åˆ›å»ºæ—¥å¿—å™¨
     logger = logging.getLogger(name)
     logger.setLevel(level)
     
-    # 阻止日志向上传播到根 logger，避免重复输出
+    # é˜»æ­¢æ—¥å¿—å‘ä¸Šä¼ æ’­åˆ°æ ¹ loggerï¼Œé¿å…é‡å¤è¾“å‡º
     logger.propagate = False
     
-    # 如果已经有处理器，不重复添加
+    # å¦‚æžœå·²ç»æœ‰å¤„ç†å™¨ï¼Œä¸é‡å¤æ·»åŠ 
     if logger.handlers:
         return logger
     
-    # 日志格式
+    # æ—¥å¿—æ ¼å¼
     detailed_formatter = logging.Formatter(
         '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
@@ -63,7 +63,7 @@ def setup_logger(name: str = 'mirofish', level: int = logging.DEBUG) -> logging.
         datefmt='%H:%M:%S'
     )
     
-    # 1. 文件处理器 - 详细日志（按日期命名，带轮转）
+    # 1. æ–‡ä»¶å¤„ç†å™¨ - è¯¦ç»†æ—¥å¿—ï¼ˆæŒ‰æ—¥æœŸå‘½åï¼Œå¸¦è½®è½¬ï¼‰
     log_filename = datetime.now().strftime('%Y-%m-%d') + '.log'
     file_handler = RotatingFileHandler(
         os.path.join(LOG_DIR, log_filename),
@@ -74,29 +74,29 @@ def setup_logger(name: str = 'mirofish', level: int = logging.DEBUG) -> logging.
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(detailed_formatter)
     
-    # 2. 控制台处理器 - 简洁日志（INFO及以上）
-    # 确保 Windows 下使用 UTF-8 编码，避免中文乱码
+    # 2. æŽ§åˆ¶å°å¤„ç†å™¨ - ç®€æ´æ—¥å¿—ï¼ˆINFOåŠä»¥ä¸Šï¼‰
+    # ç¡®ä¿ Windows ä¸‹ä½¿ç”¨ UTF-8 ç¼–ç ï¼Œé¿å…ä¸­æ–‡ä¹±ç 
     _ensure_utf8_stdout()
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(simple_formatter)
     
-    # 添加处理器
+    # æ·»åŠ å¤„ç†å™¨
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
     
     return logger
 
 
-def get_logger(name: str = 'mirofish') -> logging.Logger:
+def get_logger(name: str = 'posiedon') -> logging.Logger:
     """
-    获取日志器（如果不存在则创建）
+    èŽ·å–æ—¥å¿—å™¨ï¼ˆå¦‚æžœä¸å­˜åœ¨åˆ™åˆ›å»ºï¼‰
     
     Args:
-        name: 日志器名称
+        name: æ—¥å¿—å™¨åç§°
         
     Returns:
-        日志器实例
+        æ—¥å¿—å™¨å®žä¾‹
     """
     logger = logging.getLogger(name)
     if not logger.handlers:
@@ -104,11 +104,11 @@ def get_logger(name: str = 'mirofish') -> logging.Logger:
     return logger
 
 
-# 创建默认日志器
+# åˆ›å»ºé»˜è®¤æ—¥å¿—å™¨
 logger = setup_logger()
 
 
-# 便捷方法
+# ä¾¿æ·æ–¹æ³•
 def debug(msg, *args, **kwargs):
     logger.debug(msg, *args, **kwargs)
 

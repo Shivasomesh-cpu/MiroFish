@@ -1,6 +1,6 @@
 """
-API调用重试机制
-用于处理LLM等外部API调用的重试逻辑
+APIè°ƒç”¨é‡è¯•æœºåˆ¶
+ç”¨äºŽå¤„ç†LLMç­‰å¤–éƒ¨APIè°ƒç”¨çš„é‡è¯•é€»è¾‘
 """
 
 import time
@@ -9,7 +9,7 @@ import functools
 from typing import Callable, Any, Optional, Type, Tuple
 from ..utils.logger import get_logger
 
-logger = get_logger('mirofish.retry')
+logger = get_logger('posiedon.retry')
 
 
 def retry_with_backoff(
@@ -22,16 +22,16 @@ def retry_with_backoff(
     on_retry: Optional[Callable[[Exception, int], None]] = None
 ):
     """
-    带指数退避的重试装饰器
+    å¸¦æŒ‡æ•°é€€é¿çš„é‡è¯•è£…é¥°å™¨
     
     Args:
-        max_retries: 最大重试次数
-        initial_delay: 初始延迟（秒）
-        max_delay: 最大延迟（秒）
-        backoff_factor: 退避因子
-        jitter: 是否添加随机抖动
-        exceptions: 需要重试的异常类型
-        on_retry: 重试时的回调函数 (exception, retry_count)
+        max_retries: æœ€å¤§é‡è¯•æ¬¡æ•°
+        initial_delay: åˆå§‹å»¶è¿Ÿï¼ˆç§’ï¼‰
+        max_delay: æœ€å¤§å»¶è¿Ÿï¼ˆç§’ï¼‰
+        backoff_factor: é€€é¿å› å­
+        jitter: æ˜¯å¦æ·»åŠ éšæœºæŠ–åŠ¨
+        exceptions: éœ€è¦é‡è¯•çš„å¼‚å¸¸ç±»åž‹
+        on_retry: é‡è¯•æ—¶çš„å›žè°ƒå‡½æ•° (exception, retry_count)
     
     Usage:
         @retry_with_backoff(max_retries=3)
@@ -52,17 +52,17 @@ def retry_with_backoff(
                     last_exception = e
                     
                     if attempt == max_retries:
-                        logger.error(f"函数 {func.__name__} 在 {max_retries} 次重试后仍失败: {str(e)}")
+                        logger.error(f"å‡½æ•° {func.__name__} åœ¨ {max_retries} æ¬¡é‡è¯•åŽä»å¤±è´¥: {str(e)}")
                         raise
                     
-                    # 计算延迟
+                    # è®¡ç®—å»¶è¿Ÿ
                     current_delay = min(delay, max_delay)
                     if jitter:
                         current_delay = current_delay * (0.5 + random.random())
                     
                     logger.warning(
-                        f"函数 {func.__name__} 第 {attempt + 1} 次尝试失败: {str(e)}, "
-                        f"{current_delay:.1f}秒后重试..."
+                        f"å‡½æ•° {func.__name__} ç¬¬ {attempt + 1} æ¬¡å°è¯•å¤±è´¥: {str(e)}, "
+                        f"{current_delay:.1f}ç§’åŽé‡è¯•..."
                     )
                     
                     if on_retry:
@@ -87,7 +87,7 @@ def retry_with_backoff_async(
     on_retry: Optional[Callable[[Exception, int], None]] = None
 ):
     """
-    异步版本的重试装饰器
+    å¼‚æ­¥ç‰ˆæœ¬çš„é‡è¯•è£…é¥°å™¨
     """
     import asyncio
     
@@ -105,7 +105,7 @@ def retry_with_backoff_async(
                     last_exception = e
                     
                     if attempt == max_retries:
-                        logger.error(f"异步函数 {func.__name__} 在 {max_retries} 次重试后仍失败: {str(e)}")
+                        logger.error(f"å¼‚æ­¥å‡½æ•° {func.__name__} åœ¨ {max_retries} æ¬¡é‡è¯•åŽä»å¤±è´¥: {str(e)}")
                         raise
                     
                     current_delay = min(delay, max_delay)
@@ -113,8 +113,8 @@ def retry_with_backoff_async(
                         current_delay = current_delay * (0.5 + random.random())
                     
                     logger.warning(
-                        f"异步函数 {func.__name__} 第 {attempt + 1} 次尝试失败: {str(e)}, "
-                        f"{current_delay:.1f}秒后重试..."
+                        f"å¼‚æ­¥å‡½æ•° {func.__name__} ç¬¬ {attempt + 1} æ¬¡å°è¯•å¤±è´¥: {str(e)}, "
+                        f"{current_delay:.1f}ç§’åŽé‡è¯•..."
                     )
                     
                     if on_retry:
@@ -131,7 +131,7 @@ def retry_with_backoff_async(
 
 class RetryableAPIClient:
     """
-    可重试的API客户端封装
+    å¯é‡è¯•çš„APIå®¢æˆ·ç«¯å°è£…
     """
     
     def __init__(
@@ -154,16 +154,16 @@ class RetryableAPIClient:
         **kwargs
     ) -> Any:
         """
-        执行函数调用并在失败时重试
+        æ‰§è¡Œå‡½æ•°è°ƒç”¨å¹¶åœ¨å¤±è´¥æ—¶é‡è¯•
         
         Args:
-            func: 要调用的函数
-            *args: 函数参数
-            exceptions: 需要重试的异常类型
-            **kwargs: 函数关键字参数
+            func: è¦è°ƒç”¨çš„å‡½æ•°
+            *args: å‡½æ•°å‚æ•°
+            exceptions: éœ€è¦é‡è¯•çš„å¼‚å¸¸ç±»åž‹
+            **kwargs: å‡½æ•°å…³é”®å­—å‚æ•°
             
         Returns:
-            函数返回值
+            å‡½æ•°è¿”å›žå€¼
         """
         last_exception = None
         delay = self.initial_delay
@@ -176,15 +176,15 @@ class RetryableAPIClient:
                 last_exception = e
                 
                 if attempt == self.max_retries:
-                    logger.error(f"API调用在 {self.max_retries} 次重试后仍失败: {str(e)}")
+                    logger.error(f"APIè°ƒç”¨åœ¨ {self.max_retries} æ¬¡é‡è¯•åŽä»å¤±è´¥: {str(e)}")
                     raise
                 
                 current_delay = min(delay, self.max_delay)
                 current_delay = current_delay * (0.5 + random.random())
                 
                 logger.warning(
-                    f"API调用第 {attempt + 1} 次尝试失败: {str(e)}, "
-                    f"{current_delay:.1f}秒后重试..."
+                    f"APIè°ƒç”¨ç¬¬ {attempt + 1} æ¬¡å°è¯•å¤±è´¥: {str(e)}, "
+                    f"{current_delay:.1f}ç§’åŽé‡è¯•..."
                 )
                 
                 time.sleep(current_delay)
@@ -200,16 +200,16 @@ class RetryableAPIClient:
         continue_on_failure: bool = True
     ) -> Tuple[list, list]:
         """
-        批量调用并对每个失败项单独重试
+        æ‰¹é‡è°ƒç”¨å¹¶å¯¹æ¯ä¸ªå¤±è´¥é¡¹å•ç‹¬é‡è¯•
         
         Args:
-            items: 要处理的项目列表
-            process_func: 处理函数，接收单个item作为参数
-            exceptions: 需要重试的异常类型
-            continue_on_failure: 单项失败后是否继续处理其他项
+            items: è¦å¤„ç†çš„é¡¹ç›®åˆ—è¡¨
+            process_func: å¤„ç†å‡½æ•°ï¼ŒæŽ¥æ”¶å•ä¸ªitemä½œä¸ºå‚æ•°
+            exceptions: éœ€è¦é‡è¯•çš„å¼‚å¸¸ç±»åž‹
+            continue_on_failure: å•é¡¹å¤±è´¥åŽæ˜¯å¦ç»§ç»­å¤„ç†å…¶ä»–é¡¹
             
         Returns:
-            (成功结果列表, 失败项列表)
+            (æˆåŠŸç»“æžœåˆ—è¡¨, å¤±è´¥é¡¹åˆ—è¡¨)
         """
         results = []
         failures = []
@@ -224,7 +224,7 @@ class RetryableAPIClient:
                 results.append(result)
                 
             except Exception as e:
-                logger.error(f"处理第 {idx + 1} 项失败: {str(e)}")
+                logger.error(f"å¤„ç†ç¬¬ {idx + 1} é¡¹å¤±è´¥: {str(e)}")
                 failures.append({
                     "index": idx,
                     "item": item,

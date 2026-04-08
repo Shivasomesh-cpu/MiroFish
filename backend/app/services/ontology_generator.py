@@ -1,6 +1,6 @@
 """
-本体生成服务
-接口1：分析文本内容，生成适合社会模拟的实体和关系类型定义
+æœ¬ä½“ç”ŸæˆæœåŠ¡
+æŽ¥å£1ï¼šåˆ†æžæ–‡æœ¬å†…å®¹ï¼Œç”Ÿæˆé€‚åˆç¤¾ä¼šæ¨¡æ‹Ÿçš„å®žä½“å’Œå…³ç³»ç±»åž‹å®šä¹‰
 """
 
 import json
@@ -14,169 +14,169 @@ logger = logging.getLogger(__name__)
 
 
 def _to_pascal_case(name: str) -> str:
-    """将任意格式的名称转换为 PascalCase（如 'works_for' -> 'WorksFor', 'person' -> 'Person'）"""
-    # 按非字母数字字符分割
+    """å°†ä»»æ„æ ¼å¼çš„åç§°è½¬æ¢ä¸º PascalCaseï¼ˆå¦‚ 'works_for' -> 'WorksFor', 'person' -> 'Person'ï¼‰"""
+    # æŒ‰éžå­—æ¯æ•°å­—å­—ç¬¦åˆ†å‰²
     parts = re.split(r'[^a-zA-Z0-9]+', name)
-    # 再按 camelCase 边界分割（如 'camelCase' -> ['camel', 'Case']）
+    # å†æŒ‰ camelCase è¾¹ç•Œåˆ†å‰²ï¼ˆå¦‚ 'camelCase' -> ['camel', 'Case']ï¼‰
     words = []
     for part in parts:
         words.extend(re.sub(r'([a-z])([A-Z])', r'\1_\2', part).split('_'))
-    # 每个词首字母大写，过滤空串
+    # æ¯ä¸ªè¯é¦–å­—æ¯å¤§å†™ï¼Œè¿‡æ»¤ç©ºä¸²
     result = ''.join(word.capitalize() for word in words if word)
     return result if result else 'Unknown'
 
 
-# 本体生成的系统提示词
-ONTOLOGY_SYSTEM_PROMPT = """你是一个专业的知识图谱本体设计专家。你的任务是分析给定的文本内容和模拟需求，设计适合**社交媒体舆论模拟**的实体类型和关系类型。
+# æœ¬ä½“ç”Ÿæˆçš„ç³»ç»Ÿæç¤ºè¯
+ONTOLOGY_SYSTEM_PROMPT = """ä½ æ˜¯ä¸€ä¸ªä¸“ä¸šçš„çŸ¥è¯†å›¾è°±æœ¬ä½“è®¾è®¡ä¸“å®¶ã€‚ä½ çš„ä»»åŠ¡æ˜¯åˆ†æžç»™å®šçš„æ–‡æœ¬å†…å®¹å’Œæ¨¡æ‹Ÿéœ€æ±‚ï¼Œè®¾è®¡é€‚åˆ**ç¤¾äº¤åª’ä½“èˆ†è®ºæ¨¡æ‹Ÿ**çš„å®žä½“ç±»åž‹å’Œå…³ç³»ç±»åž‹ã€‚
 
-**重要：你必须输出有效的JSON格式数据，不要输出任何其他内容。**
+**é‡è¦ï¼šä½ å¿…é¡»è¾“å‡ºæœ‰æ•ˆçš„JSONæ ¼å¼æ•°æ®ï¼Œä¸è¦è¾“å‡ºä»»ä½•å…¶ä»–å†…å®¹ã€‚**
 
-## 核心任务背景
+## æ ¸å¿ƒä»»åŠ¡èƒŒæ™¯
 
-我们正在构建一个**社交媒体舆论模拟系统**。在这个系统中：
-- 每个实体都是一个可以在社交媒体上发声、互动、传播信息的"账号"或"主体"
-- 实体之间会相互影响、转发、评论、回应
-- 我们需要模拟舆论事件中各方的反应和信息传播路径
+æˆ‘ä»¬æ­£åœ¨æž„å»ºä¸€ä¸ª**ç¤¾äº¤åª’ä½“èˆ†è®ºæ¨¡æ‹Ÿç³»ç»Ÿ**ã€‚åœ¨è¿™ä¸ªç³»ç»Ÿä¸­ï¼š
+- æ¯ä¸ªå®žä½“éƒ½æ˜¯ä¸€ä¸ªå¯ä»¥åœ¨ç¤¾äº¤åª’ä½“ä¸Šå‘å£°ã€äº’åŠ¨ã€ä¼ æ’­ä¿¡æ¯çš„"è´¦å·"æˆ–"ä¸»ä½“"
+- å®žä½“ä¹‹é—´ä¼šç›¸äº’å½±å“ã€è½¬å‘ã€è¯„è®ºã€å›žåº”
+- æˆ‘ä»¬éœ€è¦æ¨¡æ‹Ÿèˆ†è®ºäº‹ä»¶ä¸­å„æ–¹çš„ååº”å’Œä¿¡æ¯ä¼ æ’­è·¯å¾„
 
-因此，**实体必须是现实中真实存在的、可以在社媒上发声和互动的主体**：
+å› æ­¤ï¼Œ**å®žä½“å¿…é¡»æ˜¯çŽ°å®žä¸­çœŸå®žå­˜åœ¨çš„ã€å¯ä»¥åœ¨ç¤¾åª’ä¸Šå‘å£°å’Œäº’åŠ¨çš„ä¸»ä½“**ï¼š
 
-**可以是**：
-- 具体的个人（公众人物、当事人、意见领袖、专家学者、普通人）
-- 公司、企业（包括其官方账号）
-- 组织机构（大学、协会、NGO、工会等）
-- 政府部门、监管机构
-- 媒体机构（报纸、电视台、自媒体、网站）
-- 社交媒体平台本身
-- 特定群体代表（如校友会、粉丝团、维权群体等）
+**å¯ä»¥æ˜¯**ï¼š
+- å…·ä½“çš„ä¸ªäººï¼ˆå…¬ä¼—äººç‰©ã€å½“äº‹äººã€æ„è§é¢†è¢–ã€ä¸“å®¶å­¦è€…ã€æ™®é€šäººï¼‰
+- å…¬å¸ã€ä¼ä¸šï¼ˆåŒ…æ‹¬å…¶å®˜æ–¹è´¦å·ï¼‰
+- ç»„ç»‡æœºæž„ï¼ˆå¤§å­¦ã€åä¼šã€NGOã€å·¥ä¼šç­‰ï¼‰
+- æ”¿åºœéƒ¨é—¨ã€ç›‘ç®¡æœºæž„
+- åª’ä½“æœºæž„ï¼ˆæŠ¥çº¸ã€ç”µè§†å°ã€è‡ªåª’ä½“ã€ç½‘ç«™ï¼‰
+- ç¤¾äº¤åª’ä½“å¹³å°æœ¬èº«
+- ç‰¹å®šç¾¤ä½“ä»£è¡¨ï¼ˆå¦‚æ ¡å‹ä¼šã€ç²‰ä¸å›¢ã€ç»´æƒç¾¤ä½“ç­‰ï¼‰
 
-**不可以是**：
-- 抽象概念（如"舆论"、"情绪"、"趋势"）
-- 主题/话题（如"学术诚信"、"教育改革"）
-- 观点/态度（如"支持方"、"反对方"）
+**ä¸å¯ä»¥æ˜¯**ï¼š
+- æŠ½è±¡æ¦‚å¿µï¼ˆå¦‚"èˆ†è®º"ã€"æƒ…ç»ª"ã€"è¶‹åŠ¿"ï¼‰
+- ä¸»é¢˜/è¯é¢˜ï¼ˆå¦‚"å­¦æœ¯è¯šä¿¡"ã€"æ•™è‚²æ”¹é©"ï¼‰
+- è§‚ç‚¹/æ€åº¦ï¼ˆå¦‚"æ”¯æŒæ–¹"ã€"åå¯¹æ–¹"ï¼‰
 
-## 输出格式
+## è¾“å‡ºæ ¼å¼
 
-请输出JSON格式，包含以下结构：
+è¯·è¾“å‡ºJSONæ ¼å¼ï¼ŒåŒ…å«ä»¥ä¸‹ç»“æž„ï¼š
 
 ```json
 {
     "entity_types": [
         {
-            "name": "实体类型名称（英文，PascalCase）",
-            "description": "简短描述（英文，不超过100字符）",
+            "name": "å®žä½“ç±»åž‹åç§°ï¼ˆè‹±æ–‡ï¼ŒPascalCaseï¼‰",
+            "description": "ç®€çŸ­æè¿°ï¼ˆè‹±æ–‡ï¼Œä¸è¶…è¿‡100å­—ç¬¦ï¼‰",
             "attributes": [
                 {
-                    "name": "属性名（英文，snake_case）",
+                    "name": "å±žæ€§åï¼ˆè‹±æ–‡ï¼Œsnake_caseï¼‰",
                     "type": "text",
-                    "description": "属性描述"
+                    "description": "å±žæ€§æè¿°"
                 }
             ],
-            "examples": ["示例实体1", "示例实体2"]
+            "examples": ["ç¤ºä¾‹å®žä½“1", "ç¤ºä¾‹å®žä½“2"]
         }
     ],
     "edge_types": [
         {
-            "name": "关系类型名称（英文，UPPER_SNAKE_CASE）",
-            "description": "简短描述（英文，不超过100字符）",
+            "name": "å…³ç³»ç±»åž‹åç§°ï¼ˆè‹±æ–‡ï¼ŒUPPER_SNAKE_CASEï¼‰",
+            "description": "ç®€çŸ­æè¿°ï¼ˆè‹±æ–‡ï¼Œä¸è¶…è¿‡100å­—ç¬¦ï¼‰",
             "source_targets": [
-                {"source": "源实体类型", "target": "目标实体类型"}
+                {"source": "æºå®žä½“ç±»åž‹", "target": "ç›®æ ‡å®žä½“ç±»åž‹"}
             ],
             "attributes": []
         }
     ],
-    "analysis_summary": "对文本内容的简要分析说明"
+    "analysis_summary": "å¯¹æ–‡æœ¬å†…å®¹çš„ç®€è¦åˆ†æžè¯´æ˜Ž"
 }
 ```
 
-## 设计指南（极其重要！）
+## è®¾è®¡æŒ‡å—ï¼ˆæžå…¶é‡è¦ï¼ï¼‰
 
-### 1. 实体类型设计 - 必须严格遵守
+### 1. å®žä½“ç±»åž‹è®¾è®¡ - å¿…é¡»ä¸¥æ ¼éµå®ˆ
 
-**数量要求：必须正好10个实体类型**
+**æ•°é‡è¦æ±‚ï¼šå¿…é¡»æ­£å¥½10ä¸ªå®žä½“ç±»åž‹**
 
-**层次结构要求（必须同时包含具体类型和兜底类型）**：
+**å±‚æ¬¡ç»“æž„è¦æ±‚ï¼ˆå¿…é¡»åŒæ—¶åŒ…å«å…·ä½“ç±»åž‹å’Œå…œåº•ç±»åž‹ï¼‰**ï¼š
 
-你的10个实体类型必须包含以下层次：
+ä½ çš„10ä¸ªå®žä½“ç±»åž‹å¿…é¡»åŒ…å«ä»¥ä¸‹å±‚æ¬¡ï¼š
 
-A. **兜底类型（必须包含，放在列表最后2个）**：
-   - `Person`: 任何自然人个体的兜底类型。当一个人不属于其他更具体的人物类型时，归入此类。
-   - `Organization`: 任何组织机构的兜底类型。当一个组织不属于其他更具体的组织类型时，归入此类。
+A. **å…œåº•ç±»åž‹ï¼ˆå¿…é¡»åŒ…å«ï¼Œæ”¾åœ¨åˆ—è¡¨æœ€åŽ2ä¸ªï¼‰**ï¼š
+   - `Person`: ä»»ä½•è‡ªç„¶äººä¸ªä½“çš„å…œåº•ç±»åž‹ã€‚å½“ä¸€ä¸ªäººä¸å±žäºŽå…¶ä»–æ›´å…·ä½“çš„äººç‰©ç±»åž‹æ—¶ï¼Œå½’å…¥æ­¤ç±»ã€‚
+   - `Organization`: ä»»ä½•ç»„ç»‡æœºæž„çš„å…œåº•ç±»åž‹ã€‚å½“ä¸€ä¸ªç»„ç»‡ä¸å±žäºŽå…¶ä»–æ›´å…·ä½“çš„ç»„ç»‡ç±»åž‹æ—¶ï¼Œå½’å…¥æ­¤ç±»ã€‚
 
-B. **具体类型（8个，根据文本内容设计）**：
-   - 针对文本中出现的主要角色，设计更具体的类型
-   - 例如：如果文本涉及学术事件，可以有 `Student`, `Professor`, `University`
-   - 例如：如果文本涉及商业事件，可以有 `Company`, `CEO`, `Employee`
+B. **å…·ä½“ç±»åž‹ï¼ˆ8ä¸ªï¼Œæ ¹æ®æ–‡æœ¬å†…å®¹è®¾è®¡ï¼‰**ï¼š
+   - é’ˆå¯¹æ–‡æœ¬ä¸­å‡ºçŽ°çš„ä¸»è¦è§’è‰²ï¼Œè®¾è®¡æ›´å…·ä½“çš„ç±»åž‹
+   - ä¾‹å¦‚ï¼šå¦‚æžœæ–‡æœ¬æ¶‰åŠå­¦æœ¯äº‹ä»¶ï¼Œå¯ä»¥æœ‰ `Student`, `Professor`, `University`
+   - ä¾‹å¦‚ï¼šå¦‚æžœæ–‡æœ¬æ¶‰åŠå•†ä¸šäº‹ä»¶ï¼Œå¯ä»¥æœ‰ `Company`, `CEO`, `Employee`
 
-**为什么需要兜底类型**：
-- 文本中会出现各种人物，如"中小学教师"、"路人甲"、"某位网友"
-- 如果没有专门的类型匹配，他们应该被归入 `Person`
-- 同理，小型组织、临时团体等应该归入 `Organization`
+**ä¸ºä»€ä¹ˆéœ€è¦å…œåº•ç±»åž‹**ï¼š
+- æ–‡æœ¬ä¸­ä¼šå‡ºçŽ°å„ç§äººç‰©ï¼Œå¦‚"ä¸­å°å­¦æ•™å¸ˆ"ã€"è·¯äººç”²"ã€"æŸä½ç½‘å‹"
+- å¦‚æžœæ²¡æœ‰ä¸“é—¨çš„ç±»åž‹åŒ¹é…ï¼Œä»–ä»¬åº”è¯¥è¢«å½’å…¥ `Person`
+- åŒç†ï¼Œå°åž‹ç»„ç»‡ã€ä¸´æ—¶å›¢ä½“ç­‰åº”è¯¥å½’å…¥ `Organization`
 
-**具体类型的设计原则**：
-- 从文本中识别出高频出现或关键的角色类型
-- 每个具体类型应该有明确的边界，避免重叠
-- description 必须清晰说明这个类型和兜底类型的区别
+**å…·ä½“ç±»åž‹çš„è®¾è®¡åŽŸåˆ™**ï¼š
+- ä»Žæ–‡æœ¬ä¸­è¯†åˆ«å‡ºé«˜é¢‘å‡ºçŽ°æˆ–å…³é”®çš„è§’è‰²ç±»åž‹
+- æ¯ä¸ªå…·ä½“ç±»åž‹åº”è¯¥æœ‰æ˜Žç¡®çš„è¾¹ç•Œï¼Œé¿å…é‡å 
+- description å¿…é¡»æ¸…æ™°è¯´æ˜Žè¿™ä¸ªç±»åž‹å’Œå…œåº•ç±»åž‹çš„åŒºåˆ«
 
-### 2. 关系类型设计
+### 2. å…³ç³»ç±»åž‹è®¾è®¡
 
-- 数量：6-10个
-- 关系应该反映社媒互动中的真实联系
-- 确保关系的 source_targets 涵盖你定义的实体类型
+- æ•°é‡ï¼š6-10ä¸ª
+- å…³ç³»åº”è¯¥åæ˜ ç¤¾åª’äº’åŠ¨ä¸­çš„çœŸå®žè”ç³»
+- ç¡®ä¿å…³ç³»çš„ source_targets æ¶µç›–ä½ å®šä¹‰çš„å®žä½“ç±»åž‹
 
-### 3. 属性设计
+### 3. å±žæ€§è®¾è®¡
 
-- 每个实体类型1-3个关键属性
-- **注意**：属性名不能使用 `name`、`uuid`、`group_id`、`created_at`、`summary`（这些是系统保留字）
-- 推荐使用：`full_name`, `title`, `role`, `position`, `location`, `description` 等
+- æ¯ä¸ªå®žä½“ç±»åž‹1-3ä¸ªå…³é”®å±žæ€§
+- **æ³¨æ„**ï¼šå±žæ€§åä¸èƒ½ä½¿ç”¨ `name`ã€`uuid`ã€`group_id`ã€`created_at`ã€`summary`ï¼ˆè¿™äº›æ˜¯ç³»ç»Ÿä¿ç•™å­—ï¼‰
+- æŽ¨èä½¿ç”¨ï¼š`full_name`, `title`, `role`, `position`, `location`, `description` ç­‰
 
-## 实体类型参考
+## å®žä½“ç±»åž‹å‚è€ƒ
 
-**个人类（具体）**：
-- Student: 学生
-- Professor: 教授/学者
-- Journalist: 记者
-- Celebrity: 明星/网红
-- Executive: 高管
-- Official: 政府官员
-- Lawyer: 律师
-- Doctor: 医生
+**ä¸ªäººç±»ï¼ˆå…·ä½“ï¼‰**ï¼š
+- Student: å­¦ç”Ÿ
+- Professor: æ•™æŽˆ/å­¦è€…
+- Journalist: è®°è€…
+- Celebrity: æ˜Žæ˜Ÿ/ç½‘çº¢
+- Executive: é«˜ç®¡
+- Official: æ”¿åºœå®˜å‘˜
+- Lawyer: å¾‹å¸ˆ
+- Doctor: åŒ»ç”Ÿ
 
-**个人类（兜底）**：
-- Person: 任何自然人（不属于上述具体类型时使用）
+**ä¸ªäººç±»ï¼ˆå…œåº•ï¼‰**ï¼š
+- Person: ä»»ä½•è‡ªç„¶äººï¼ˆä¸å±žäºŽä¸Šè¿°å…·ä½“ç±»åž‹æ—¶ä½¿ç”¨ï¼‰
 
-**组织类（具体）**：
-- University: 高校
-- Company: 公司企业
-- GovernmentAgency: 政府机构
-- MediaOutlet: 媒体机构
-- Hospital: 医院
-- School: 中小学
-- NGO: 非政府组织
+**ç»„ç»‡ç±»ï¼ˆå…·ä½“ï¼‰**ï¼š
+- University: é«˜æ ¡
+- Company: å…¬å¸ä¼ä¸š
+- GovernmentAgency: æ”¿åºœæœºæž„
+- MediaOutlet: åª’ä½“æœºæž„
+- Hospital: åŒ»é™¢
+- School: ä¸­å°å­¦
+- NGO: éžæ”¿åºœç»„ç»‡
 
-**组织类（兜底）**：
-- Organization: 任何组织机构（不属于上述具体类型时使用）
+**ç»„ç»‡ç±»ï¼ˆå…œåº•ï¼‰**ï¼š
+- Organization: ä»»ä½•ç»„ç»‡æœºæž„ï¼ˆä¸å±žäºŽä¸Šè¿°å…·ä½“ç±»åž‹æ—¶ä½¿ç”¨ï¼‰
 
-## 关系类型参考
+## å…³ç³»ç±»åž‹å‚è€ƒ
 
-- WORKS_FOR: 工作于
-- STUDIES_AT: 就读于
-- AFFILIATED_WITH: 隶属于
-- REPRESENTS: 代表
-- REGULATES: 监管
-- REPORTS_ON: 报道
-- COMMENTS_ON: 评论
-- RESPONDS_TO: 回应
-- SUPPORTS: 支持
-- OPPOSES: 反对
-- COLLABORATES_WITH: 合作
-- COMPETES_WITH: 竞争
+- WORKS_FOR: å·¥ä½œäºŽ
+- STUDIES_AT: å°±è¯»äºŽ
+- AFFILIATED_WITH: éš¶å±žäºŽ
+- REPRESENTS: ä»£è¡¨
+- REGULATES: ç›‘ç®¡
+- REPORTS_ON: æŠ¥é“
+- COMMENTS_ON: è¯„è®º
+- RESPONDS_TO: å›žåº”
+- SUPPORTS: æ”¯æŒ
+- OPPOSES: åå¯¹
+- COLLABORATES_WITH: åˆä½œ
+- COMPETES_WITH: ç«žäº‰
 """
 
 
 class OntologyGenerator:
     """
-    本体生成器
-    分析文本内容，生成实体和关系类型定义
+    æœ¬ä½“ç”Ÿæˆå™¨
+    åˆ†æžæ–‡æœ¬å†…å®¹ï¼Œç”Ÿæˆå®žä½“å’Œå…³ç³»ç±»åž‹å®šä¹‰
     """
     
     def __init__(self, llm_client: Optional[LLMClient] = None):
@@ -189,17 +189,17 @@ class OntologyGenerator:
         additional_context: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        生成本体定义
+        ç”Ÿæˆæœ¬ä½“å®šä¹‰
         
         Args:
-            document_texts: 文档文本列表
-            simulation_requirement: 模拟需求描述
-            additional_context: 额外上下文
+            document_texts: æ–‡æ¡£æ–‡æœ¬åˆ—è¡¨
+            simulation_requirement: æ¨¡æ‹Ÿéœ€æ±‚æè¿°
+            additional_context: é¢å¤–ä¸Šä¸‹æ–‡
             
         Returns:
-            本体定义（entity_types, edge_types等）
+            æœ¬ä½“å®šä¹‰ï¼ˆentity_types, edge_typesç­‰ï¼‰
         """
-        # 构建用户消息
+        # æž„å»ºç”¨æˆ·æ¶ˆæ¯
         user_message = self._build_user_message(
             document_texts, 
             simulation_requirement,
@@ -213,19 +213,19 @@ class OntologyGenerator:
             {"role": "user", "content": user_message}
         ]
         
-        # 调用LLM
+        # è°ƒç”¨LLM
         result = self.llm_client.chat_json(
             messages=messages,
             temperature=0.3,
             max_tokens=4096
         )
         
-        # 验证和后处理
+        # éªŒè¯å’ŒåŽå¤„ç†
         result = self._validate_and_process(result)
         
         return result
     
-    # 传给 LLM 的文本最大长度（5万字）
+    # ä¼ ç»™ LLM çš„æ–‡æœ¬æœ€å¤§é•¿åº¦ï¼ˆ5ä¸‡å­—ï¼‰
     MAX_TEXT_LENGTH_FOR_LLM = 50000
     
     def _build_user_message(
@@ -234,50 +234,50 @@ class OntologyGenerator:
         simulation_requirement: str,
         additional_context: Optional[str]
     ) -> str:
-        """构建用户消息"""
+        """æž„å»ºç”¨æˆ·æ¶ˆæ¯"""
         
-        # 合并文本
+        # åˆå¹¶æ–‡æœ¬
         combined_text = "\n\n---\n\n".join(document_texts)
         original_length = len(combined_text)
         
-        # 如果文本超过5万字，截断（仅影响传给LLM的内容，不影响图谱构建）
+        # å¦‚æžœæ–‡æœ¬è¶…è¿‡5ä¸‡å­—ï¼Œæˆªæ–­ï¼ˆä»…å½±å“ä¼ ç»™LLMçš„å†…å®¹ï¼Œä¸å½±å“å›¾è°±æž„å»ºï¼‰
         if len(combined_text) > self.MAX_TEXT_LENGTH_FOR_LLM:
             combined_text = combined_text[:self.MAX_TEXT_LENGTH_FOR_LLM]
-            combined_text += f"\n\n...(原文共{original_length}字，已截取前{self.MAX_TEXT_LENGTH_FOR_LLM}字用于本体分析)..."
+            combined_text += f"\n\n...(åŽŸæ–‡å…±{original_length}å­—ï¼Œå·²æˆªå–å‰{self.MAX_TEXT_LENGTH_FOR_LLM}å­—ç”¨äºŽæœ¬ä½“åˆ†æž)..."
         
-        message = f"""## 模拟需求
+        message = f"""## æ¨¡æ‹Ÿéœ€æ±‚
 
 {simulation_requirement}
 
-## 文档内容
+## æ–‡æ¡£å†…å®¹
 
 {combined_text}
 """
         
         if additional_context:
             message += f"""
-## 额外说明
+## é¢å¤–è¯´æ˜Ž
 
 {additional_context}
 """
         
         message += """
-请根据以上内容，设计适合社会舆论模拟的实体类型和关系类型。
+è¯·æ ¹æ®ä»¥ä¸Šå†…å®¹ï¼Œè®¾è®¡é€‚åˆç¤¾ä¼šèˆ†è®ºæ¨¡æ‹Ÿçš„å®žä½“ç±»åž‹å’Œå…³ç³»ç±»åž‹ã€‚
 
-**必须遵守的规则**：
-1. 必须正好输出10个实体类型
-2. 最后2个必须是兜底类型：Person（个人兜底）和 Organization（组织兜底）
-3. 前8个是根据文本内容设计的具体类型
-4. 所有实体类型必须是现实中可以发声的主体，不能是抽象概念
-5. 属性名不能使用 name、uuid、group_id 等保留字，用 full_name、org_name 等替代
+**å¿…é¡»éµå®ˆçš„è§„åˆ™**ï¼š
+1. å¿…é¡»æ­£å¥½è¾“å‡º10ä¸ªå®žä½“ç±»åž‹
+2. æœ€åŽ2ä¸ªå¿…é¡»æ˜¯å…œåº•ç±»åž‹ï¼šPersonï¼ˆä¸ªäººå…œåº•ï¼‰å’Œ Organizationï¼ˆç»„ç»‡å…œåº•ï¼‰
+3. å‰8ä¸ªæ˜¯æ ¹æ®æ–‡æœ¬å†…å®¹è®¾è®¡çš„å…·ä½“ç±»åž‹
+4. æ‰€æœ‰å®žä½“ç±»åž‹å¿…é¡»æ˜¯çŽ°å®žä¸­å¯ä»¥å‘å£°çš„ä¸»ä½“ï¼Œä¸èƒ½æ˜¯æŠ½è±¡æ¦‚å¿µ
+5. å±žæ€§åä¸èƒ½ä½¿ç”¨ nameã€uuidã€group_id ç­‰ä¿ç•™å­—ï¼Œç”¨ full_nameã€org_name ç­‰æ›¿ä»£
 """
         
         return message
     
     def _validate_and_process(self, result: Dict[str, Any]) -> Dict[str, Any]:
-        """验证和后处理结果"""
+        """éªŒè¯å’ŒåŽå¤„ç†ç»“æžœ"""
         
-        # 确保必要字段存在
+        # ç¡®ä¿å¿…è¦å­—æ®µå­˜åœ¨
         if "entity_types" not in result:
             result["entity_types"] = []
         if "edge_types" not in result:
@@ -285,11 +285,11 @@ class OntologyGenerator:
         if "analysis_summary" not in result:
             result["analysis_summary"] = ""
         
-        # 验证实体类型
-        # 记录原始名称到 PascalCase 的映射，用于后续修正 edge 的 source_targets 引用
+        # éªŒè¯å®žä½“ç±»åž‹
+        # è®°å½•åŽŸå§‹åç§°åˆ° PascalCase çš„æ˜ å°„ï¼Œç”¨äºŽåŽç»­ä¿®æ­£ edge çš„ source_targets å¼•ç”¨
         entity_name_map = {}
         for entity in result["entity_types"]:
-            # 强制将 entity name 转为 PascalCase（Zep API 要求）
+            # å¼ºåˆ¶å°† entity name è½¬ä¸º PascalCaseï¼ˆZep API è¦æ±‚ï¼‰
             if "name" in entity:
                 original_name = entity["name"]
                 entity["name"] = _to_pascal_case(original_name)
@@ -300,19 +300,19 @@ class OntologyGenerator:
                 entity["attributes"] = []
             if "examples" not in entity:
                 entity["examples"] = []
-            # 确保description不超过100字符
+            # ç¡®ä¿descriptionä¸è¶…è¿‡100å­—ç¬¦
             if len(entity.get("description", "")) > 100:
                 entity["description"] = entity["description"][:97] + "..."
         
-        # 验证关系类型
+        # éªŒè¯å…³ç³»ç±»åž‹
         for edge in result["edge_types"]:
-            # 强制将 edge name 转为 SCREAMING_SNAKE_CASE（Zep API 要求）
+            # å¼ºåˆ¶å°† edge name è½¬ä¸º SCREAMING_SNAKE_CASEï¼ˆZep API è¦æ±‚ï¼‰
             if "name" in edge:
                 original_name = edge["name"]
                 edge["name"] = original_name.upper()
                 if edge["name"] != original_name:
                     logger.warning(f"Edge type name '{original_name}' auto-converted to '{edge['name']}'")
-            # 修正 source_targets 中的实体名称引用，与转换后的 PascalCase 保持一致
+            # ä¿®æ­£ source_targets ä¸­çš„å®žä½“åç§°å¼•ç”¨ï¼Œä¸Žè½¬æ¢åŽçš„ PascalCase ä¿æŒä¸€è‡´
             for st in edge.get("source_targets", []):
                 if st.get("source") in entity_name_map:
                     st["source"] = entity_name_map[st["source"]]
@@ -325,11 +325,11 @@ class OntologyGenerator:
             if len(edge.get("description", "")) > 100:
                 edge["description"] = edge["description"][:97] + "..."
         
-        # Zep API 限制：最多 10 个自定义实体类型，最多 10 个自定义边类型
+        # Zep API é™åˆ¶ï¼šæœ€å¤š 10 ä¸ªè‡ªå®šä¹‰å®žä½“ç±»åž‹ï¼Œæœ€å¤š 10 ä¸ªè‡ªå®šä¹‰è¾¹ç±»åž‹
         MAX_ENTITY_TYPES = 10
         MAX_EDGE_TYPES = 10
 
-        # 去重：按 name 去重，保留首次出现的
+        # åŽ»é‡ï¼šæŒ‰ name åŽ»é‡ï¼Œä¿ç•™é¦–æ¬¡å‡ºçŽ°çš„
         seen_names = set()
         deduped = []
         for entity in result["entity_types"]:
@@ -341,7 +341,7 @@ class OntologyGenerator:
                 logger.warning(f"Duplicate entity type '{name}' removed during validation")
         result["entity_types"] = deduped
 
-        # 兜底类型定义
+        # å…œåº•ç±»åž‹å®šä¹‰
         person_fallback = {
             "name": "Person",
             "description": "Any individual person not fitting other specific person types.",
@@ -362,12 +362,12 @@ class OntologyGenerator:
             "examples": ["small business", "community group"]
         }
         
-        # 检查是否已有兜底类型
+        # æ£€æŸ¥æ˜¯å¦å·²æœ‰å…œåº•ç±»åž‹
         entity_names = {e["name"] for e in result["entity_types"]}
         has_person = "Person" in entity_names
         has_organization = "Organization" in entity_names
         
-        # 需要添加的兜底类型
+        # éœ€è¦æ·»åŠ çš„å…œåº•ç±»åž‹
         fallbacks_to_add = []
         if not has_person:
             fallbacks_to_add.append(person_fallback)
@@ -378,17 +378,17 @@ class OntologyGenerator:
             current_count = len(result["entity_types"])
             needed_slots = len(fallbacks_to_add)
             
-            # 如果添加后会超过 10 个，需要移除一些现有类型
+            # å¦‚æžœæ·»åŠ åŽä¼šè¶…è¿‡ 10 ä¸ªï¼Œéœ€è¦ç§»é™¤ä¸€äº›çŽ°æœ‰ç±»åž‹
             if current_count + needed_slots > MAX_ENTITY_TYPES:
-                # 计算需要移除多少个
+                # è®¡ç®—éœ€è¦ç§»é™¤å¤šå°‘ä¸ª
                 to_remove = current_count + needed_slots - MAX_ENTITY_TYPES
-                # 从末尾移除（保留前面更重要的具体类型）
+                # ä»Žæœ«å°¾ç§»é™¤ï¼ˆä¿ç•™å‰é¢æ›´é‡è¦çš„å…·ä½“ç±»åž‹ï¼‰
                 result["entity_types"] = result["entity_types"][:-to_remove]
             
-            # 添加兜底类型
+            # æ·»åŠ å…œåº•ç±»åž‹
             result["entity_types"].extend(fallbacks_to_add)
         
-        # 最终确保不超过限制（防御性编程）
+        # æœ€ç»ˆç¡®ä¿ä¸è¶…è¿‡é™åˆ¶ï¼ˆé˜²å¾¡æ€§ç¼–ç¨‹ï¼‰
         if len(result["entity_types"]) > MAX_ENTITY_TYPES:
             result["entity_types"] = result["entity_types"][:MAX_ENTITY_TYPES]
         
@@ -399,29 +399,29 @@ class OntologyGenerator:
     
     def generate_python_code(self, ontology: Dict[str, Any]) -> str:
         """
-        将本体定义转换为Python代码（类似ontology.py）
+        å°†æœ¬ä½“å®šä¹‰è½¬æ¢ä¸ºPythonä»£ç ï¼ˆç±»ä¼¼ontology.pyï¼‰
         
         Args:
-            ontology: 本体定义
+            ontology: æœ¬ä½“å®šä¹‰
             
         Returns:
-            Python代码字符串
+            Pythonä»£ç å­—ç¬¦ä¸²
         """
         code_lines = [
             '"""',
-            '自定义实体类型定义',
-            '由MiroFish自动生成，用于社会舆论模拟',
+            'è‡ªå®šä¹‰å®žä½“ç±»åž‹å®šä¹‰',
+            'ç”±Posiedonè‡ªåŠ¨ç”Ÿæˆï¼Œç”¨äºŽç¤¾ä¼šèˆ†è®ºæ¨¡æ‹Ÿ',
             '"""',
             '',
             'from pydantic import Field',
             'from zep_cloud.external_clients.ontology import EntityModel, EntityText, EdgeModel',
             '',
             '',
-            '# ============== 实体类型定义 ==============',
+            '# ============== å®žä½“ç±»åž‹å®šä¹‰ ==============',
             '',
         ]
         
-        # 生成实体类型
+        # ç”Ÿæˆå®žä½“ç±»åž‹
         for entity in ontology.get("entity_types", []):
             name = entity["name"]
             desc = entity.get("description", f"A {name} entity.")
@@ -444,13 +444,13 @@ class OntologyGenerator:
             code_lines.append('')
             code_lines.append('')
         
-        code_lines.append('# ============== 关系类型定义 ==============')
+        code_lines.append('# ============== å…³ç³»ç±»åž‹å®šä¹‰ ==============')
         code_lines.append('')
         
-        # 生成关系类型
+        # ç”Ÿæˆå…³ç³»ç±»åž‹
         for edge in ontology.get("edge_types", []):
             name = edge["name"]
-            # 转换为PascalCase类名
+            # è½¬æ¢ä¸ºPascalCaseç±»å
             class_name = ''.join(word.capitalize() for word in name.split('_'))
             desc = edge.get("description", f"A {name} relationship.")
             
@@ -472,8 +472,8 @@ class OntologyGenerator:
             code_lines.append('')
             code_lines.append('')
         
-        # 生成类型字典
-        code_lines.append('# ============== 类型配置 ==============')
+        # ç”Ÿæˆç±»åž‹å­—å…¸
+        code_lines.append('# ============== ç±»åž‹é…ç½® ==============')
         code_lines.append('')
         code_lines.append('ENTITY_TYPES = {')
         for entity in ontology.get("entity_types", []):
@@ -489,7 +489,7 @@ class OntologyGenerator:
         code_lines.append('}')
         code_lines.append('')
         
-        # 生成边的source_targets映射
+        # ç”Ÿæˆè¾¹çš„source_targetsæ˜ å°„
         code_lines.append('EDGE_SOURCE_TARGETS = {')
         for edge in ontology.get("edge_types", []):
             name = edge["name"]

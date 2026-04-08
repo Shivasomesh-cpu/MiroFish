@@ -1,7 +1,7 @@
 """
 Opinion Drift Service
 
-Implements dynamic opinion evolution for MiroFish agents.
+Implements dynamic opinion evolution for Posiedon agents.
 After each simulation round, agents' opinions update based on their social exposure.
 
 Key concepts:
@@ -22,7 +22,7 @@ from openai import OpenAI
 from ..config import Config
 from ..utils.logger import get_logger
 
-logger = get_logger('mirofish.opinion_drift')
+logger = get_logger('posiedon.opinion_drift')
 
 
 @dataclass
