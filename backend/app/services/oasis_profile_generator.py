@@ -1,11 +1,5 @@
 """
-OASIS Agent Profileç”Ÿæˆå™¨
-å°†Zepå›¾è°±ä¸­çš„å®žä½“è½¬æ¢ä¸ºOASISæ¨¡æ‹Ÿå¹³å°æ‰€éœ€çš„Agent Profileæ ¼å¼
 
-ä¼˜åŒ–æ”¹è¿›ï¼š
-1. è°ƒç”¨Zepæ£€ç´¢åŠŸèƒ½äºŒæ¬¡ä¸°å¯ŒèŠ‚ç‚¹ä¿¡æ¯
-2. ä¼˜åŒ–æç¤ºè¯ç”Ÿæˆéžå¸¸è¯¦ç»†çš„äººè®¾
-3. åŒºåˆ†ä¸ªäººå®žä½“å’ŒæŠ½è±¡ç¾¤ä½“å®žä½“
 """
 
 import json
@@ -29,22 +23,18 @@ logger = get_logger('posiedon.oasis_profile')
 @dataclass
 class OasisAgentProfile:
     """OASIS Agent Profileæ•°æ®ç»“æž„"""
-    # é€šç”¨å­—æ®µ
     user_id: int
     user_name: str
     name: str
     bio: str
     persona: str
     
-    # å¯é€‰å­—æ®µ - Reddité£Žæ ¼
     karma: int = 1000
     
-    # å¯é€‰å­—æ®µ - Twitteré£Žæ ¼
     friend_count: int = 100
     follower_count: int = 150
     statuses_count: int = 500
     
-    # é¢å¤–äººè®¾ä¿¡æ¯
     age: Optional[int] = None
     gender: Optional[str] = None
     mbti: Optional[str] = None
@@ -67,7 +57,6 @@ class OasisAgentProfile:
     # Big Five openness trait (derived from MBTI or set directly)
     openness: Optional[float] = None
     
-    # æ¥æºå®žä½“ä¿¡æ¯
     source_entity_uuid: Optional[str] = None
     source_entity_type: Optional[str] = None
     
@@ -85,7 +74,6 @@ class OasisAgentProfile:
             "created_at": self.created_at,
         }
         
-        # æ·»åŠ é¢å¤–äººè®¾ä¿¡æ¯ï¼ˆå¦‚æžœæœ‰ï¼‰
         if self.age:
             profile["age"] = self.age
         if self.gender:
@@ -122,7 +110,6 @@ class OasisAgentProfile:
             "created_at": self.created_at,
         }
         
-        # æ·»åŠ é¢å¤–äººè®¾ä¿¡æ¯
         if self.age:
             profile["age"] = self.age
         if self.gender:
@@ -233,17 +220,10 @@ class OasisAgentProfile:
 
 class OasisProfileGenerator:
     """
-    OASIS Profileç”Ÿæˆå™¨
     
-    å°†Zepå›¾è°±ä¸­çš„å®žä½“è½¬æ¢ä¸ºOASISæ¨¡æ‹Ÿæ‰€éœ€çš„Agent Profile
     
-    ä¼˜åŒ–ç‰¹æ€§ï¼š
-    1. è°ƒç”¨Zepå›¾è°±æ£€ç´¢åŠŸèƒ½èŽ·å–æ›´ä¸°å¯Œçš„ä¸Šä¸‹æ–‡
-    2. ç”Ÿæˆéžå¸¸è¯¦ç»†çš„äººè®¾ï¼ˆåŒ…æ‹¬åŸºæœ¬ä¿¡æ¯ã€èŒä¸šç»åŽ†ã€æ€§æ ¼ç‰¹å¾ã€ç¤¾äº¤åª’ä½“è¡Œä¸ºç­‰ï¼‰
-    3. åŒºåˆ†ä¸ªäººå®žä½“å’ŒæŠ½è±¡ç¾¤ä½“å®žä½“
     """
     
-    # MBTIç±»åž‹åˆ—è¡¨
     MBTI_TYPES = [
         "INTJ", "INTP", "ENTJ", "ENTP",
         "INFJ", "INFP", "ENFJ", "ENFP",
@@ -251,19 +231,16 @@ class OasisProfileGenerator:
         "ISTP", "ISFP", "ESTP", "ESFP"
     ]
     
-    # å¸¸è§å›½å®¶åˆ—è¡¨
     COUNTRIES = [
         "China", "US", "UK", "Japan", "Germany", "France", 
         "Canada", "Australia", "Brazil", "India", "South Korea"
     ]
     
-    # ä¸ªäººç±»åž‹å®žä½“ï¼ˆéœ€è¦ç”Ÿæˆå…·ä½“äººè®¾ï¼‰
     INDIVIDUAL_ENTITY_TYPES = [
         "student", "alumni", "professor", "person", "publicfigure", 
         "expert", "faculty", "official", "journalist", "activist"
     ]
     
-    # ç¾¤ä½“/æœºæž„ç±»åž‹å®žä½“ï¼ˆéœ€è¦ç”Ÿæˆç¾¤ä½“ä»£è¡¨äººè®¾ï¼‰
     GROUP_ENTITY_TYPES = [
         "university", "governmentagency", "organization", "ngo", 
         "mediaoutlet", "company", "institution", "group", "community"
@@ -289,7 +266,6 @@ class OasisProfileGenerator:
             base_url=self.base_url
         )
         
-        # Zepå®¢æˆ·ç«¯ç”¨äºŽæ£€ç´¢ä¸°å¯Œä¸Šä¸‹æ–‡
         self.zep_api_key = zep_api_key or Config.ZEP_API_KEY
         self.zep_client = None
         self.graph_id = graph_id
@@ -307,27 +283,20 @@ class OasisProfileGenerator:
         use_llm: bool = True
     ) -> OasisAgentProfile:
         """
-        ä»ŽZepå®žä½“ç”ŸæˆOASIS Agent Profile
         
         Args:
-            entity: Zepå®žä½“èŠ‚ç‚¹
-            user_id: ç”¨æˆ·IDï¼ˆç”¨äºŽOASISï¼‰
-            use_llm: æ˜¯å¦ä½¿ç”¨LLMç”Ÿæˆè¯¦ç»†äººè®¾
             
         Returns:
             OasisAgentProfile
         """
         entity_type = entity.get_entity_type() or "Entity"
         
-        # åŸºç¡€ä¿¡æ¯
         name = entity.name
         user_name = self._generate_username(name)
         
-        # æž„å»ºä¸Šä¸‹æ–‡ä¿¡æ¯
         context = self._build_entity_context(entity)
         
         if use_llm:
-            # ä½¿ç”¨LLMç”Ÿæˆè¯¦ç»†äººè®¾
             profile_data = self._generate_profile_with_llm(
                 entity_name=name,
                 entity_type=entity_type,
@@ -336,7 +305,6 @@ class OasisProfileGenerator:
                 context=context
             )
         else:
-            # ä½¿ç”¨è§„åˆ™ç”ŸæˆåŸºç¡€äººè®¾
             profile_data = self._generate_profile_rule_based(
                 entity_name=name,
                 entity_type=entity_type,
@@ -366,26 +334,19 @@ class OasisProfileGenerator:
     
     def _generate_username(self, name: str) -> str:
         """ç”Ÿæˆç”¨æˆ·å"""
-        # ç§»é™¤ç‰¹æ®Šå­—ç¬¦ï¼Œè½¬æ¢ä¸ºå°å†™
         username = name.lower().replace(" ", "_")
         username = ''.join(c for c in username if c.isalnum() or c == '_')
         
-        # æ·»åŠ éšæœºåŽç¼€é¿å…é‡å¤
         suffix = random.randint(100, 999)
         return f"{username}_{suffix}"
     
     def _search_zep_for_entity(self, entity: EntityNode) -> Dict[str, Any]:
         """
-        ä½¿ç”¨Zepå›¾è°±æ··åˆæœç´¢åŠŸèƒ½èŽ·å–å®žä½“ç›¸å…³çš„ä¸°å¯Œä¿¡æ¯
         
-        Zepæ²¡æœ‰å†…ç½®æ··åˆæœç´¢æŽ¥å£ï¼Œéœ€è¦åˆ†åˆ«æœç´¢edgeså’Œnodesç„¶åŽåˆå¹¶ç»“æžœã€‚
-        ä½¿ç”¨å¹¶è¡Œè¯·æ±‚åŒæ—¶æœç´¢ï¼Œæé«˜æ•ˆçŽ‡ã€‚
         
         Args:
-            entity: å®žä½“èŠ‚ç‚¹å¯¹è±¡
             
         Returns:
-            åŒ…å«facts, node_summaries, contextçš„å­—å…¸
         """
         import concurrent.futures
         
@@ -400,7 +361,6 @@ class OasisProfileGenerator:
             "context": ""
         }
         
-        # å¿…é¡»æœ‰graph_idæ‰èƒ½è¿›è¡Œæœç´¢
         if not self.graph_id:
             logger.debug(f"è·³è¿‡Zepæ£€ç´¢ï¼šæœªè®¾ç½®graph_id")
             return results
@@ -458,16 +418,13 @@ class OasisProfileGenerator:
             return None
         
         try:
-            # å¹¶è¡Œæ‰§è¡Œedgeså’Œnodesæœç´¢
             with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
                 edge_future = executor.submit(search_edges)
                 node_future = executor.submit(search_nodes)
                 
-                # èŽ·å–ç»“æžœ
                 edge_result = edge_future.result(timeout=30)
                 node_result = node_future.result(timeout=30)
             
-            # å¤„ç†è¾¹æœç´¢ç»“æžœ
             all_facts = set()
             if edge_result and hasattr(edge_result, 'edges') and edge_result.edges:
                 for edge in edge_result.edges:
@@ -475,7 +432,6 @@ class OasisProfileGenerator:
                         all_facts.add(edge.fact)
             results["facts"] = list(all_facts)
             
-            # å¤„ç†èŠ‚ç‚¹æœç´¢ç»“æžœ
             all_summaries = set()
             if node_result and hasattr(node_result, 'nodes') and node_result.nodes:
                 for node in node_result.nodes:
@@ -485,7 +441,6 @@ class OasisProfileGenerator:
                         all_summaries.add(f"ç›¸å…³å®žä½“: {node.name}")
             results["node_summaries"] = list(all_summaries)
             
-            # æž„å»ºç»¼åˆä¸Šä¸‹æ–‡
             context_parts = []
             if results["facts"]:
                 context_parts.append("äº‹å®žä¿¡æ¯:\n" + "\n".join(f"- {f}" for f in results["facts"][:20]))
@@ -504,16 +459,10 @@ class OasisProfileGenerator:
     
     def _build_entity_context(self, entity: EntityNode) -> str:
         """
-        æž„å»ºå®žä½“çš„å®Œæ•´ä¸Šä¸‹æ–‡ä¿¡æ¯
         
-        åŒ…æ‹¬ï¼š
-        1. å®žä½“æœ¬èº«çš„è¾¹ä¿¡æ¯ï¼ˆäº‹å®žï¼‰
-        2. å…³è”èŠ‚ç‚¹çš„è¯¦ç»†ä¿¡æ¯
-        3. Zepæ··åˆæ£€ç´¢åˆ°çš„ä¸°å¯Œä¿¡æ¯
         """
         context_parts = []
         
-        # 1. æ·»åŠ å®žä½“å±žæ€§ä¿¡æ¯
         if entity.attributes:
             attrs = []
             for key, value in entity.attributes.items():
@@ -522,7 +471,6 @@ class OasisProfileGenerator:
             if attrs:
                 context_parts.append("### å®žä½“å±žæ€§\n" + "\n".join(attrs))
         
-        # 2. æ·»åŠ ç›¸å…³è¾¹ä¿¡æ¯ï¼ˆäº‹å®ž/å…³ç³»ï¼‰
         existing_facts = set()
         if entity.related_edges:
             relationships = []
@@ -543,7 +491,6 @@ class OasisProfileGenerator:
             if relationships:
                 context_parts.append("### ç›¸å…³äº‹å®žå’Œå…³ç³»\n" + "\n".join(relationships))
         
-        # 3. æ·»åŠ å…³è”èŠ‚ç‚¹çš„è¯¦ç»†ä¿¡æ¯
         if entity.related_nodes:
             related_info = []
             for node in entity.related_nodes:  # ä¸é™åˆ¶æ•°é‡
@@ -551,7 +498,6 @@ class OasisProfileGenerator:
                 node_labels = node.get("labels", [])
                 node_summary = node.get("summary", "")
                 
-                # è¿‡æ»¤æŽ‰é»˜è®¤æ ‡ç­¾
                 custom_labels = [l for l in node_labels if l not in ["Entity", "Node"]]
                 label_str = f" ({', '.join(custom_labels)})" if custom_labels else ""
                 
@@ -563,11 +509,9 @@ class OasisProfileGenerator:
             if related_info:
                 context_parts.append("### å…³è”å®žä½“ä¿¡æ¯\n" + "\n".join(related_info))
         
-        # 4. ä½¿ç”¨Zepæ··åˆæ£€ç´¢èŽ·å–æ›´ä¸°å¯Œçš„ä¿¡æ¯
         zep_results = self._search_zep_for_entity(entity)
         
         if zep_results.get("facts"):
-            # åŽ»é‡ï¼šæŽ’é™¤å·²å­˜åœ¨çš„äº‹å®ž
             new_facts = [f for f in zep_results["facts"] if f not in existing_facts]
             if new_facts:
                 context_parts.append("### Zepæ£€ç´¢åˆ°çš„äº‹å®žä¿¡æ¯\n" + "\n".join(f"- {f}" for f in new_facts[:15]))
@@ -594,11 +538,7 @@ class OasisProfileGenerator:
         context: str
     ) -> Dict[str, Any]:
         """
-        ä½¿ç”¨LLMç”Ÿæˆéžå¸¸è¯¦ç»†çš„äººè®¾
         
-        æ ¹æ®å®žä½“ç±»åž‹åŒºåˆ†ï¼š
-        - ä¸ªäººå®žä½“ï¼šç”Ÿæˆå…·ä½“çš„äººç‰©è®¾å®š
-        - ç¾¤ä½“/æœºæž„å®žä½“ï¼šç”Ÿæˆä»£è¡¨æ€§è´¦å·è®¾å®š
         """
         
         is_individual = self._is_individual_entity(entity_type)
@@ -612,7 +552,6 @@ class OasisProfileGenerator:
                 entity_name, entity_type, entity_summary, entity_attributes, context
             )
 
-        # å°è¯•å¤šæ¬¡ç”Ÿæˆï¼Œç›´åˆ°æˆåŠŸæˆ–è¾¾åˆ°æœ€å¤§é‡è¯•æ¬¡æ•°
         max_attempts = 3
         last_error = None
         
@@ -626,22 +565,18 @@ class OasisProfileGenerator:
                     ],
                     response_format={"type": "json_object"},
                     temperature=0.7 - (attempt * 0.1)  # æ¯æ¬¡é‡è¯•é™ä½Žæ¸©åº¦
-                    # ä¸è®¾ç½®max_tokensï¼Œè®©LLMè‡ªç”±å‘æŒ¥
                 )
                 
                 content = response.choices[0].message.content
                 
-                # æ£€æŸ¥æ˜¯å¦è¢«æˆªæ–­ï¼ˆfinish_reasonä¸æ˜¯'stop'ï¼‰
                 finish_reason = response.choices[0].finish_reason
                 if finish_reason == 'length':
                     logger.warning(f"LLMè¾“å‡ºè¢«æˆªæ–­ (attempt {attempt+1}), å°è¯•ä¿®å¤...")
                     content = self._fix_truncated_json(content)
                 
-                # å°è¯•è§£æžJSON
                 try:
                     result = json.loads(content)
                     
-                    # éªŒè¯å¿…éœ€å­—æ®µ
                     if "bio" not in result or not result["bio"]:
                         result["bio"] = entity_summary[:200] if entity_summary else f"{entity_type}: {entity_name}"
                     if "persona" not in result or not result["persona"]:
@@ -652,7 +587,6 @@ class OasisProfileGenerator:
                 except json.JSONDecodeError as je:
                     logger.warning(f"JSONè§£æžå¤±è´¥ (attempt {attempt+1}): {str(je)[:80]}")
                     
-                    # å°è¯•ä¿®å¤JSON
                     result = self._try_fix_json(content, entity_name, entity_type, entity_summary)
                     if result.get("_fixed"):
                         del result["_fixed"]
@@ -675,20 +609,14 @@ class OasisProfileGenerator:
         """ä¿®å¤è¢«æˆªæ–­çš„JSONï¼ˆè¾“å‡ºè¢«max_tokensé™åˆ¶æˆªæ–­ï¼‰"""
         import re
         
-        # å¦‚æžœJSONè¢«æˆªæ–­ï¼Œå°è¯•é—­åˆå®ƒ
         content = content.strip()
         
-        # è®¡ç®—æœªé—­åˆçš„æ‹¬å·
         open_braces = content.count('{') - content.count('}')
         open_brackets = content.count('[') - content.count(']')
         
-        # æ£€æŸ¥æ˜¯å¦æœ‰æœªé—­åˆçš„å­—ç¬¦ä¸²
-        # ç®€å•æ£€æŸ¥ï¼šå¦‚æžœæœ€åŽä¸€ä¸ªå¼•å·åŽæ²¡æœ‰é€—å·æˆ–é—­åˆæ‹¬å·ï¼Œå¯èƒ½æ˜¯å­—ç¬¦ä¸²è¢«æˆªæ–­
         if content and content[-1] not in '",}]':
-            # å°è¯•é—­åˆå­—ç¬¦ä¸²
             content += '"'
         
-        # é—­åˆæ‹¬å·
         content += ']' * open_brackets
         content += '}' * open_braces
         
@@ -698,38 +626,27 @@ class OasisProfileGenerator:
         """å°è¯•ä¿®å¤æŸåçš„JSON"""
         import re
         
-        # 1. é¦–å…ˆå°è¯•ä¿®å¤è¢«æˆªæ–­çš„æƒ…å†µ
         content = self._fix_truncated_json(content)
         
-        # 2. å°è¯•æå–JSONéƒ¨åˆ†
         json_match = re.search(r'\{[\s\S]*\}', content)
         if json_match:
             json_str = json_match.group()
             
-            # 3. å¤„ç†å­—ç¬¦ä¸²ä¸­çš„æ¢è¡Œç¬¦é—®é¢˜
-            # æ‰¾åˆ°æ‰€æœ‰å­—ç¬¦ä¸²å€¼å¹¶æ›¿æ¢å…¶ä¸­çš„æ¢è¡Œç¬¦
             def fix_string_newlines(match):
                 s = match.group(0)
-                # æ›¿æ¢å­—ç¬¦ä¸²å†…çš„å®žé™…æ¢è¡Œç¬¦ä¸ºç©ºæ ¼
                 s = s.replace('\n', ' ').replace('\r', ' ')
-                # æ›¿æ¢å¤šä½™ç©ºæ ¼
                 s = re.sub(r'\s+', ' ', s)
                 return s
             
-            # åŒ¹é…JSONå­—ç¬¦ä¸²å€¼
             json_str = re.sub(r'"[^"\\]*(?:\\.[^"\\]*)*"', fix_string_newlines, json_str)
             
-            # 4. å°è¯•è§£æž
             try:
                 result = json.loads(json_str)
                 result["_fixed"] = True
                 return result
             except json.JSONDecodeError as e:
-                # 5. å¦‚æžœè¿˜æ˜¯å¤±è´¥ï¼Œå°è¯•æ›´æ¿€è¿›çš„ä¿®å¤
                 try:
-                    # ç§»é™¤æ‰€æœ‰æŽ§åˆ¶å­—ç¬¦
                     json_str = re.sub(r'[\x00-\x1f\x7f-\x9f]', ' ', json_str)
-                    # æ›¿æ¢æ‰€æœ‰è¿žç»­ç©ºç™½
                     json_str = re.sub(r'\s+', ' ', json_str)
                     result = json.loads(json_str)
                     result["_fixed"] = True
@@ -737,14 +654,12 @@ class OasisProfileGenerator:
                 except:
                     pass
         
-        # 6. å°è¯•ä»Žå†…å®¹ä¸­æå–éƒ¨åˆ†ä¿¡æ¯
         bio_match = re.search(r'"bio"\s*:\s*"([^"]*)"', content)
         persona_match = re.search(r'"persona"\s*:\s*"([^"]*)', content)  # å¯èƒ½è¢«æˆªæ–­
         
         bio = bio_match.group(1) if bio_match else (entity_summary[:200] if entity_summary else f"{entity_type}: {entity_name}")
         persona = persona_match.group(1) if persona_match else (entity_summary or f"{entity_name}æ˜¯ä¸€ä¸ª{entity_type}ã€‚")
         
-        # å¦‚æžœæå–åˆ°äº†æœ‰æ„ä¹‰çš„å†…å®¹ï¼Œæ ‡è®°ä¸ºå·²ä¿®å¤
         if bio_match or persona_match:
             logger.info(f"ä»ŽæŸåçš„JSONä¸­æå–äº†éƒ¨åˆ†ä¿¡æ¯")
             return {
@@ -753,7 +668,6 @@ class OasisProfileGenerator:
                 "_fixed": True
             }
         
-        # 7. å®Œå…¨å¤±è´¥ï¼Œè¿”å›žåŸºç¡€ç»“æž„
         logger.warning(f"JSONä¿®å¤å¤±è´¥ï¼Œè¿”å›žåŸºç¡€ç»“æž„")
         return {
             "bio": entity_summary[:200] if entity_summary else f"{entity_type}: {entity_name}",
@@ -871,7 +785,6 @@ class OasisProfileGenerator:
     ) -> Dict[str, Any]:
         """ä½¿ç”¨è§„åˆ™ç”ŸæˆåŸºç¡€äººè®¾"""
         
-        # æ ¹æ®å®žä½“ç±»åž‹ç”Ÿæˆä¸åŒçš„äººè®¾
         entity_type_lower = entity_type.lower()
         
         if entity_type_lower in ["student", "alumni"]:
@@ -923,7 +836,6 @@ class OasisProfileGenerator:
             }
         
         else:
-            # é»˜è®¤äººè®¾
             return {
                 "bio": entity_summary[:150] if entity_summary else f"{entity_type}: {entity_name}",
                 "persona": entity_summary or f"{entity_name} is a {entity_type.lower()} participating in social discussions.",
@@ -950,24 +862,14 @@ class OasisProfileGenerator:
         output_platform: str = "reddit"
     ) -> List[OasisAgentProfile]:
         """
-        æ‰¹é‡ä»Žå®žä½“ç”ŸæˆAgent Profileï¼ˆæ”¯æŒå¹¶è¡Œç”Ÿæˆï¼‰
         
         Args:
-            entities: å®žä½“åˆ—è¡¨
-            use_llm: æ˜¯å¦ä½¿ç”¨LLMç”Ÿæˆè¯¦ç»†äººè®¾
-            progress_callback: è¿›åº¦å›žè°ƒå‡½æ•° (current, total, message)
-            graph_id: å›¾è°±IDï¼Œç”¨äºŽZepæ£€ç´¢èŽ·å–æ›´ä¸°å¯Œä¸Šä¸‹æ–‡
-            parallel_count: å¹¶è¡Œç”Ÿæˆæ•°é‡ï¼Œé»˜è®¤5
-            realtime_output_path: å®žæ—¶å†™å…¥çš„æ–‡ä»¶è·¯å¾„ï¼ˆå¦‚æžœæä¾›ï¼Œæ¯ç”Ÿæˆä¸€ä¸ªå°±å†™å…¥ä¸€æ¬¡ï¼‰
-            output_platform: è¾“å‡ºå¹³å°æ ¼å¼ ("reddit" æˆ– "twitter")
             
         Returns:
-            Agent Profileåˆ—è¡¨
         """
         import concurrent.futures
         from threading import Lock
         
-        # è®¾ç½®graph_idç”¨äºŽZepæ£€ç´¢
         if graph_id:
             self.graph_id = graph_id
         
@@ -976,26 +878,22 @@ class OasisProfileGenerator:
         completed_count = [0]  # ä½¿ç”¨åˆ—è¡¨ä»¥ä¾¿åœ¨é—­åŒ…ä¸­ä¿®æ”¹
         lock = Lock()
         
-        # å®žæ—¶å†™å…¥æ–‡ä»¶çš„è¾…åŠ©å‡½æ•°
         def save_profiles_realtime():
             """å®žæ—¶ä¿å­˜å·²ç”Ÿæˆçš„ profiles åˆ°æ–‡ä»¶"""
             if not realtime_output_path:
                 return
             
             with lock:
-                # è¿‡æ»¤å‡ºå·²ç”Ÿæˆçš„ profiles
                 existing_profiles = [p for p in profiles if p is not None]
                 if not existing_profiles:
                     return
                 
                 try:
                     if output_platform == "reddit":
-                        # Reddit JSON æ ¼å¼
                         profiles_data = [p.to_reddit_format() for p in existing_profiles]
                         with open(realtime_output_path, 'w', encoding='utf-8') as f:
                             json.dump(profiles_data, f, ensure_ascii=False, indent=2)
                     else:
-                        # Twitter CSV æ ¼å¼
                         import csv
                         profiles_data = [p.to_twitter_format() for p in existing_profiles]
                         if profiles_data:
@@ -1022,14 +920,12 @@ class OasisProfileGenerator:
                     use_llm=use_llm
                 )
                 
-                # å®žæ—¶è¾“å‡ºç”Ÿæˆçš„äººè®¾åˆ°æŽ§åˆ¶å°å’Œæ—¥å¿—
                 self._print_generated_profile(entity.name, entity_type, profile)
                 
                 return idx, profile, None
                 
             except Exception as e:
                 logger.error(f"ç”Ÿæˆå®žä½“ {entity.name} çš„äººè®¾å¤±è´¥: {str(e)}")
-                # åˆ›å»ºä¸€ä¸ªåŸºç¡€profile
                 fallback_profile = OasisAgentProfile(
                     user_id=idx,
                     user_name=self._generate_username(entity.name),
@@ -1046,15 +942,12 @@ class OasisProfileGenerator:
         print(f"å¼€å§‹ç”ŸæˆAgentäººè®¾ - å…± {total} ä¸ªå®žä½“ï¼Œå¹¶è¡Œæ•°: {parallel_count}")
         print(f"{'='*60}\n")
         
-        # ä½¿ç”¨çº¿ç¨‹æ± å¹¶è¡Œæ‰§è¡Œ
         with concurrent.futures.ThreadPoolExecutor(max_workers=parallel_count) as executor:
-            # æäº¤æ‰€æœ‰ä»»åŠ¡
             future_to_entity = {
                 executor.submit(generate_single_profile, idx, entity): (idx, entity)
                 for idx, entity in enumerate(entities)
             }
             
-            # æ”¶é›†ç»“æžœ
             for future in concurrent.futures.as_completed(future_to_entity):
                 idx, entity = future_to_entity[future]
                 entity_type = entity.get_entity_type() or "Entity"
@@ -1067,7 +960,6 @@ class OasisProfileGenerator:
                         completed_count[0] += 1
                         current = completed_count[0]
                     
-                    # å®žæ—¶å†™å…¥æ–‡ä»¶
                     save_profiles_realtime()
                     
                     if progress_callback:
@@ -1095,7 +987,6 @@ class OasisProfileGenerator:
                         source_entity_uuid=entity.uuid,
                         source_entity_type=entity_type,
                     )
-                    # å®žæ—¶å†™å…¥æ–‡ä»¶ï¼ˆå³ä½¿æ˜¯å¤‡ç”¨äººè®¾ï¼‰
                     save_profiles_realtime()
         
         print(f"\n{'='*60}")
@@ -1108,7 +999,6 @@ class OasisProfileGenerator:
         """å®žæ—¶è¾“å‡ºç”Ÿæˆçš„äººè®¾åˆ°æŽ§åˆ¶å°ï¼ˆå®Œæ•´å†…å®¹ï¼Œä¸æˆªæ–­ï¼‰"""
         separator = "-" * 70
         
-        # æž„å»ºå®Œæ•´è¾“å‡ºå†…å®¹ï¼ˆä¸æˆªæ–­ï¼‰
         topics_str = ', '.join(profile.interested_topics) if profile.interested_topics else 'æ— '
         
         output_lines = [
@@ -1132,7 +1022,6 @@ class OasisProfileGenerator:
         
         output = "\n".join(output_lines)
         
-        # åªè¾“å‡ºåˆ°æŽ§åˆ¶å°ï¼ˆé¿å…é‡å¤ï¼Œloggerä¸å†è¾“å‡ºå®Œæ•´å†…å®¹ï¼‰
         print(output)
     
     def save_profiles(
@@ -1142,16 +1031,9 @@ class OasisProfileGenerator:
         platform: str = "reddit"
     ):
         """
-        ä¿å­˜Profileåˆ°æ–‡ä»¶ï¼ˆæ ¹æ®å¹³å°é€‰æ‹©æ­£ç¡®æ ¼å¼ï¼‰
         
-        OASISå¹³å°æ ¼å¼è¦æ±‚ï¼š
-        - Twitter: CSVæ ¼å¼
-        - Reddit: JSONæ ¼å¼
         
         Args:
-            profiles: Profileåˆ—è¡¨
-            file_path: æ–‡ä»¶è·¯å¾„
-            platform: å¹³å°ç±»åž‹ ("reddit" æˆ– "twitter")
         """
         if platform == "twitter":
             self._save_twitter_csv(profiles, file_path)
@@ -1160,42 +1042,26 @@ class OasisProfileGenerator:
     
     def _save_twitter_csv(self, profiles: List[OasisAgentProfile], file_path: str):
         """
-        ä¿å­˜Twitter Profileä¸ºCSVæ ¼å¼ï¼ˆç¬¦åˆOASISå®˜æ–¹è¦æ±‚ï¼‰
         
-        OASIS Twitterè¦æ±‚çš„CSVå­—æ®µï¼š
-        - user_id: ç”¨æˆ·IDï¼ˆæ ¹æ®CSVé¡ºåºä»Ž0å¼€å§‹ï¼‰
-        - name: ç”¨æˆ·çœŸå®žå§“å
-        - username: ç³»ç»Ÿä¸­çš„ç”¨æˆ·å
-        - user_char: è¯¦ç»†äººè®¾æè¿°ï¼ˆæ³¨å…¥åˆ°LLMç³»ç»Ÿæç¤ºä¸­ï¼ŒæŒ‡å¯¼Agentè¡Œä¸ºï¼‰
-        - description: ç®€çŸ­çš„å…¬å¼€ç®€ä»‹ï¼ˆæ˜¾ç¤ºåœ¨ç”¨æˆ·èµ„æ–™é¡µé¢ï¼‰
         
-        user_char vs description åŒºåˆ«ï¼š
-        - user_char: å†…éƒ¨ä½¿ç”¨ï¼ŒLLMç³»ç»Ÿæç¤ºï¼Œå†³å®šAgentå¦‚ä½•æ€è€ƒå’Œè¡ŒåŠ¨
-        - description: å¤–éƒ¨æ˜¾ç¤ºï¼Œå…¶ä»–ç”¨æˆ·å¯è§çš„ç®€ä»‹
         """
         import csv
         
-        # ç¡®ä¿æ–‡ä»¶æ‰©å±•åæ˜¯.csv
         if not file_path.endswith('.csv'):
             file_path = file_path.replace('.json', '.csv')
         
         with open(file_path, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             
-            # å†™å…¥OASISè¦æ±‚çš„è¡¨å¤´
             headers = ['user_id', 'name', 'username', 'user_char', 'description']
             writer.writerow(headers)
             
-            # å†™å…¥æ•°æ®è¡Œ
             for idx, profile in enumerate(profiles):
-                # user_char: å®Œæ•´äººè®¾ï¼ˆbio + personaï¼‰ï¼Œç”¨äºŽLLMç³»ç»Ÿæç¤º
                 user_char = profile.bio
                 if profile.persona and profile.persona != profile.bio:
                     user_char = f"{profile.bio} {profile.persona}"
-                # å¤„ç†æ¢è¡Œç¬¦ï¼ˆCSVä¸­ç”¨ç©ºæ ¼æ›¿ä»£ï¼‰
                 user_char = user_char.replace('\n', ' ').replace('\r', ' ')
                 
-                # description: ç®€çŸ­ç®€ä»‹ï¼Œç”¨äºŽå¤–éƒ¨æ˜¾ç¤º
                 description = profile.bio.replace('\n', ' ').replace('\r', ' ')
                 
                 row = [
@@ -1211,22 +1077,18 @@ class OasisProfileGenerator:
     
     def _normalize_gender(self, gender: Optional[str]) -> str:
         """
-        æ ‡å‡†åŒ–genderå­—æ®µä¸ºOASISè¦æ±‚çš„è‹±æ–‡æ ¼å¼
         
-        OASISè¦æ±‚: male, female, other
         """
         if not gender:
             return "other"
         
         gender_lower = gender.lower().strip()
         
-        # ä¸­æ–‡æ˜ å°„
         gender_map = {
             "ç”·": "male",
             "å¥³": "female",
             "æœºæž„": "other",
             "å…¶ä»–": "other",
-            # è‹±æ–‡å·²æœ‰
             "male": "male",
             "female": "female",
             "other": "other",
@@ -1236,25 +1098,11 @@ class OasisProfileGenerator:
     
     def _save_reddit_json(self, profiles: List[OasisAgentProfile], file_path: str):
         """
-        ä¿å­˜Reddit Profileä¸ºJSONæ ¼å¼
         
-        ä½¿ç”¨ä¸Ž to_reddit_format() ä¸€è‡´çš„æ ¼å¼ï¼Œç¡®ä¿ OASIS èƒ½æ­£ç¡®è¯»å–ã€‚
-        å¿…é¡»åŒ…å« user_id å­—æ®µï¼Œè¿™æ˜¯ OASIS agent_graph.get_agent() åŒ¹é…çš„å…³é”®ï¼
         
-        å¿…éœ€å­—æ®µï¼š
-        - user_id: ç”¨æˆ·IDï¼ˆæ•´æ•°ï¼Œç”¨äºŽåŒ¹é… initial_posts ä¸­çš„ poster_agent_idï¼‰
-        - username: ç”¨æˆ·å
-        - name: æ˜¾ç¤ºåç§°
-        - bio: ç®€ä»‹
-        - persona: è¯¦ç»†äººè®¾
-        - age: å¹´é¾„ï¼ˆæ•´æ•°ï¼‰
-        - gender: "male", "female", æˆ– "other"
-        - mbti: MBTIç±»åž‹
-        - country: å›½å®¶
         """
         data = []
         for idx, profile in enumerate(profiles):
-            # ä½¿ç”¨ä¸Ž to_reddit_format() ä¸€è‡´çš„æ ¼å¼
             item = {
                 "user_id": profile.user_id if profile.user_id is not None else idx,  # å…³é”®ï¼šå¿…é¡»åŒ…å« user_id
                 "username": profile.user_name,
@@ -1263,14 +1111,12 @@ class OasisProfileGenerator:
                 "persona": profile.persona or f"{profile.name} is a participant in social discussions.",
                 "karma": profile.karma if profile.karma else 1000,
                 "created_at": profile.created_at,
-                # OASISå¿…éœ€å­—æ®µ - ç¡®ä¿éƒ½æœ‰é»˜è®¤å€¼
                 "age": profile.age if profile.age else 30,
                 "gender": self._normalize_gender(profile.gender),
                 "mbti": profile.mbti if profile.mbti else "ISTJ",
                 "country": profile.country if profile.country else "ä¸­å›½",
             }
             
-            # å¯é€‰å­—æ®µ
             if profile.profession:
                 item["profession"] = profile.profession
             if profile.interested_topics:
@@ -1283,7 +1129,6 @@ class OasisProfileGenerator:
         
         logger.info(f"å·²ä¿å­˜ {len(profiles)} ä¸ªReddit Profileåˆ° {file_path} (JSONæ ¼å¼ï¼ŒåŒ…å«user_idå­—æ®µ)")
     
-    # ä¿ç•™æ—§æ–¹æ³•åä½œä¸ºåˆ«åï¼Œä¿æŒå‘åŽå…¼å®¹
     def save_profiles_to_json(
         self,
         profiles: List[OasisAgentProfile],

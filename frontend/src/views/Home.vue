@@ -1,6 +1,5 @@
 <template>
   <div class="home-container">
-    <!-- Ã©Â¡Â¶Ã©Æ’Â¨Ã¥Â¯Â¼Ã¨Ë†ÂªÃ¦Â Â -->
     <nav class="navbar">
       <div class="nav-brand">POSIEDON</div>
       <div class="nav-links">
@@ -12,7 +11,6 @@
     </nav>
 
     <div class="main-content">
-      <!-- Ã¤Â¸Å Ã¥ÂÅ Ã©Æ’Â¨Ã¥Ë†â€ Ã¯Â¼Å¡Hero Ã¥Å’ÂºÃ¥Å¸Å¸ -->
       <section class="hero-section">
         <div class="hero-left">
           <div class="tag-row">
@@ -42,9 +40,8 @@
         </div>
         
         <div class="hero-right">
-          <!-- Logo Ã¥Å’ÂºÃ¥Å¸Å¸ -->
           <div class="logo-container">
-            <img src="../assets/logo/MiroFish_logo_left.jpeg" alt="Posiedon Logo" class="hero-logo" />
+            <img src="../assets/logo/Posiedon_logo_left.jpeg" alt="Posiedon Logo" class="hero-logo" />
           </div>
           
           <button class="scroll-down-btn" @click="scrollToBottom">
@@ -53,9 +50,7 @@
         </div>
       </section>
 
-      <!-- Ã¤Â¸â€¹Ã¥ÂÅ Ã©Æ’Â¨Ã¥Ë†â€ Ã¯Â¼Å¡Ã¥ÂÅ’Ã¦Â ÂÃ¥Â¸Æ’Ã¥Â±â‚¬ -->
       <section class="dashboard-section">
-        <!-- Ã¥Â·Â¦Ã¦Â ÂÃ¯Â¼Å¡Ã§Å Â¶Ã¦â‚¬ÂÃ¤Â¸Å½Ã¦Â­Â¥Ã©ÂªÂ¤ -->
         <div class="left-panel">
           <div class="panel-header">
             <span class="status-dot">Ã¢â€“Â </span> {{ $t('home.systemStatus') }}
@@ -66,7 +61,6 @@
             {{ $t('home.systemReadyDesc') }}
           </p>
           
-          <!-- Ã¦â€¢Â°Ã¦ÂÂ®Ã¦Å’â€¡Ã¦Â â€¡Ã¥ÂÂ¡Ã§â€°â€¡ -->
           <div class="metrics-row">
             <div class="metric-card">
               <div class="metric-value">{{ $t('home.metricLowCost') }}</div>
@@ -78,7 +72,6 @@
             </div>
           </div>
 
-          <!-- Ã©Â¡Â¹Ã§â€ºÂ®Ã¦Â¨Â¡Ã¦â€¹Å¸Ã¦Â­Â¥Ã©ÂªÂ¤Ã¤Â»â€¹Ã§Â»Â (Ã¦â€“Â°Ã¥Â¢Å¾Ã¥Å’ÂºÃ¥Å¸Å¸) -->
           <div class="steps-container">
             <div class="steps-header">
                <span class="diamond-icon">Ã¢â€”â€¡</span> {{ $t('home.workflowSequence') }}
@@ -123,10 +116,8 @@
           </div>
         </div>
 
-        <!-- Ã¥ÂÂ³Ã¦Â ÂÃ¯Â¼Å¡Ã¤ÂºÂ¤Ã¤Âºâ€™Ã¦Å½Â§Ã¥Ë†Â¶Ã¥ÂÂ° -->
         <div class="right-panel">
           <div class="console-box">
-            <!-- Ã¤Â¸Å Ã¤Â¼Â Ã¥Å’ÂºÃ¥Å¸Å¸ -->
             <div class="console-section">
               <div class="console-header">
                 <span class="console-label">{{ $t('home.realitySeed') }}</span>
@@ -167,12 +158,10 @@
               </div>
             </div>
 
-            <!-- Ã¥Ë†â€ Ã¥â€°Â²Ã§ÂºÂ¿ -->
             <div class="console-divider">
               <span>{{ $t('home.inputParams') }}</span>
             </div>
 
-            <!-- Ã¨Â¾â€œÃ¥â€¦Â¥Ã¥Å’ÂºÃ¥Å¸Å¸ -->
             <div class="console-section">
               <div class="console-header">
                 <span class="console-label">{{ $t('home.simulationPrompt') }}</span>
@@ -189,7 +178,6 @@
               </div>
             </div>
 
-            <!-- Ã¥ÂÂ¯Ã¥Å Â¨Ã¦Å’â€°Ã©â€™Â® -->
             <div class="console-section btn-section">
               <button 
                 class="start-engine-btn"
@@ -205,7 +193,6 @@
         </div>
       </section>
 
-      <!-- Ã¥Å½â€ Ã¥ÂÂ²Ã©Â¡Â¹Ã§â€ºÂ®Ã¦â€¢Â°Ã¦ÂÂ®Ã¥Âºâ€œ -->
       <HistoryDatabase />
     </div>
   </div>
@@ -219,41 +206,33 @@ import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 
 const router = useRouter()
 
-// Ã¨Â¡Â¨Ã¥Ââ€¢Ã¦â€¢Â°Ã¦ÂÂ®
 const formData = ref({
   simulationRequirement: ''
 })
 
-// Ã¦â€“â€¡Ã¤Â»Â¶Ã¥Ë†â€”Ã¨Â¡Â¨
 const files = ref([])
 
-// Ã§Å Â¶Ã¦â‚¬Â
 const loading = ref(false)
 const error = ref('')
 const isDragOver = ref(false)
 
-// Ã¦â€“â€¡Ã¤Â»Â¶Ã¨Â¾â€œÃ¥â€¦Â¥Ã¥Â¼â€¢Ã§â€Â¨
 const fileInput = ref(null)
 
-// Ã¨Â®Â¡Ã§Â®â€”Ã¥Â±Å¾Ã¦â‚¬Â§:Ã¦ËœÂ¯Ã¥ÂÂ¦Ã¥ÂÂ¯Ã¤Â»Â¥Ã¦ÂÂÃ¤ÂºÂ¤
 const canSubmit = computed(() => {
   return formData.value.simulationRequirement.trim() !== '' && files.value.length > 0
 })
 
-// Ã¨Â§Â¦Ã¥Ââ€˜Ã¦â€“â€¡Ã¤Â»Â¶Ã©â‚¬â€°Ã¦â€¹Â©
 const triggerFileInput = () => {
   if (!loading.value) {
     fileInput.value?.click()
   }
 }
 
-// Ã¥Â¤â€žÃ§Ââ€ Ã¦â€“â€¡Ã¤Â»Â¶Ã©â‚¬â€°Ã¦â€¹Â©
 const handleFileSelect = (event) => {
   const selectedFiles = Array.from(event.target.files)
   addFiles(selectedFiles)
 }
 
-// Ã¥Â¤â€žÃ§Ââ€ Ã¦â€¹â€“Ã¦â€¹Â½Ã§â€ºÂ¸Ã¥â€¦Â³
 const handleDragOver = (e) => {
   if (!loading.value) {
     isDragOver.value = true
@@ -272,7 +251,6 @@ const handleDrop = (e) => {
   addFiles(droppedFiles)
 }
 
-// Ã¦Â·Â»Ã¥Å Â Ã¦â€“â€¡Ã¤Â»Â¶
 const addFiles = (newFiles) => {
   const validFiles = newFiles.filter(file => {
     const ext = file.name.split('.').pop().toLowerCase()
@@ -281,12 +259,10 @@ const addFiles = (newFiles) => {
   files.value.push(...validFiles)
 }
 
-// Ã§Â§Â»Ã©â„¢Â¤Ã¦â€“â€¡Ã¤Â»Â¶
 const removeFile = (index) => {
   files.value.splice(index, 1)
 }
 
-// Ã¦Â»Å¡Ã¥Å Â¨Ã¥Ë†Â°Ã¥Âºâ€¢Ã©Æ’Â¨
 const scrollToBottom = () => {
   window.scrollTo({
     top: document.body.scrollHeight,
@@ -294,15 +270,12 @@ const scrollToBottom = () => {
   })
 }
 
-// Ã¥Â¼â‚¬Ã¥Â§â€¹Ã¦Â¨Â¡Ã¦â€¹Å¸ - Ã§Â«â€¹Ã¥ÂÂ³Ã¨Â·Â³Ã¨Â½Â¬Ã¯Â¼Å’APIÃ¨Â°Æ’Ã§â€Â¨Ã¥Å“Â¨ProcessÃ©Â¡ÂµÃ©ÂÂ¢Ã¨Â¿â€ºÃ¨Â¡Å’
 const startSimulation = () => {
   if (!canSubmit.value || loading.value) return
   
-  // Ã¥Â­ËœÃ¥â€šÂ¨Ã¥Â¾â€¦Ã¤Â¸Å Ã¤Â¼Â Ã§Å¡â€žÃ¦â€¢Â°Ã¦ÂÂ®
   import('../store/pendingUpload.js').then(({ setPendingUpload }) => {
     setPendingUpload(files.value, formData.value.simulationRequirement)
     
-    // Ã§Â«â€¹Ã¥ÂÂ³Ã¨Â·Â³Ã¨Â½Â¬Ã¥Ë†Â°ProcessÃ©Â¡ÂµÃ©ÂÂ¢Ã¯Â¼Ë†Ã¤Â½Â¿Ã§â€Â¨Ã§â€°Â¹Ã¦Â®Å Ã¦Â â€¡Ã¨Â¯â€ Ã¨Â¡Â¨Ã§Â¤ÂºÃ¦â€“Â°Ã¥Â»ÂºÃ©Â¡Â¹Ã§â€ºÂ®Ã¯Â¼â€°
     router.push({
       name: 'Process',
       params: { projectId: 'new' }

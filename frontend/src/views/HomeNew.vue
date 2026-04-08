@@ -72,7 +72,7 @@
         <div class="hero-right">
           <div class="logo-glow-container">
             <div class="logo-glow"></div>
-            <img src="../assets/logo/MiroFish_logo_left.jpeg" alt="Posiedon Logo" class="hero-logo" />
+            <img src="../assets/logo/Posiedon_logo_left.jpeg" alt="Posiedon Logo" class="hero-logo" />
           </div>
         </div>
       </div>

@@ -49,7 +49,6 @@
         />
       </div>
 
-      <!-- Right Panel: Step3 å¼€å§‹æ¨¡æ‹Ÿ -->
       <div class="panel-wrapper right" :style="rightPanelStyle">
         <Step3Simulation
           :simulationId="currentSimulationId"
@@ -92,7 +91,6 @@ const viewMode = ref('split')
 
 // Data State
 const currentSimulationId = ref(route.params.simulationId)
-// ç›´æŽ¥åœ¨åˆå§‹åŒ–æ—¶ä»Ž query å‚æ•°èŽ·å– maxRoundsï¼Œç¡®ä¿å­ç»„ä»¶èƒ½ç«‹å³èŽ·å–åˆ°å€¼
 const maxRounds = ref(route.query.maxRounds ? parseInt(route.query.maxRounds) : null)
 const minutesPerRound = ref(30) // é»˜è®¤æ¯è½®30åˆ†é’Ÿ
 const projectData = ref(null)
@@ -150,14 +148,11 @@ const toggleMaximize = (target) => {
 }
 
 const handleGoBack = async () => {
-  // åœ¨è¿”å›ž Step 2 ä¹‹å‰ï¼Œå…ˆå…³é—­æ­£åœ¨è¿è¡Œçš„æ¨¡æ‹Ÿ
   addLog(t('log.preparingGoBack'))
   
-  // åœæ­¢è½®è¯¢
   stopGraphRefresh()
   
   try {
-    // å…ˆå°è¯•ä¼˜é›…å…³é—­æ¨¡æ‹ŸçŽ¯å¢ƒ
     const envStatusRes = await getEnvStatus({ simulation_id: currentSimulationId.value })
     
     if (envStatusRes.success && envStatusRes.data?.env_alive) {
@@ -178,7 +173,6 @@ const handleGoBack = async () => {
         }
       }
     } else {
-      // çŽ¯å¢ƒæœªè¿è¡Œï¼Œæ£€æŸ¥æ˜¯å¦éœ€è¦åœæ­¢è¿›ç¨‹
       if (isSimulating.value) {
         addLog(t('log.stoppingSimProcess'))
         try {
@@ -193,13 +187,10 @@ const handleGoBack = async () => {
     addLog(t('log.checkStatusFailed', { error: err.message }))
   }
   
-  // è¿”å›žåˆ° Step 2 (çŽ¯å¢ƒæ­å»º)
   router.push({ name: 'Simulation', params: { simulationId: currentSimulationId.value } })
 }
 
 const handleNextStep = () => {
-  // Step3Simulation ç»„ä»¶ä¼šç›´æŽ¥å¤„ç†æŠ¥å‘Šç”Ÿæˆå’Œè·¯ç”±è·³è½¬
-  // è¿™ä¸ªæ–¹æ³•ä»…ä½œä¸ºå¤‡ç”¨
   addLog(t('log.enterStep4'))
 }
 
@@ -208,12 +199,10 @@ const loadSimulationData = async () => {
   try {
     addLog(t('log.loadingSimData', { id: currentSimulationId.value }))
     
-    // èŽ·å– simulation ä¿¡æ¯
     const simRes = await getSimulation(currentSimulationId.value)
     if (simRes.success && simRes.data) {
       const simData = simRes.data
       
-      // èŽ·å– simulation config ä»¥èŽ·å– minutes_per_round
       try {
         const configRes = await getSimulationConfig(currentSimulationId.value)
         if (configRes.success && configRes.data?.time_config?.minutes_per_round) {
@@ -224,14 +213,12 @@ const loadSimulationData = async () => {
         addLog(t('log.timeConfigFetchFailed', { minutes: minutesPerRound.value }))
       }
       
-      // èŽ·å– project ä¿¡æ¯
       if (simData.project_id) {
         const projRes = await getProject(simData.project_id)
         if (projRes.success && projRes.data) {
           projectData.value = projRes.data
           addLog(t('log.projectLoadSuccess', { id: projRes.data.project_id }))
           
-          // èŽ·å– graph æ•°æ®
           if (projRes.data.graph_id) {
             await loadGraph(projRes.data.graph_id)
           }
@@ -246,8 +233,6 @@ const loadSimulationData = async () => {
 }
 
 const loadGraph = async (graphId) => {
-  // å½“æ­£åœ¨æ¨¡æ‹Ÿæ—¶ï¼Œè‡ªåŠ¨åˆ·æ–°ä¸æ˜¾ç¤ºå…¨å± loadingï¼Œä»¥å…é—ªçƒ
-  // æ‰‹åŠ¨åˆ·æ–°æˆ–åˆå§‹åŠ è½½æ—¶æ˜¾ç¤º loading
   if (!isSimulating.value) {
     graphLoading.value = true
   }
@@ -279,7 +264,6 @@ let graphRefreshTimer = null
 const startGraphRefresh = () => {
   if (graphRefreshTimer) return
   addLog(t('log.graphRealtimeRefreshStart'))
-  // ç«‹å³åˆ·æ–°ä¸€æ¬¡ï¼Œç„¶åŽæ¯30ç§’åˆ·æ–°
   graphRefreshTimer = setInterval(refreshGraph, 30000)
 }
 
@@ -302,7 +286,6 @@ watch(isSimulating, (newValue) => {
 onMounted(() => {
   addLog(t('log.simRunViewInit'))
   
-  // è®°å½• maxRounds é…ç½®ï¼ˆå€¼å·²åœ¨åˆå§‹åŒ–æ—¶ä»Ž query å‚æ•°èŽ·å–ï¼‰
   if (maxRounds.value) {
     addLog(t('log.customRounds', { rounds: maxRounds.value }))
   }

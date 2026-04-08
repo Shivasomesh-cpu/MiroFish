@@ -1,11 +1,5 @@
 """
-æ¨¡æ‹ŸIPCé€šä¿¡æ¨¡å—
-ç”¨äºŽFlaskåŽç«¯å’Œæ¨¡æ‹Ÿè„šæœ¬ä¹‹é—´çš„è¿›ç¨‹é—´é€šä¿¡
 
-é€šè¿‡æ–‡ä»¶ç³»ç»Ÿå®žçŽ°ç®€å•çš„å‘½ä»¤/å“åº”æ¨¡å¼ï¼š
-1. Flaskå†™å…¥å‘½ä»¤åˆ° commands/ ç›®å½•
-2. æ¨¡æ‹Ÿè„šæœ¬è½®è¯¢å‘½ä»¤ç›®å½•ï¼Œæ‰§è¡Œå‘½ä»¤å¹¶å†™å…¥å“åº”åˆ° responses/ ç›®å½•
-3. Flaskè½®è¯¢å“åº”ç›®å½•èŽ·å–ç»“æžœ
 """
 
 import os
@@ -94,23 +88,18 @@ class IPCResponse:
 
 class SimulationIPCClient:
     """
-    æ¨¡æ‹ŸIPCå®¢æˆ·ç«¯ï¼ˆFlaskç«¯ä½¿ç”¨ï¼‰
     
-    ç”¨äºŽå‘æ¨¡æ‹Ÿè¿›ç¨‹å‘é€å‘½ä»¤å¹¶ç­‰å¾…å“åº”
     """
     
     def __init__(self, simulation_dir: str):
         """
-        åˆå§‹åŒ–IPCå®¢æˆ·ç«¯
         
         Args:
-            simulation_dir: æ¨¡æ‹Ÿæ•°æ®ç›®å½•
         """
         self.simulation_dir = simulation_dir
         self.commands_dir = os.path.join(simulation_dir, "ipc_commands")
         self.responses_dir = os.path.join(simulation_dir, "ipc_responses")
         
-        # ç¡®ä¿ç›®å½•å­˜åœ¨
         os.makedirs(self.commands_dir, exist_ok=True)
         os.makedirs(self.responses_dir, exist_ok=True)
     
@@ -122,19 +111,13 @@ class SimulationIPCClient:
         poll_interval: float = 0.5
     ) -> IPCResponse:
         """
-        å‘é€å‘½ä»¤å¹¶ç­‰å¾…å“åº”
         
         Args:
-            command_type: å‘½ä»¤ç±»åž‹
-            args: å‘½ä»¤å‚æ•°
-            timeout: è¶…æ—¶æ—¶é—´ï¼ˆç§’ï¼‰
-            poll_interval: è½®è¯¢é—´éš”ï¼ˆç§’ï¼‰
             
         Returns:
             IPCResponse
             
         Raises:
-            TimeoutError: ç­‰å¾…å“åº”è¶…æ—¶
         """
         command_id = str(uuid.uuid4())
         command = IPCCommand(
@@ -143,14 +126,12 @@ class SimulationIPCClient:
             args=args
         )
         
-        # å†™å…¥å‘½ä»¤æ–‡ä»¶
         command_file = os.path.join(self.commands_dir, f"{command_id}.json")
         with open(command_file, 'w', encoding='utf-8') as f:
             json.dump(command.to_dict(), f, ensure_ascii=False, indent=2)
         
         logger.info(f"å‘é€IPCå‘½ä»¤: {command_type.value}, command_id={command_id}")
         
-        # ç­‰å¾…å“åº”
         response_file = os.path.join(self.responses_dir, f"{command_id}.json")
         start_time = time.time()
         
@@ -161,7 +142,6 @@ class SimulationIPCClient:
                         response_data = json.load(f)
                     response = IPCResponse.from_dict(response_data)
                     
-                    # æ¸…ç†å‘½ä»¤å’Œå“åº”æ–‡ä»¶
                     try:
                         os.remove(command_file)
                         os.remove(response_file)
@@ -175,10 +155,8 @@ class SimulationIPCClient:
             
             time.sleep(poll_interval)
         
-        # è¶…æ—¶
         logger.error(f"ç­‰å¾…IPCå“åº”è¶…æ—¶: command_id={command_id}")
         
-        # æ¸…ç†å‘½ä»¤æ–‡ä»¶
         try:
             os.remove(command_file)
         except OSError:
@@ -194,19 +172,11 @@ class SimulationIPCClient:
         timeout: float = 60.0
     ) -> IPCResponse:
         """
-        å‘é€å•ä¸ªAgenté‡‡è®¿å‘½ä»¤
         
         Args:
             agent_id: Agent ID
-            prompt: é‡‡è®¿é—®é¢˜
-            platform: æŒ‡å®šå¹³å°ï¼ˆå¯é€‰ï¼‰
-                - "twitter": åªé‡‡è®¿Twitterå¹³å°
-                - "reddit": åªé‡‡è®¿Redditå¹³å°  
-                - None: åŒå¹³å°æ¨¡æ‹Ÿæ—¶åŒæ—¶é‡‡è®¿ä¸¤ä¸ªå¹³å°ï¼Œå•å¹³å°æ¨¡æ‹Ÿæ—¶é‡‡è®¿è¯¥å¹³å°
-            timeout: è¶…æ—¶æ—¶é—´
             
         Returns:
-            IPCResponseï¼Œresultå­—æ®µåŒ…å«é‡‡è®¿ç»“æžœ
         """
         args = {
             "agent_id": agent_id,
@@ -228,18 +198,10 @@ class SimulationIPCClient:
         timeout: float = 120.0
     ) -> IPCResponse:
         """
-        å‘é€æ‰¹é‡é‡‡è®¿å‘½ä»¤
         
         Args:
-            interviews: é‡‡è®¿åˆ—è¡¨ï¼Œæ¯ä¸ªå…ƒç´ åŒ…å« {"agent_id": int, "prompt": str, "platform": str(å¯é€‰)}
-            platform: é»˜è®¤å¹³å°ï¼ˆå¯é€‰ï¼Œä¼šè¢«æ¯ä¸ªé‡‡è®¿é¡¹çš„platformè¦†ç›–ï¼‰
-                - "twitter": é»˜è®¤åªé‡‡è®¿Twitterå¹³å°
-                - "reddit": é»˜è®¤åªé‡‡è®¿Redditå¹³å°
-                - None: åŒå¹³å°æ¨¡æ‹Ÿæ—¶æ¯ä¸ªAgentåŒæ—¶é‡‡è®¿ä¸¤ä¸ªå¹³å°
-            timeout: è¶…æ—¶æ—¶é—´
             
         Returns:
-            IPCResponseï¼Œresultå­—æ®µåŒ…å«æ‰€æœ‰é‡‡è®¿ç»“æžœ
         """
         args = {"interviews": interviews}
         if platform:
@@ -253,10 +215,8 @@ class SimulationIPCClient:
     
     def send_close_env(self, timeout: float = 30.0) -> IPCResponse:
         """
-        å‘é€å…³é—­çŽ¯å¢ƒå‘½ä»¤
         
         Args:
-            timeout: è¶…æ—¶æ—¶é—´
             
         Returns:
             IPCResponse
@@ -269,9 +229,7 @@ class SimulationIPCClient:
     
     def check_env_alive(self) -> bool:
         """
-        æ£€æŸ¥æ¨¡æ‹ŸçŽ¯å¢ƒæ˜¯å¦å­˜æ´»
         
-        é€šè¿‡æ£€æŸ¥ env_status.json æ–‡ä»¶æ¥åˆ¤æ–­
         """
         status_file = os.path.join(self.simulation_dir, "env_status.json")
         if not os.path.exists(status_file):
@@ -287,27 +245,21 @@ class SimulationIPCClient:
 
 class SimulationIPCServer:
     """
-    æ¨¡æ‹ŸIPCæœåŠ¡å™¨ï¼ˆæ¨¡æ‹Ÿè„šæœ¬ç«¯ä½¿ç”¨ï¼‰
     
-    è½®è¯¢å‘½ä»¤ç›®å½•ï¼Œæ‰§è¡Œå‘½ä»¤å¹¶è¿”å›žå“åº”
     """
     
     def __init__(self, simulation_dir: str):
         """
-        åˆå§‹åŒ–IPCæœåŠ¡å™¨
         
         Args:
-            simulation_dir: æ¨¡æ‹Ÿæ•°æ®ç›®å½•
         """
         self.simulation_dir = simulation_dir
         self.commands_dir = os.path.join(simulation_dir, "ipc_commands")
         self.responses_dir = os.path.join(simulation_dir, "ipc_responses")
         
-        # ç¡®ä¿ç›®å½•å­˜åœ¨
         os.makedirs(self.commands_dir, exist_ok=True)
         os.makedirs(self.responses_dir, exist_ok=True)
         
-        # çŽ¯å¢ƒçŠ¶æ€
         self._running = False
     
     def start(self):
@@ -331,15 +283,12 @@ class SimulationIPCServer:
     
     def poll_commands(self) -> Optional[IPCCommand]:
         """
-        è½®è¯¢å‘½ä»¤ç›®å½•ï¼Œè¿”å›žç¬¬ä¸€ä¸ªå¾…å¤„ç†çš„å‘½ä»¤
         
         Returns:
-            IPCCommand æˆ– None
         """
         if not os.path.exists(self.commands_dir):
             return None
         
-        # æŒ‰æ—¶é—´æŽ’åºèŽ·å–å‘½ä»¤æ–‡ä»¶
         command_files = []
         for filename in os.listdir(self.commands_dir):
             if filename.endswith('.json'):
@@ -361,16 +310,13 @@ class SimulationIPCServer:
     
     def send_response(self, response: IPCResponse):
         """
-        å‘é€å“åº”
         
         Args:
-            response: IPCå“åº”
         """
         response_file = os.path.join(self.responses_dir, f"{response.command_id}.json")
         with open(response_file, 'w', encoding='utf-8') as f:
             json.dump(response.to_dict(), f, ensure_ascii=False, indent=2)
         
-        # åˆ é™¤å‘½ä»¤æ–‡ä»¶
         command_file = os.path.join(self.commands_dir, f"{response.command_id}.json")
         try:
             os.remove(command_file)

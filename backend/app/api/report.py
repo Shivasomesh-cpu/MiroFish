@@ -1,6 +1,4 @@
 """
-Report APIè·¯ç”±
-æä¾›æ¨¡æ‹ŸæŠ¥å‘Šç”Ÿæˆã€èŽ·å–ã€å¯¹è¯ç­‰æŽ¥å£
 """
 
 import os
@@ -20,30 +18,21 @@ from ..utils.locale import t, get_locale, set_locale
 logger = get_logger('posiedon.api.report')
 
 
-# ============== æŠ¥å‘Šç”ŸæˆæŽ¥å£ ==============
 
 @report_bp.route('/generate', methods=['POST'])
 def generate_report():
     """
-    ç”Ÿæˆæ¨¡æ‹Ÿåˆ†æžæŠ¥å‘Šï¼ˆå¼‚æ­¥ä»»åŠ¡ï¼‰
     
-    è¿™æ˜¯ä¸€ä¸ªè€—æ—¶æ“ä½œï¼ŒæŽ¥å£ä¼šç«‹å³è¿”å›žtask_idï¼Œ
-    ä½¿ç”¨ GET /api/report/generate/status æŸ¥è¯¢è¿›åº¦
     
-    è¯·æ±‚ï¼ˆJSONï¼‰ï¼š
         {
-            "simulation_id": "sim_xxxx",    // å¿…å¡«ï¼Œæ¨¡æ‹ŸID
-            "force_regenerate": false        // å¯é€‰ï¼Œå¼ºåˆ¶é‡æ–°ç”Ÿæˆ
         }
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
                 "simulation_id": "sim_xxxx",
                 "task_id": "task_xxxx",
                 "status": "generating",
-                "message": "æŠ¥å‘Šç”Ÿæˆä»»åŠ¡å·²å¯åŠ¨"
             }
         }
     """
@@ -59,7 +48,6 @@ def generate_report():
 
         force_regenerate = data.get('force_regenerate', False)
         
-        # èŽ·å–æ¨¡æ‹Ÿä¿¡æ¯
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
         
@@ -69,7 +57,6 @@ def generate_report():
                 "error": t('api.simulationNotFound', id=simulation_id)
             }), 404
 
-        # æ£€æŸ¥æ˜¯å¦å·²æœ‰æŠ¥å‘Š
         if not force_regenerate:
             existing_report = ReportManager.get_report_by_simulation(simulation_id)
             if existing_report and existing_report.status == ReportStatus.COMPLETED:
@@ -84,7 +71,6 @@ def generate_report():
                     }
                 })
         
-        # èŽ·å–é¡¹ç›®ä¿¡æ¯
         project = ProjectManager.get_project(state.project_id)
         if not project:
             return jsonify({
@@ -106,11 +92,9 @@ def generate_report():
                 "error": t('api.missingSimRequirement')
             }), 400
         
-        # æå‰ç”Ÿæˆ report_idï¼Œä»¥ä¾¿ç«‹å³è¿”å›žç»™å‰ç«¯
         import uuid
         report_id = f"report_{uuid.uuid4().hex[:12]}"
         
-        # åˆ›å»ºå¼‚æ­¥ä»»åŠ¡
         task_manager = TaskManager()
         task_id = task_manager.create_task(
             task_type="report_generate",
@@ -124,7 +108,6 @@ def generate_report():
         # Capture locale before spawning background thread
         current_locale = get_locale()
 
-        # å®šä¹‰åŽå°ä»»åŠ¡
         def run_generate():
             set_locale(current_locale)
             try:
@@ -135,14 +118,12 @@ def generate_report():
                     message=t('api.initReportAgent')
                 )
                 
-                # åˆ›å»ºReport Agent
                 agent = ReportAgent(
                     graph_id=graph_id,
                     simulation_id=simulation_id,
                     simulation_requirement=simulation_requirement
                 )
                 
-                # è¿›åº¦å›žè°ƒ
                 def progress_callback(stage, progress, message):
                     task_manager.update_task(
                         task_id,
@@ -150,13 +131,11 @@ def generate_report():
                         message=f"[{stage}] {message}"
                     )
                 
-                # ç”ŸæˆæŠ¥å‘Šï¼ˆä¼ å…¥é¢„å…ˆç”Ÿæˆçš„ report_idï¼‰
                 report = agent.generate_report(
                     progress_callback=progress_callback,
                     report_id=report_id
                 )
                 
-                # ä¿å­˜æŠ¥å‘Š
                 ReportManager.save_report(report)
                 
                 if report.status == ReportStatus.COMPLETED:
@@ -175,7 +154,6 @@ def generate_report():
                 logger.error(f"æŠ¥å‘Šç”Ÿæˆå¤±è´¥: {str(e)}")
                 task_manager.fail_task(task_id, str(e))
         
-        # å¯åŠ¨åŽå°çº¿ç¨‹
         thread = threading.Thread(target=run_generate, daemon=True)
         thread.start()
         
@@ -203,15 +181,10 @@ def generate_report():
 @report_bp.route('/generate/status', methods=['POST'])
 def get_generate_status():
     """
-    æŸ¥è¯¢æŠ¥å‘Šç”Ÿæˆä»»åŠ¡è¿›åº¦
     
-    è¯·æ±‚ï¼ˆJSONï¼‰ï¼š
         {
-            "task_id": "task_xxxx",         // å¯é€‰ï¼Œgenerateè¿”å›žçš„task_id
-            "simulation_id": "sim_xxxx"     // å¯é€‰ï¼Œæ¨¡æ‹ŸID
         }
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -228,7 +201,6 @@ def get_generate_status():
         task_id = data.get('task_id')
         simulation_id = data.get('simulation_id')
         
-        # å¦‚æžœæä¾›äº†simulation_idï¼Œå…ˆæ£€æŸ¥æ˜¯å¦å·²æœ‰å®Œæˆçš„æŠ¥å‘Š
         if simulation_id:
             existing_report = ReportManager.get_report_by_simulation(simulation_id)
             if existing_report and existing_report.status == ReportStatus.COMPLETED:
@@ -272,14 +244,11 @@ def get_generate_status():
         }), 500
 
 
-# ============== æŠ¥å‘ŠèŽ·å–æŽ¥å£ ==============
 
 @report_bp.route('/<report_id>', methods=['GET'])
 def get_report(report_id: str):
     """
-    èŽ·å–æŠ¥å‘Šè¯¦æƒ…
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -319,9 +288,7 @@ def get_report(report_id: str):
 @report_bp.route('/by-simulation/<simulation_id>', methods=['GET'])
 def get_report_by_simulation(simulation_id: str):
     """
-    æ ¹æ®æ¨¡æ‹ŸIDèŽ·å–æŠ¥å‘Š
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -358,13 +325,8 @@ def get_report_by_simulation(simulation_id: str):
 @report_bp.route('/list', methods=['GET'])
 def list_reports():
     """
-    åˆ—å‡ºæ‰€æœ‰æŠ¥å‘Š
     
-    Queryå‚æ•°ï¼š
-        simulation_id: æŒ‰æ¨¡æ‹ŸIDè¿‡æ»¤ï¼ˆå¯é€‰ï¼‰
-        limit: è¿”å›žæ•°é‡é™åˆ¶ï¼ˆé»˜è®¤50ï¼‰
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": [...],
@@ -398,9 +360,7 @@ def list_reports():
 @report_bp.route('/<report_id>/download', methods=['GET'])
 def download_report(report_id: str):
     """
-    ä¸‹è½½æŠ¥å‘Šï¼ˆMarkdownæ ¼å¼ï¼‰
     
-    è¿”å›žMarkdownæ–‡ä»¶
     """
     try:
         report = ReportManager.get_report(report_id)
@@ -414,7 +374,6 @@ def download_report(report_id: str):
         md_path = ReportManager._get_report_markdown_path(report_id)
         
         if not os.path.exists(md_path):
-            # å¦‚æžœMDæ–‡ä»¶ä¸å­˜åœ¨ï¼Œç”Ÿæˆä¸€ä¸ªä¸´æ—¶æ–‡ä»¶
             import tempfile
             with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
                 f.write(report.markdown_content)
@@ -467,32 +426,21 @@ def delete_report(report_id: str):
         }), 500
 
 
-# ============== Report Agentå¯¹è¯æŽ¥å£ ==============
 
 @report_bp.route('/chat', methods=['POST'])
 def chat_with_report_agent():
     """
-    ä¸ŽReport Agentå¯¹è¯
     
-    Report Agentå¯ä»¥åœ¨å¯¹è¯ä¸­è‡ªä¸»è°ƒç”¨æ£€ç´¢å·¥å…·æ¥å›žç­”é—®é¢˜
     
-    è¯·æ±‚ï¼ˆJSONï¼‰ï¼š
         {
-            "simulation_id": "sim_xxxx",        // å¿…å¡«ï¼Œæ¨¡æ‹ŸID
-            "message": "è¯·è§£é‡Šä¸€ä¸‹èˆ†æƒ…èµ°å‘",    // å¿…å¡«ï¼Œç”¨æˆ·æ¶ˆæ¯
-            "chat_history": [                   // å¯é€‰ï¼Œå¯¹è¯åŽ†å²
                 {"role": "user", "content": "..."},
                 {"role": "assistant", "content": "..."}
             ]
         }
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
-                "response": "Agentå›žå¤...",
-                "tool_calls": [è°ƒç”¨çš„å·¥å…·åˆ—è¡¨],
-                "sources": [ä¿¡æ¯æ¥æº]
             }
         }
     """
@@ -515,7 +463,6 @@ def chat_with_report_agent():
                 "error": t('api.requireMessage')
             }), 400
         
-        # èŽ·å–æ¨¡æ‹Ÿå’Œé¡¹ç›®ä¿¡æ¯
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
         
@@ -541,7 +488,6 @@ def chat_with_report_agent():
         
         simulation_requirement = project.simulation_requirement or ""
         
-        # åˆ›å»ºAgentå¹¶è¿›è¡Œå¯¹è¯
         agent = ReportAgent(
             graph_id=graph_id,
             simulation_id=simulation_id,
@@ -564,22 +510,16 @@ def chat_with_report_agent():
         }), 500
 
 
-# ============== æŠ¥å‘Šè¿›åº¦ä¸Žåˆ†ç« èŠ‚æŽ¥å£ ==============
 
 @report_bp.route('/<report_id>/progress', methods=['GET'])
 def get_report_progress(report_id: str):
     """
-    èŽ·å–æŠ¥å‘Šç”Ÿæˆè¿›åº¦ï¼ˆå®žæ—¶ï¼‰
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
                 "status": "generating",
                 "progress": 45,
-                "message": "æ­£åœ¨ç”Ÿæˆç« èŠ‚: å…³é”®å‘çŽ°",
-                "current_section": "å…³é”®å‘çŽ°",
-                "completed_sections": ["æ‰§è¡Œæ‘˜è¦", "æ¨¡æ‹ŸèƒŒæ™¯"],
                 "updated_at": "2025-12-09T..."
             }
         }
@@ -610,11 +550,8 @@ def get_report_progress(report_id: str):
 @report_bp.route('/<report_id>/sections', methods=['GET'])
 def get_report_sections(report_id: str):
     """
-    èŽ·å–å·²ç”Ÿæˆçš„ç« èŠ‚åˆ—è¡¨ï¼ˆåˆ†ç« èŠ‚è¾“å‡ºï¼‰
     
-    å‰ç«¯å¯ä»¥è½®è¯¢æ­¤æŽ¥å£èŽ·å–å·²ç”Ÿæˆçš„ç« èŠ‚å†…å®¹ï¼Œæ— éœ€ç­‰å¾…æ•´ä¸ªæŠ¥å‘Šå®Œæˆ
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -623,7 +560,6 @@ def get_report_sections(report_id: str):
                     {
                         "filename": "section_01.md",
                         "section_index": 1,
-                        "content": "## æ‰§è¡Œæ‘˜è¦\\n\\n..."
                     },
                     ...
                 ],
@@ -635,7 +571,6 @@ def get_report_sections(report_id: str):
     try:
         sections = ReportManager.get_generated_sections(report_id)
         
-        # èŽ·å–æŠ¥å‘ŠçŠ¶æ€
         report = ReportManager.get_report(report_id)
         is_complete = report is not None and report.status == ReportStatus.COMPLETED
         
@@ -661,14 +596,11 @@ def get_report_sections(report_id: str):
 @report_bp.route('/<report_id>/section/<int:section_index>', methods=['GET'])
 def get_single_section(report_id: str, section_index: int):
     """
-    èŽ·å–å•ä¸ªç« èŠ‚å†…å®¹
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
                 "filename": "section_01.md",
-                "content": "## æ‰§è¡Œæ‘˜è¦\\n\\n..."
             }
         }
     """
@@ -702,16 +634,12 @@ def get_single_section(report_id: str, section_index: int):
         }), 500
 
 
-# ============== æŠ¥å‘ŠçŠ¶æ€æ£€æŸ¥æŽ¥å£ ==============
 
 @report_bp.route('/check/<simulation_id>', methods=['GET'])
 def check_report_status(simulation_id: str):
     """
-    æ£€æŸ¥æ¨¡æ‹Ÿæ˜¯å¦æœ‰æŠ¥å‘Šï¼Œä»¥åŠæŠ¥å‘ŠçŠ¶æ€
     
-    ç”¨äºŽå‰ç«¯åˆ¤æ–­æ˜¯å¦è§£é”InterviewåŠŸèƒ½
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -730,7 +658,6 @@ def check_report_status(simulation_id: str):
         report_status = report.status.value if report else None
         report_id = report.report_id if report else None
         
-        # åªæœ‰æŠ¥å‘Šå®ŒæˆåŽæ‰è§£é”interview
         interview_unlocked = has_report and report.status == ReportStatus.COMPLETED
         
         return jsonify({
@@ -753,22 +680,13 @@ def check_report_status(simulation_id: str):
         }), 500
 
 
-# ============== Agent æ—¥å¿—æŽ¥å£ ==============
 
 @report_bp.route('/<report_id>/agent-log', methods=['GET'])
 def get_agent_log(report_id: str):
     """
-    èŽ·å– Report Agent çš„è¯¦ç»†æ‰§è¡Œæ—¥å¿—
     
-    å®žæ—¶èŽ·å–æŠ¥å‘Šç”Ÿæˆè¿‡ç¨‹ä¸­çš„æ¯ä¸€æ­¥åŠ¨ä½œï¼ŒåŒ…æ‹¬ï¼š
-    - æŠ¥å‘Šå¼€å§‹ã€è§„åˆ’å¼€å§‹/å®Œæˆ
-    - æ¯ä¸ªç« èŠ‚çš„å¼€å§‹ã€å·¥å…·è°ƒç”¨ã€LLMå“åº”ã€å®Œæˆ
-    - æŠ¥å‘Šå®Œæˆæˆ–å¤±è´¥
     
-    Queryå‚æ•°ï¼š
-        from_line: ä»Žç¬¬å‡ è¡Œå¼€å§‹è¯»å–ï¼ˆå¯é€‰ï¼Œé»˜è®¤0ï¼Œç”¨äºŽå¢žé‡èŽ·å–ï¼‰
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -779,7 +697,6 @@ def get_agent_log(report_id: str):
                         "report_id": "report_xxxx",
                         "action": "tool_call",
                         "stage": "generating",
-                        "section_title": "æ‰§è¡Œæ‘˜è¦",
                         "section_index": 1,
                         "details": {
                             "tool_name": "insight_forge",
@@ -817,9 +734,7 @@ def get_agent_log(report_id: str):
 @report_bp.route('/<report_id>/agent-log/stream', methods=['GET'])
 def stream_agent_log(report_id: str):
     """
-    èŽ·å–å®Œæ•´çš„ Agent æ—¥å¿—ï¼ˆä¸€æ¬¡æ€§èŽ·å–å…¨éƒ¨ï¼‰
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -848,27 +763,17 @@ def stream_agent_log(report_id: str):
         }), 500
 
 
-# ============== æŽ§åˆ¶å°æ—¥å¿—æŽ¥å£ ==============
 
 @report_bp.route('/<report_id>/console-log', methods=['GET'])
 def get_console_log(report_id: str):
     """
-    èŽ·å– Report Agent çš„æŽ§åˆ¶å°è¾“å‡ºæ—¥å¿—
     
-    å®žæ—¶èŽ·å–æŠ¥å‘Šç”Ÿæˆè¿‡ç¨‹ä¸­çš„æŽ§åˆ¶å°è¾“å‡ºï¼ˆINFOã€WARNINGç­‰ï¼‰ï¼Œ
-    è¿™ä¸Ž agent-log æŽ¥å£è¿”å›žçš„ç»“æž„åŒ– JSON æ—¥å¿—ä¸åŒï¼Œ
-    æ˜¯çº¯æ–‡æœ¬æ ¼å¼çš„æŽ§åˆ¶å°é£Žæ ¼æ—¥å¿—ã€‚
     
-    Queryå‚æ•°ï¼š
-        from_line: ä»Žç¬¬å‡ è¡Œå¼€å§‹è¯»å–ï¼ˆå¯é€‰ï¼Œé»˜è®¤0ï¼Œç”¨äºŽå¢žé‡èŽ·å–ï¼‰
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
                 "logs": [
-                    "[19:46:14] INFO: æœç´¢å®Œæˆ: æ‰¾åˆ° 15 æ¡ç›¸å…³äº‹å®ž",
-                    "[19:46:14] INFO: å›¾è°±æœç´¢: graph_id=xxx, query=...",
                     ...
                 ],
                 "total_lines": 100,
@@ -899,9 +804,7 @@ def get_console_log(report_id: str):
 @report_bp.route('/<report_id>/console-log/stream', methods=['GET'])
 def stream_console_log(report_id: str):
     """
-    èŽ·å–å®Œæ•´çš„æŽ§åˆ¶å°æ—¥å¿—ï¼ˆä¸€æ¬¡æ€§èŽ·å–å…¨éƒ¨ï¼‰
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -930,17 +833,13 @@ def stream_console_log(report_id: str):
         }), 500
 
 
-# ============== å·¥å…·è°ƒç”¨æŽ¥å£ï¼ˆä¾›è°ƒè¯•ä½¿ç”¨ï¼‰==============
 
 @report_bp.route('/tools/search', methods=['POST'])
 def search_graph_tool():
     """
-    å›¾è°±æœç´¢å·¥å…·æŽ¥å£ï¼ˆä¾›è°ƒè¯•ä½¿ç”¨ï¼‰
     
-    è¯·æ±‚ï¼ˆJSONï¼‰ï¼š
         {
             "graph_id": "posiedon_xxxx",
-            "query": "æœç´¢æŸ¥è¯¢",
             "limit": 10
         }
     """
@@ -983,9 +882,7 @@ def search_graph_tool():
 @report_bp.route('/tools/statistics', methods=['POST'])
 def get_graph_statistics_tool():
     """
-    å›¾è°±ç»Ÿè®¡å·¥å…·æŽ¥å£ï¼ˆä¾›è°ƒè¯•ä½¿ç”¨ï¼‰
     
-    è¯·æ±‚ï¼ˆJSONï¼‰ï¼š
         {
             "graph_id": "posiedon_xxxx"
         }

@@ -1,6 +1,4 @@
 """
-æ¨¡æ‹Ÿç›¸å…³APIè·¯ç”±
-Step2: Zepå®žä½“è¯»å–ä¸Žè¿‡æ»¤ã€OASISæ¨¡æ‹Ÿå‡†å¤‡ä¸Žè¿è¡Œï¼ˆå…¨ç¨‹è‡ªåŠ¨åŒ–ï¼‰
 """
 
 import os
@@ -22,41 +20,29 @@ from ..models.project import ProjectManager
 logger = get_logger('posiedon.api.simulation')
 
 
-# Interview prompt ä¼˜åŒ–å‰ç¼€
-# æ·»åŠ æ­¤å‰ç¼€å¯ä»¥é¿å…Agentè°ƒç”¨å·¥å…·ï¼Œç›´æŽ¥ç”¨æ–‡æœ¬å›žå¤
 INTERVIEW_PROMPT_PREFIX = "ç»“åˆä½ çš„äººè®¾ã€æ‰€æœ‰çš„è¿‡å¾€è®°å¿†ä¸Žè¡ŒåŠ¨ï¼Œä¸è°ƒç”¨ä»»ä½•å·¥å…·ç›´æŽ¥ç”¨æ–‡æœ¬å›žå¤æˆ‘ï¼š"
 
 
 def optimize_interview_prompt(prompt: str) -> str:
     """
-    ä¼˜åŒ–Interviewæé—®ï¼Œæ·»åŠ å‰ç¼€é¿å…Agentè°ƒç”¨å·¥å…·
     
     Args:
-        prompt: åŽŸå§‹æé—®
         
     Returns:
-        ä¼˜åŒ–åŽçš„æé—®
     """
     if not prompt:
         return prompt
-    # é¿å…é‡å¤æ·»åŠ å‰ç¼€
     if prompt.startswith(INTERVIEW_PROMPT_PREFIX):
         return prompt
     return f"{INTERVIEW_PROMPT_PREFIX}{prompt}"
 
 
-# ============== å®žä½“è¯»å–æŽ¥å£ ==============
 
 @simulation_bp.route('/entities/<graph_id>', methods=['GET'])
 def get_graph_entities(graph_id: str):
     """
-    èŽ·å–å›¾è°±ä¸­çš„æ‰€æœ‰å®žä½“ï¼ˆå·²è¿‡æ»¤ï¼‰
     
-    åªè¿”å›žç¬¦åˆé¢„å®šä¹‰å®žä½“ç±»åž‹çš„èŠ‚ç‚¹ï¼ˆLabelsä¸åªæ˜¯Entityçš„èŠ‚ç‚¹ï¼‰
     
-    Queryå‚æ•°ï¼š
-        entity_types: é€—å·åˆ†éš”çš„å®žä½“ç±»åž‹åˆ—è¡¨ï¼ˆå¯é€‰ï¼Œç”¨äºŽè¿›ä¸€æ­¥è¿‡æ»¤ï¼‰
-        enrich: æ˜¯å¦èŽ·å–ç›¸å…³è¾¹ä¿¡æ¯ï¼ˆé»˜è®¤trueï¼‰
     """
     try:
         if not Config.ZEP_API_KEY:
@@ -162,24 +148,15 @@ def get_entities_by_type(graph_id: str, entity_type: str):
         }), 500
 
 
-# ============== æ¨¡æ‹Ÿç®¡ç†æŽ¥å£ ==============
 
 @simulation_bp.route('/create', methods=['POST'])
 def create_simulation():
     """
-    åˆ›å»ºæ–°çš„æ¨¡æ‹Ÿ
     
-    æ³¨æ„ï¼šmax_roundsç­‰å‚æ•°ç”±LLMæ™ºèƒ½ç”Ÿæˆï¼Œæ— éœ€æ‰‹åŠ¨è®¾ç½®
     
-    è¯·æ±‚ï¼ˆJSONï¼‰ï¼š
         {
-            "project_id": "proj_xxxx",      // å¿…å¡«
-            "graph_id": "posiedon_xxxx",    // å¯é€‰ï¼Œå¦‚ä¸æä¾›åˆ™ä»ŽprojectèŽ·å–
-            "enable_twitter": true,          // å¯é€‰ï¼Œé»˜è®¤true
-            "enable_reddit": true            // å¯é€‰ï¼Œé»˜è®¤true
         }
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -241,16 +218,10 @@ def create_simulation():
 
 def _check_simulation_prepared(simulation_id: str) -> tuple:
     """
-    æ£€æŸ¥æ¨¡æ‹Ÿæ˜¯å¦å·²ç»å‡†å¤‡å®Œæˆ
     
-    æ£€æŸ¥æ¡ä»¶ï¼š
-    1. state.json å­˜åœ¨ä¸” status ä¸º "ready"
-    2. å¿…è¦æ–‡ä»¶å­˜åœ¨ï¼šreddit_profiles.json, twitter_profiles.csv, simulation_config.json
     
-    æ³¨æ„ï¼šè¿è¡Œè„šæœ¬(run_*.py)ä¿ç•™åœ¨ backend/scripts/ ç›®å½•ï¼Œä¸å†å¤åˆ¶åˆ°æ¨¡æ‹Ÿç›®å½•
     
     Args:
-        simulation_id: æ¨¡æ‹ŸID
         
     Returns:
         (is_prepared: bool, info: dict)
@@ -260,11 +231,9 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
     
     simulation_dir = os.path.join(Config.OASIS_SIMULATION_DATA_DIR, simulation_id)
     
-    # æ£€æŸ¥ç›®å½•æ˜¯å¦å­˜åœ¨
     if not os.path.exists(simulation_dir):
         return False, {"reason": "æ¨¡æ‹Ÿç›®å½•ä¸å­˜åœ¨"}
     
-    # å¿…è¦æ–‡ä»¶åˆ—è¡¨ï¼ˆä¸åŒ…æ‹¬è„šæœ¬ï¼Œè„šæœ¬ä½äºŽ backend/scripts/ï¼‰
     required_files = [
         "state.json",
         "simulation_config.json",
@@ -272,7 +241,6 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
         "twitter_profiles.csv"
     ]
     
-    # æ£€æŸ¥æ–‡ä»¶æ˜¯å¦å­˜åœ¨
     existing_files = []
     missing_files = []
     for f in required_files:
@@ -289,7 +257,6 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
             "existing_files": existing_files
         }
     
-    # æ£€æŸ¥state.jsonä¸­çš„çŠ¶æ€
     state_file = os.path.join(simulation_dir, "state.json")
     try:
         import json
@@ -299,20 +266,10 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
         status = state_data.get("status", "")
         config_generated = state_data.get("config_generated", False)
         
-        # è¯¦ç»†æ—¥å¿—
         logger.debug(f"æ£€æµ‹æ¨¡æ‹Ÿå‡†å¤‡çŠ¶æ€: {simulation_id}, status={status}, config_generated={config_generated}")
         
-        # å¦‚æžœ config_generated=True ä¸”æ–‡ä»¶å­˜åœ¨ï¼Œè®¤ä¸ºå‡†å¤‡å®Œæˆ
-        # ä»¥ä¸‹çŠ¶æ€éƒ½è¯´æ˜Žå‡†å¤‡å·¥ä½œå·²å®Œæˆï¼š
-        # - ready: å‡†å¤‡å®Œæˆï¼Œå¯ä»¥è¿è¡Œ
-        # - preparing: å¦‚æžœ config_generated=True è¯´æ˜Žå·²å®Œæˆ
-        # - running: æ­£åœ¨è¿è¡Œï¼Œè¯´æ˜Žå‡†å¤‡æ—©å°±å®Œæˆäº†
-        # - completed: è¿è¡Œå®Œæˆï¼Œè¯´æ˜Žå‡†å¤‡æ—©å°±å®Œæˆäº†
-        # - stopped: å·²åœæ­¢ï¼Œè¯´æ˜Žå‡†å¤‡æ—©å°±å®Œæˆäº†
-        # - failed: è¿è¡Œå¤±è´¥ï¼ˆä½†å‡†å¤‡æ˜¯å®Œæˆçš„ï¼‰
         prepared_statuses = ["ready", "preparing", "running", "completed", "stopped", "failed"]
         if status in prepared_statuses and config_generated:
-            # èŽ·å–æ–‡ä»¶ç»Ÿè®¡ä¿¡æ¯
             profiles_file = os.path.join(simulation_dir, "reddit_profiles.json")
             config_file = os.path.join(simulation_dir, "simulation_config.json")
             
@@ -322,7 +279,6 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
                     profiles_data = json.load(f)
                     profiles_count = len(profiles_data) if isinstance(profiles_data, list) else 0
             
-            # å¦‚æžœçŠ¶æ€æ˜¯preparingä½†æ–‡ä»¶å·²å®Œæˆï¼Œè‡ªåŠ¨æ›´æ–°çŠ¶æ€ä¸ºready
             if status == "preparing":
                 try:
                     state_data["status"] = "ready"
@@ -361,41 +317,18 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
 @simulation_bp.route('/prepare', methods=['POST'])
 def prepare_simulation():
     """
-    å‡†å¤‡æ¨¡æ‹ŸçŽ¯å¢ƒï¼ˆå¼‚æ­¥ä»»åŠ¡ï¼ŒLLMæ™ºèƒ½ç”Ÿæˆæ‰€æœ‰å‚æ•°ï¼‰
     
-    è¿™æ˜¯ä¸€ä¸ªè€—æ—¶æ“ä½œï¼ŒæŽ¥å£ä¼šç«‹å³è¿”å›žtask_idï¼Œ
-    ä½¿ç”¨ GET /api/simulation/prepare/status æŸ¥è¯¢è¿›åº¦
     
-    ç‰¹æ€§ï¼š
-    - è‡ªåŠ¨æ£€æµ‹å·²å®Œæˆçš„å‡†å¤‡å·¥ä½œï¼Œé¿å…é‡å¤ç”Ÿæˆ
-    - å¦‚æžœå·²å‡†å¤‡å®Œæˆï¼Œç›´æŽ¥è¿”å›žå·²æœ‰ç»“æžœ
-    - æ”¯æŒå¼ºåˆ¶é‡æ–°ç”Ÿæˆï¼ˆforce_regenerate=trueï¼‰
     
-    æ­¥éª¤ï¼š
-    1. æ£€æŸ¥æ˜¯å¦å·²æœ‰å®Œæˆçš„å‡†å¤‡å·¥ä½œ
-    2. ä»ŽZepå›¾è°±è¯»å–å¹¶è¿‡æ»¤å®žä½“
-    3. ä¸ºæ¯ä¸ªå®žä½“ç”ŸæˆOASIS Agent Profileï¼ˆå¸¦é‡è¯•æœºåˆ¶ï¼‰
-    4. LLMæ™ºèƒ½ç”Ÿæˆæ¨¡æ‹Ÿé…ç½®ï¼ˆå¸¦é‡è¯•æœºåˆ¶ï¼‰
-    5. ä¿å­˜é…ç½®æ–‡ä»¶å’Œé¢„è®¾è„šæœ¬
     
-    è¯·æ±‚ï¼ˆJSONï¼‰ï¼š
         {
-            "simulation_id": "sim_xxxx",                   // å¿…å¡«ï¼Œæ¨¡æ‹ŸID
-            "entity_types": ["Student", "PublicFigure"],  // å¯é€‰ï¼ŒæŒ‡å®šå®žä½“ç±»åž‹
-            "use_llm_for_profiles": true,                 // å¯é€‰ï¼Œæ˜¯å¦ç”¨LLMç”Ÿæˆäººè®¾
-            "parallel_profile_count": 5,                  // å¯é€‰ï¼Œå¹¶è¡Œç”Ÿæˆäººè®¾æ•°é‡ï¼Œé»˜è®¤5
-            "force_regenerate": false                     // å¯é€‰ï¼Œå¼ºåˆ¶é‡æ–°ç”Ÿæˆï¼Œé»˜è®¤false
         }
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
                 "simulation_id": "sim_xxxx",
-                "task_id": "task_xxxx",           // æ–°ä»»åŠ¡æ—¶è¿”å›ž
                 "status": "preparing|ready",
-                "message": "å‡†å¤‡ä»»åŠ¡å·²å¯åŠ¨|å·²æœ‰å®Œæˆçš„å‡†å¤‡å·¥ä½œ",
-                "already_prepared": true|false    // æ˜¯å¦å·²å‡†å¤‡å®Œæˆ
             }
         }
     """
@@ -423,11 +356,9 @@ def prepare_simulation():
                 "error": t('api.simulationNotFound', id=simulation_id)
             }), 404
         
-        # æ£€æŸ¥æ˜¯å¦å¼ºåˆ¶é‡æ–°ç”Ÿæˆ
         force_regenerate = data.get('force_regenerate', False)
         logger.info(f"å¼€å§‹å¤„ç† /prepare è¯·æ±‚: simulation_id={simulation_id}, force_regenerate={force_regenerate}")
         
-        # æ£€æŸ¥æ˜¯å¦å·²ç»å‡†å¤‡å®Œæˆï¼ˆé¿å…é‡å¤ç”Ÿæˆï¼‰
         if not force_regenerate:
             logger.debug(f"æ£€æŸ¥æ¨¡æ‹Ÿ {simulation_id} æ˜¯å¦å·²å‡†å¤‡å®Œæˆ...")
             is_prepared, prepare_info = _check_simulation_prepared(simulation_id)
@@ -447,7 +378,6 @@ def prepare_simulation():
             else:
                 logger.info(f"æ¨¡æ‹Ÿ {simulation_id} æœªå‡†å¤‡å®Œæˆï¼Œå°†å¯åŠ¨å‡†å¤‡ä»»åŠ¡")
         
-        # ä»Žé¡¹ç›®èŽ·å–å¿…è¦ä¿¡æ¯
         project = ProjectManager.get_project(state.project_id)
         if not project:
             return jsonify({
@@ -455,7 +385,6 @@ def prepare_simulation():
                 "error": t('api.projectNotFound', id=state.project_id)
             }), 404
         
-        # èŽ·å–æ¨¡æ‹Ÿéœ€æ±‚
         simulation_requirement = project.simulation_requirement or ""
         if not simulation_requirement:
             return jsonify({
@@ -463,33 +392,26 @@ def prepare_simulation():
                 "error": t('api.projectMissingRequirement')
             }), 400
         
-        # èŽ·å–æ–‡æ¡£æ–‡æœ¬
         document_text = ProjectManager.get_extracted_text(state.project_id) or ""
         
         entity_types_list = data.get('entity_types')
         use_llm_for_profiles = data.get('use_llm_for_profiles', True)
         parallel_profile_count = data.get('parallel_profile_count', 5)
         
-        # ========== åŒæ­¥èŽ·å–å®žä½“æ•°é‡ï¼ˆåœ¨åŽå°ä»»åŠ¡å¯åŠ¨å‰ï¼‰ ==========
-        # è¿™æ ·å‰ç«¯åœ¨è°ƒç”¨prepareåŽç«‹å³å°±èƒ½èŽ·å–åˆ°é¢„æœŸAgentæ€»æ•°
         try:
             logger.info(f"åŒæ­¥èŽ·å–å®žä½“æ•°é‡: graph_id={state.graph_id}")
             reader = ZepEntityReader()
-            # å¿«é€Ÿè¯»å–å®žä½“ï¼ˆä¸éœ€è¦è¾¹ä¿¡æ¯ï¼Œåªç»Ÿè®¡æ•°é‡ï¼‰
             filtered_preview = reader.filter_defined_entities(
                 graph_id=state.graph_id,
                 defined_entity_types=entity_types_list,
                 enrich_with_edges=False  # ä¸èŽ·å–è¾¹ä¿¡æ¯ï¼ŒåŠ å¿«é€Ÿåº¦
             )
-            # ä¿å­˜å®žä½“æ•°é‡åˆ°çŠ¶æ€ï¼ˆä¾›å‰ç«¯ç«‹å³èŽ·å–ï¼‰
             state.entities_count = filtered_preview.filtered_count
             state.entity_types = list(filtered_preview.entity_types)
             logger.info(f"é¢„æœŸå®žä½“æ•°é‡: {filtered_preview.filtered_count}, ç±»åž‹: {filtered_preview.entity_types}")
         except Exception as e:
             logger.warning(f"åŒæ­¥èŽ·å–å®žä½“æ•°é‡å¤±è´¥ï¼ˆå°†åœ¨åŽå°ä»»åŠ¡ä¸­é‡è¯•ï¼‰: {e}")
-            # å¤±è´¥ä¸å½±å“åŽç»­æµç¨‹ï¼ŒåŽå°ä»»åŠ¡ä¼šé‡æ–°èŽ·å–
         
-        # åˆ›å»ºå¼‚æ­¥ä»»åŠ¡
         task_manager = TaskManager()
         task_id = task_manager.create_task(
             task_type="simulation_prepare",
@@ -499,14 +421,12 @@ def prepare_simulation():
             }
         )
         
-        # æ›´æ–°æ¨¡æ‹ŸçŠ¶æ€ï¼ˆåŒ…å«é¢„å…ˆèŽ·å–çš„å®žä½“æ•°é‡ï¼‰
         state.status = SimulationStatus.PREPARING
         manager._save_simulation_state(state)
         
         # Capture locale before spawning background thread
         current_locale = get_locale()
 
-        # å®šä¹‰åŽå°ä»»åŠ¡
         def run_prepare():
             set_locale(current_locale)
             try:
@@ -517,12 +437,9 @@ def prepare_simulation():
                     message=t('progress.startPreparingEnv')
                 )
                 
-                # å‡†å¤‡æ¨¡æ‹Ÿï¼ˆå¸¦è¿›åº¦å›žè°ƒï¼‰
-                # å­˜å‚¨é˜¶æ®µè¿›åº¦è¯¦æƒ…
                 stage_details = {}
                 
                 def progress_callback(stage, progress, message, **kwargs):
-                    # è®¡ç®—æ€»è¿›åº¦
                     stage_weights = {
                         "reading": (0, 20),           # 0-20%
                         "generating_profiles": (20, 70),  # 20-70%
@@ -533,7 +450,6 @@ def prepare_simulation():
                     start, end = stage_weights.get(stage, (0, 100))
                     current_progress = int(start + (end - start) * progress / 100)
                     
-                    # æž„å»ºè¯¦ç»†è¿›åº¦ä¿¡æ¯
                     stage_names = {
                         "reading": t('progress.readingGraphEntities'),
                         "generating_profiles": t('progress.generatingProfiles'),
@@ -544,7 +460,6 @@ def prepare_simulation():
                     stage_index = list(stage_weights.keys()).index(stage) + 1 if stage in stage_weights else 1
                     total_stages = len(stage_weights)
                     
-                    # æ›´æ–°é˜¶æ®µè¯¦æƒ…
                     stage_details[stage] = {
                         "stage_name": stage_names.get(stage, stage),
                         "stage_progress": progress,
@@ -553,7 +468,6 @@ def prepare_simulation():
                         "item_name": kwargs.get("item_name", "")
                     }
                     
-                    # æž„å»ºè¯¦ç»†è¿›åº¦ä¿¡æ¯
                     detail = stage_details[stage]
                     progress_detail_data = {
                         "current_stage": stage,
@@ -566,7 +480,6 @@ def prepare_simulation():
                         "item_description": message
                     }
                     
-                    # æž„å»ºç®€æ´æ¶ˆæ¯
                     if detail["total"] > 0:
                         detailed_message = (
                             f"[{stage_index}/{total_stages}] {stage_names.get(stage, stage)}: "
@@ -592,7 +505,6 @@ def prepare_simulation():
                     parallel_profile_count=parallel_profile_count
                 )
                 
-                # ä»»åŠ¡å®Œæˆ
                 task_manager.complete_task(
                     task_id,
                     result=result_state.to_simple_dict()
@@ -602,14 +514,12 @@ def prepare_simulation():
                 logger.error(f"å‡†å¤‡æ¨¡æ‹Ÿå¤±è´¥: {str(e)}")
                 task_manager.fail_task(task_id, str(e))
                 
-                # æ›´æ–°æ¨¡æ‹ŸçŠ¶æ€ä¸ºå¤±è´¥
                 state = manager.get_simulation(simulation_id)
                 if state:
                     state.status = SimulationStatus.FAILED
                     state.error = str(e)
                     manager._save_simulation_state(state)
         
-        # å¯åŠ¨åŽå°çº¿ç¨‹
         thread = threading.Thread(target=run_prepare, daemon=True)
         thread.start()
         
@@ -644,19 +554,11 @@ def prepare_simulation():
 @simulation_bp.route('/prepare/status', methods=['POST'])
 def get_prepare_status():
     """
-    æŸ¥è¯¢å‡†å¤‡ä»»åŠ¡è¿›åº¦
     
-    æ”¯æŒä¸¤ç§æŸ¥è¯¢æ–¹å¼ï¼š
-    1. é€šè¿‡task_idæŸ¥è¯¢æ­£åœ¨è¿›è¡Œçš„ä»»åŠ¡è¿›åº¦
-    2. é€šè¿‡simulation_idæ£€æŸ¥æ˜¯å¦å·²æœ‰å®Œæˆçš„å‡†å¤‡å·¥ä½œ
     
-    è¯·æ±‚ï¼ˆJSONï¼‰ï¼š
         {
-            "task_id": "task_xxxx",          // å¯é€‰ï¼Œprepareè¿”å›žçš„task_id
-            "simulation_id": "sim_xxxx"      // å¯é€‰ï¼Œæ¨¡æ‹ŸIDï¼ˆç”¨äºŽæ£€æŸ¥å·²å®Œæˆçš„å‡†å¤‡ï¼‰
         }
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -664,8 +566,6 @@ def get_prepare_status():
                 "status": "processing|completed|ready",
                 "progress": 45,
                 "message": "...",
-                "already_prepared": true|false,  // æ˜¯å¦å·²æœ‰å®Œæˆçš„å‡†å¤‡
-                "prepare_info": {...}            // å·²å‡†å¤‡å®Œæˆæ—¶çš„è¯¦ç»†ä¿¡æ¯
             }
         }
     """
@@ -677,7 +577,6 @@ def get_prepare_status():
         task_id = data.get('task_id')
         simulation_id = data.get('simulation_id')
         
-        # å¦‚æžœæä¾›äº†simulation_idï¼Œå…ˆæ£€æŸ¥æ˜¯å¦å·²å‡†å¤‡å®Œæˆ
         if simulation_id:
             is_prepared, prepare_info = _check_simulation_prepared(simulation_id)
             if is_prepared:
@@ -693,10 +592,8 @@ def get_prepare_status():
                     }
                 })
         
-        # å¦‚æžœæ²¡æœ‰task_idï¼Œè¿”å›žé”™è¯¯
         if not task_id:
             if simulation_id:
-                # æœ‰simulation_idä½†æœªå‡†å¤‡å®Œæˆ
                 return jsonify({
                     "success": True,
                     "data": {
@@ -716,7 +613,6 @@ def get_prepare_status():
         task = task_manager.get_task(task_id)
         
         if not task:
-            # ä»»åŠ¡ä¸å­˜åœ¨ï¼Œä½†å¦‚æžœæœ‰simulation_idï¼Œæ£€æŸ¥æ˜¯å¦å·²å‡†å¤‡å®Œæˆ
             if simulation_id:
                 is_prepared, prepare_info = _check_simulation_prepared(simulation_id)
                 if is_prepared:
@@ -769,7 +665,6 @@ def get_simulation(simulation_id: str):
         
         result = state.to_dict()
         
-        # å¦‚æžœæ¨¡æ‹Ÿå·²å‡†å¤‡å¥½ï¼Œé™„åŠ è¿è¡Œè¯´æ˜Ž
         if state.status == SimulationStatus.READY:
             result["run_instructions"] = manager.get_run_instructions(simulation_id)
         
@@ -790,10 +685,7 @@ def get_simulation(simulation_id: str):
 @simulation_bp.route('/list', methods=['GET'])
 def list_simulations():
     """
-    åˆ—å‡ºæ‰€æœ‰æ¨¡æ‹Ÿ
     
-    Queryå‚æ•°ï¼š
-        project_id: æŒ‰é¡¹ç›®IDè¿‡æ»¤ï¼ˆå¯é€‰ï¼‰
     """
     try:
         project_id = request.args.get('project_id')
@@ -818,22 +710,15 @@ def list_simulations():
 
 def _get_report_id_for_simulation(simulation_id: str) -> str:
     """
-    èŽ·å– simulation å¯¹åº”çš„æœ€æ–° report_id
     
-    éåŽ† reports ç›®å½•ï¼Œæ‰¾å‡º simulation_id åŒ¹é…çš„ reportï¼Œ
-    å¦‚æžœæœ‰å¤šä¸ªåˆ™è¿”å›žæœ€æ–°çš„ï¼ˆæŒ‰ created_at æŽ’åºï¼‰
     
     Args:
-        simulation_id: æ¨¡æ‹ŸID
         
     Returns:
-        report_id æˆ– None
     """
     import json
     from datetime import datetime
     
-    # reports ç›®å½•è·¯å¾„ï¼šbackend/uploads/reports
-    # __file__ æ˜¯ app/api/simulation.pyï¼Œéœ€è¦å‘ä¸Šä¸¤çº§åˆ° backend/
     reports_dir = os.path.join(os.path.dirname(__file__), '../../uploads/reports')
     if not os.path.exists(reports_dir):
         return None
@@ -866,7 +751,6 @@ def _get_report_id_for_simulation(simulation_id: str) -> str:
         if not matching_reports:
             return None
         
-        # æŒ‰åˆ›å»ºæ—¶é—´å€’åºæŽ’åºï¼Œè¿”å›žæœ€æ–°çš„
         matching_reports.sort(key=lambda x: x.get("created_at", ""), reverse=True)
         return matching_reports[0].get("report_id")
         
@@ -878,22 +762,15 @@ def _get_report_id_for_simulation(simulation_id: str) -> str:
 @simulation_bp.route('/history', methods=['GET'])
 def get_simulation_history():
     """
-    èŽ·å–åŽ†å²æ¨¡æ‹Ÿåˆ—è¡¨ï¼ˆå¸¦é¡¹ç›®è¯¦æƒ…ï¼‰
     
-    ç”¨äºŽé¦–é¡µåŽ†å²é¡¹ç›®å±•ç¤ºï¼Œè¿”å›žåŒ…å«é¡¹ç›®åç§°ã€æè¿°ç­‰ä¸°å¯Œä¿¡æ¯çš„æ¨¡æ‹Ÿåˆ—è¡¨
     
-    Queryå‚æ•°ï¼š
-        limit: è¿”å›žæ•°é‡é™åˆ¶ï¼ˆé»˜è®¤20ï¼‰
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": [
                 {
                     "simulation_id": "sim_xxxx",
                     "project_id": "proj_xxxx",
-                    "project_name": "æ­¦å¤§èˆ†æƒ…åˆ†æž",
-                    "simulation_requirement": "å¦‚æžœæ­¦æ±‰å¤§å­¦å‘å¸ƒ...",
                     "status": "completed",
                     "entities_count": 68,
                     "profiles_count": 68,
@@ -916,18 +793,15 @@ def get_simulation_history():
         manager = SimulationManager()
         simulations = manager.list_simulations()[:limit]
         
-        # å¢žå¼ºæ¨¡æ‹Ÿæ•°æ®ï¼Œåªä»Ž Simulation æ–‡ä»¶è¯»å–
         enriched_simulations = []
         for sim in simulations:
             sim_dict = sim.to_dict()
             
-            # èŽ·å–æ¨¡æ‹Ÿé…ç½®ä¿¡æ¯ï¼ˆä»Ž simulation_config.json è¯»å– simulation_requirementï¼‰
             config = manager.get_simulation_config(sim.simulation_id)
             if config:
                 sim_dict["simulation_requirement"] = config.get("simulation_requirement", "")
                 time_config = config.get("time_config", {})
                 sim_dict["total_simulation_hours"] = time_config.get("total_simulation_hours", 0)
-                # æŽ¨èè½®æ•°ï¼ˆåŽå¤‡å€¼ï¼‰
                 recommended_rounds = int(
                     time_config.get("total_simulation_hours", 0) * 60 / 
                     max(time_config.get("minutes_per_round", 60), 1)
@@ -937,19 +811,16 @@ def get_simulation_history():
                 sim_dict["total_simulation_hours"] = 0
                 recommended_rounds = 0
             
-            # èŽ·å–è¿è¡ŒçŠ¶æ€ï¼ˆä»Ž run_state.json è¯»å–ç”¨æˆ·è®¾ç½®çš„å®žé™…è½®æ•°ï¼‰
             run_state = SimulationRunner.get_run_state(sim.simulation_id)
             if run_state:
                 sim_dict["current_round"] = run_state.current_round
                 sim_dict["runner_status"] = run_state.runner_status.value
-                # ä½¿ç”¨ç”¨æˆ·è®¾ç½®çš„ total_roundsï¼Œè‹¥æ— åˆ™ä½¿ç”¨æŽ¨èè½®æ•°
                 sim_dict["total_rounds"] = run_state.total_rounds if run_state.total_rounds > 0 else recommended_rounds
             else:
                 sim_dict["current_round"] = 0
                 sim_dict["runner_status"] = "idle"
                 sim_dict["total_rounds"] = recommended_rounds
             
-            # èŽ·å–å…³è”é¡¹ç›®çš„æ–‡ä»¶åˆ—è¡¨ï¼ˆæœ€å¤š3ä¸ªï¼‰
             project = ProjectManager.get_project(sim.project_id)
             if project and hasattr(project, 'files') and project.files:
                 sim_dict["files"] = [
@@ -959,13 +830,10 @@ def get_simulation_history():
             else:
                 sim_dict["files"] = []
             
-            # èŽ·å–å…³è”çš„ report_idï¼ˆæŸ¥æ‰¾è¯¥ simulation æœ€æ–°çš„ reportï¼‰
             sim_dict["report_id"] = _get_report_id_for_simulation(sim.simulation_id)
             
-            # æ·»åŠ ç‰ˆæœ¬å·
             sim_dict["version"] = "v1.0.2"
             
-            # æ ¼å¼åŒ–æ—¥æœŸ
             try:
                 created_date = sim_dict.get("created_at", "")[:10]
                 sim_dict["created_date"] = created_date
@@ -992,10 +860,7 @@ def get_simulation_history():
 @simulation_bp.route('/<simulation_id>/profiles', methods=['GET'])
 def get_simulation_profiles(simulation_id: str):
     """
-    èŽ·å–æ¨¡æ‹Ÿçš„Agent Profile
     
-    Queryå‚æ•°ï¼š
-        platform: å¹³å°ç±»åž‹ï¼ˆreddit/twitterï¼Œé»˜è®¤redditï¼‰
     """
     try:
         platform = request.args.get('platform', 'reddit')
@@ -1030,25 +895,15 @@ def get_simulation_profiles(simulation_id: str):
 @simulation_bp.route('/<simulation_id>/profiles/realtime', methods=['GET'])
 def get_simulation_profiles_realtime(simulation_id: str):
     """
-    å®žæ—¶èŽ·å–æ¨¡æ‹Ÿçš„Agent Profileï¼ˆç”¨äºŽåœ¨ç”Ÿæˆè¿‡ç¨‹ä¸­å®žæ—¶æŸ¥çœ‹è¿›åº¦ï¼‰
     
-    ä¸Ž /profiles æŽ¥å£çš„åŒºåˆ«ï¼š
-    - ç›´æŽ¥è¯»å–æ–‡ä»¶ï¼Œä¸ç»è¿‡ SimulationManager
-    - é€‚ç”¨äºŽç”Ÿæˆè¿‡ç¨‹ä¸­çš„å®žæ—¶æŸ¥çœ‹
-    - è¿”å›žé¢å¤–çš„å…ƒæ•°æ®ï¼ˆå¦‚æ–‡ä»¶ä¿®æ”¹æ—¶é—´ã€æ˜¯å¦æ­£åœ¨ç”Ÿæˆç­‰ï¼‰
     
-    Queryå‚æ•°ï¼š
-        platform: å¹³å°ç±»åž‹ï¼ˆreddit/twitterï¼Œé»˜è®¤redditï¼‰
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
                 "simulation_id": "sim_xxxx",
                 "platform": "reddit",
                 "count": 15,
-                "total_expected": 93,  // é¢„æœŸæ€»æ•°ï¼ˆå¦‚æžœæœ‰ï¼‰
-                "is_generating": true,  // æ˜¯å¦æ­£åœ¨ç”Ÿæˆ
                 "file_exists": true,
                 "file_modified_at": "2025-12-04T18:20:00",
                 "profiles": [...]
@@ -1062,7 +917,6 @@ def get_simulation_profiles_realtime(simulation_id: str):
     try:
         platform = request.args.get('platform', 'reddit')
         
-        # èŽ·å–æ¨¡æ‹Ÿç›®å½•
         sim_dir = os.path.join(Config.OASIS_SIMULATION_DATA_DIR, simulation_id)
         
         if not os.path.exists(sim_dir):
@@ -1071,19 +925,16 @@ def get_simulation_profiles_realtime(simulation_id: str):
                 "error": t('api.simulationNotFound', id=simulation_id)
             }), 404
         
-        # ç¡®å®šæ–‡ä»¶è·¯å¾„
         if platform == "reddit":
             profiles_file = os.path.join(sim_dir, "reddit_profiles.json")
         else:
             profiles_file = os.path.join(sim_dir, "twitter_profiles.csv")
         
-        # æ£€æŸ¥æ–‡ä»¶æ˜¯å¦å­˜åœ¨
         file_exists = os.path.exists(profiles_file)
         profiles = []
         file_modified_at = None
         
         if file_exists:
-            # èŽ·å–æ–‡ä»¶ä¿®æ”¹æ—¶é—´
             file_stat = os.stat(profiles_file)
             file_modified_at = datetime.fromtimestamp(file_stat.st_mtime).isoformat()
             
@@ -1099,7 +950,6 @@ def get_simulation_profiles_realtime(simulation_id: str):
                 logger.warning(f"è¯»å– profiles æ–‡ä»¶å¤±è´¥ï¼ˆå¯èƒ½æ­£åœ¨å†™å…¥ä¸­ï¼‰: {e}")
                 profiles = []
         
-        # æ£€æŸ¥æ˜¯å¦æ­£åœ¨ç”Ÿæˆï¼ˆé€šè¿‡ state.json åˆ¤æ–­ï¼‰
         is_generating = False
         total_expected = None
         
@@ -1140,24 +990,14 @@ def get_simulation_profiles_realtime(simulation_id: str):
 @simulation_bp.route('/<simulation_id>/config/realtime', methods=['GET'])
 def get_simulation_config_realtime(simulation_id: str):
     """
-    å®žæ—¶èŽ·å–æ¨¡æ‹Ÿé…ç½®ï¼ˆç”¨äºŽåœ¨ç”Ÿæˆè¿‡ç¨‹ä¸­å®žæ—¶æŸ¥çœ‹è¿›åº¦ï¼‰
     
-    ä¸Ž /config æŽ¥å£çš„åŒºåˆ«ï¼š
-    - ç›´æŽ¥è¯»å–æ–‡ä»¶ï¼Œä¸ç»è¿‡ SimulationManager
-    - é€‚ç”¨äºŽç”Ÿæˆè¿‡ç¨‹ä¸­çš„å®žæ—¶æŸ¥çœ‹
-    - è¿”å›žé¢å¤–çš„å…ƒæ•°æ®ï¼ˆå¦‚æ–‡ä»¶ä¿®æ”¹æ—¶é—´ã€æ˜¯å¦æ­£åœ¨ç”Ÿæˆç­‰ï¼‰
-    - å³ä½¿é…ç½®è¿˜æ²¡ç”Ÿæˆå®Œä¹Ÿèƒ½è¿”å›žéƒ¨åˆ†ä¿¡æ¯
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
                 "simulation_id": "sim_xxxx",
                 "file_exists": true,
                 "file_modified_at": "2025-12-04T18:20:00",
-                "is_generating": true,  // æ˜¯å¦æ­£åœ¨ç”Ÿæˆ
-                "generation_stage": "generating_config",  // å½“å‰ç”Ÿæˆé˜¶æ®µ
-                "config": {...}  // é…ç½®å†…å®¹ï¼ˆå¦‚æžœå­˜åœ¨ï¼‰
             }
         }
     """
@@ -1165,7 +1005,6 @@ def get_simulation_config_realtime(simulation_id: str):
     from datetime import datetime
     
     try:
-        # èŽ·å–æ¨¡æ‹Ÿç›®å½•
         sim_dir = os.path.join(Config.OASIS_SIMULATION_DATA_DIR, simulation_id)
         
         if not os.path.exists(sim_dir):
@@ -1174,16 +1013,13 @@ def get_simulation_config_realtime(simulation_id: str):
                 "error": t('api.simulationNotFound', id=simulation_id)
             }), 404
         
-        # é…ç½®æ–‡ä»¶è·¯å¾„
         config_file = os.path.join(sim_dir, "simulation_config.json")
         
-        # æ£€æŸ¥æ–‡ä»¶æ˜¯å¦å­˜åœ¨
         file_exists = os.path.exists(config_file)
         config = None
         file_modified_at = None
         
         if file_exists:
-            # èŽ·å–æ–‡ä»¶ä¿®æ”¹æ—¶é—´
             file_stat = os.stat(config_file)
             file_modified_at = datetime.fromtimestamp(file_stat.st_mtime).isoformat()
             
@@ -1194,7 +1030,6 @@ def get_simulation_config_realtime(simulation_id: str):
                 logger.warning(f"è¯»å– config æ–‡ä»¶å¤±è´¥ï¼ˆå¯èƒ½æ­£åœ¨å†™å…¥ä¸­ï¼‰: {e}")
                 config = None
         
-        # æ£€æŸ¥æ˜¯å¦æ­£åœ¨ç”Ÿæˆï¼ˆé€šè¿‡ state.json åˆ¤æ–­ï¼‰
         is_generating = False
         generation_stage = None
         config_generated = False
@@ -1208,7 +1043,6 @@ def get_simulation_config_realtime(simulation_id: str):
                     is_generating = status == "preparing"
                     config_generated = state_data.get("config_generated", False)
                     
-                    # åˆ¤æ–­å½“å‰é˜¶æ®µ
                     if is_generating:
                         if state_data.get("profiles_generated", False):
                             generation_stage = "generating_config"
@@ -1219,7 +1053,6 @@ def get_simulation_config_realtime(simulation_id: str):
             except Exception:
                 pass
         
-        # æž„å»ºè¿”å›žæ•°æ®
         response_data = {
             "simulation_id": simulation_id,
             "file_exists": file_exists,
@@ -1230,7 +1063,6 @@ def get_simulation_config_realtime(simulation_id: str):
             "config": config
         }
         
-        # å¦‚æžœé…ç½®å­˜åœ¨ï¼Œæå–ä¸€äº›å…³é”®ç»Ÿè®¡ä¿¡æ¯
         if config:
             response_data["summary"] = {
                 "total_agents": len(config.get("agent_configs", [])),
@@ -1260,14 +1092,7 @@ def get_simulation_config_realtime(simulation_id: str):
 @simulation_bp.route('/<simulation_id>/config', methods=['GET'])
 def get_simulation_config(simulation_id: str):
     """
-    èŽ·å–æ¨¡æ‹Ÿé…ç½®ï¼ˆLLMæ™ºèƒ½ç”Ÿæˆçš„å®Œæ•´é…ç½®ï¼‰
     
-    è¿”å›žåŒ…å«ï¼š
-        - time_config: æ—¶é—´é…ç½®ï¼ˆæ¨¡æ‹Ÿæ—¶é•¿ã€è½®æ¬¡ã€é«˜å³°/ä½Žè°·æ—¶æ®µï¼‰
-        - agent_configs: æ¯ä¸ªAgentçš„æ´»åŠ¨é…ç½®ï¼ˆæ´»è·ƒåº¦ã€å‘è¨€é¢‘çŽ‡ã€ç«‹åœºç­‰ï¼‰
-        - event_config: äº‹ä»¶é…ç½®ï¼ˆåˆå§‹å¸–å­ã€çƒ­ç‚¹è¯é¢˜ï¼‰
-        - platform_configs: å¹³å°é…ç½®
-        - generation_reasoning: LLMçš„é…ç½®æŽ¨ç†è¯´æ˜Ž
     """
     try:
         manager = SimulationManager()
@@ -1325,19 +1150,15 @@ def download_simulation_config(simulation_id: str):
 @simulation_bp.route('/script/<script_name>/download', methods=['GET'])
 def download_simulation_script(script_name: str):
     """
-    ä¸‹è½½æ¨¡æ‹Ÿè¿è¡Œè„šæœ¬æ–‡ä»¶ï¼ˆé€šç”¨è„šæœ¬ï¼Œä½äºŽ backend/scripts/ï¼‰
     
-    script_nameå¯é€‰å€¼ï¼š
         - run_twitter_simulation.py
         - run_reddit_simulation.py
         - run_parallel_simulation.py
         - action_logger.py
     """
     try:
-        # è„šæœ¬ä½äºŽ backend/scripts/ ç›®å½•
         scripts_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../scripts'))
         
-        # éªŒè¯è„šæœ¬åç§°
         allowed_scripts = [
             "run_twitter_simulation.py",
             "run_reddit_simulation.py", 
@@ -1374,19 +1195,12 @@ def download_simulation_script(script_name: str):
         }), 500
 
 
-# ============== Profileç”ŸæˆæŽ¥å£ï¼ˆç‹¬ç«‹ä½¿ç”¨ï¼‰ ==============
 
 @simulation_bp.route('/generate-profiles', methods=['POST'])
 def generate_profiles():
     """
-    ç›´æŽ¥ä»Žå›¾è°±ç”ŸæˆOASIS Agent Profileï¼ˆä¸åˆ›å»ºæ¨¡æ‹Ÿï¼‰
     
-    è¯·æ±‚ï¼ˆJSONï¼‰ï¼š
         {
-            "graph_id": "posiedon_xxxx",     // å¿…å¡«
-            "entity_types": ["Student"],      // å¯é€‰
-            "use_llm": true,                  // å¯é€‰
-            "platform": "reddit"              // å¯é€‰
         }
     """
     try:
@@ -1448,35 +1262,16 @@ def generate_profiles():
         }), 500
 
 
-# ============== æ¨¡æ‹Ÿè¿è¡ŒæŽ§åˆ¶æŽ¥å£ ==============
 
 @simulation_bp.route('/start', methods=['POST'])
 def start_simulation():
     """
-    å¼€å§‹è¿è¡Œæ¨¡æ‹Ÿ
 
-    è¯·æ±‚ï¼ˆJSONï¼‰ï¼š
         {
-            "simulation_id": "sim_xxxx",          // å¿…å¡«ï¼Œæ¨¡æ‹ŸID
-            "platform": "parallel",                // å¯é€‰: twitter / reddit / parallel (é»˜è®¤)
-            "max_rounds": 100,                     // å¯é€‰: æœ€å¤§æ¨¡æ‹Ÿè½®æ•°ï¼Œç”¨äºŽæˆªæ–­è¿‡é•¿çš„æ¨¡æ‹Ÿ
-            "enable_graph_memory_update": false,   // å¯é€‰: æ˜¯å¦å°†Agentæ´»åŠ¨åŠ¨æ€æ›´æ–°åˆ°Zepå›¾è°±è®°å¿†
-            "force": false                         // å¯é€‰: å¼ºåˆ¶é‡æ–°å¼€å§‹ï¼ˆä¼šåœæ­¢è¿è¡Œä¸­çš„æ¨¡æ‹Ÿå¹¶æ¸…ç†æ—¥å¿—ï¼‰
         }
 
-    å…³äºŽ force å‚æ•°ï¼š
-        - å¯ç”¨åŽï¼Œå¦‚æžœæ¨¡æ‹Ÿæ­£åœ¨è¿è¡Œæˆ–å·²å®Œæˆï¼Œä¼šå…ˆåœæ­¢å¹¶æ¸…ç†è¿è¡Œæ—¥å¿—
-        - æ¸…ç†çš„å†…å®¹åŒ…æ‹¬ï¼šrun_state.json, actions.jsonl, simulation.log ç­‰
-        - ä¸ä¼šæ¸…ç†é…ç½®æ–‡ä»¶ï¼ˆsimulation_config.jsonï¼‰å’Œ profile æ–‡ä»¶
-        - é€‚ç”¨äºŽéœ€è¦é‡æ–°è¿è¡Œæ¨¡æ‹Ÿçš„åœºæ™¯
 
-    å…³äºŽ enable_graph_memory_updateï¼š
-        - å¯ç”¨åŽï¼Œæ¨¡æ‹Ÿä¸­æ‰€æœ‰Agentçš„æ´»åŠ¨ï¼ˆå‘å¸–ã€è¯„è®ºã€ç‚¹èµžç­‰ï¼‰éƒ½ä¼šå®žæ—¶æ›´æ–°åˆ°Zepå›¾è°±
-        - è¿™å¯ä»¥è®©å›¾è°±"è®°ä½"æ¨¡æ‹Ÿè¿‡ç¨‹ï¼Œç”¨äºŽåŽç»­åˆ†æžæˆ–AIå¯¹è¯
-        - éœ€è¦æ¨¡æ‹Ÿå…³è”çš„é¡¹ç›®æœ‰æœ‰æ•ˆçš„ graph_id
-        - é‡‡ç”¨æ‰¹é‡æ›´æ–°æœºåˆ¶ï¼Œå‡å°‘APIè°ƒç”¨æ¬¡æ•°
 
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -1486,8 +1281,6 @@ def start_simulation():
                 "twitter_running": true,
                 "reddit_running": true,
                 "started_at": "2025-12-01T10:00:00",
-                "graph_memory_update_enabled": true,  // æ˜¯å¦å¯ç”¨äº†å›¾è°±è®°å¿†æ›´æ–°
-                "force_restarted": true               // æ˜¯å¦æ˜¯å¼ºåˆ¶é‡æ–°å¼€å§‹
             }
         }
     """
@@ -1506,7 +1299,6 @@ def start_simulation():
         enable_graph_memory_update = data.get('enable_graph_memory_update', False)  # å¯é€‰ï¼šæ˜¯å¦å¯ç”¨å›¾è°±è®°å¿†æ›´æ–°
         force = data.get('force', False)  # å¯é€‰ï¼šå¼ºåˆ¶é‡æ–°å¼€å§‹
 
-        # éªŒè¯ max_rounds å‚æ•°
         if max_rounds is not None:
             try:
                 max_rounds = int(max_rounds)
@@ -1527,7 +1319,6 @@ def start_simulation():
                 "error": t('api.invalidPlatform', platform=platform)
             }), 400
 
-        # æ£€æŸ¥æ¨¡æ‹Ÿæ˜¯å¦å·²å‡†å¤‡å¥½
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
 
@@ -1539,20 +1330,14 @@ def start_simulation():
 
         force_restarted = False
         
-        # æ™ºèƒ½å¤„ç†çŠ¶æ€ï¼šå¦‚æžœå‡†å¤‡å·¥ä½œå·²å®Œæˆï¼Œå…è®¸é‡æ–°å¯åŠ¨
         if state.status != SimulationStatus.READY:
-            # æ£€æŸ¥å‡†å¤‡å·¥ä½œæ˜¯å¦å·²å®Œæˆ
             is_prepared, prepare_info = _check_simulation_prepared(simulation_id)
 
             if is_prepared:
-                # å‡†å¤‡å·¥ä½œå·²å®Œæˆï¼Œæ£€æŸ¥æ˜¯å¦æœ‰æ­£åœ¨è¿è¡Œçš„è¿›ç¨‹
                 if state.status == SimulationStatus.RUNNING:
-                    # æ£€æŸ¥æ¨¡æ‹Ÿè¿›ç¨‹æ˜¯å¦çœŸçš„åœ¨è¿è¡Œ
                     run_state = SimulationRunner.get_run_state(simulation_id)
                     if run_state and run_state.runner_status.value == "running":
-                        # è¿›ç¨‹ç¡®å®žåœ¨è¿è¡Œ
                         if force:
-                            # å¼ºåˆ¶æ¨¡å¼ï¼šåœæ­¢è¿è¡Œä¸­çš„æ¨¡æ‹Ÿ
                             logger.info(f"å¼ºåˆ¶æ¨¡å¼ï¼šåœæ­¢è¿è¡Œä¸­çš„æ¨¡æ‹Ÿ {simulation_id}")
                             try:
                                 SimulationRunner.stop_simulation(simulation_id)
@@ -1564,7 +1349,6 @@ def start_simulation():
                                 "error": t('api.simRunningForceHint')
                             }), 400
 
-                # å¦‚æžœæ˜¯å¼ºåˆ¶æ¨¡å¼ï¼Œæ¸…ç†è¿è¡Œæ—¥å¿—
                 if force:
                     logger.info(f"å¼ºåˆ¶æ¨¡å¼ï¼šæ¸…ç†æ¨¡æ‹Ÿæ—¥å¿— {simulation_id}")
                     cleanup_result = SimulationRunner.cleanup_simulation_logs(simulation_id)
@@ -1572,24 +1356,19 @@ def start_simulation():
                         logger.warning(f"æ¸…ç†æ—¥å¿—æ—¶å‡ºçŽ°è­¦å‘Š: {cleanup_result.get('errors')}")
                     force_restarted = True
 
-                # è¿›ç¨‹ä¸å­˜åœ¨æˆ–å·²ç»“æŸï¼Œé‡ç½®çŠ¶æ€ä¸º ready
                 logger.info(f"æ¨¡æ‹Ÿ {simulation_id} å‡†å¤‡å·¥ä½œå·²å®Œæˆï¼Œé‡ç½®çŠ¶æ€ä¸º readyï¼ˆåŽŸçŠ¶æ€: {state.status.value}ï¼‰")
                 state.status = SimulationStatus.READY
                 manager._save_simulation_state(state)
             else:
-                # å‡†å¤‡å·¥ä½œæœªå®Œæˆ
                 return jsonify({
                     "success": False,
                     "error": t('api.simNotReady', status=state.status.value)
                 }), 400
         
-        # èŽ·å–å›¾è°±IDï¼ˆç”¨äºŽå›¾è°±è®°å¿†æ›´æ–°ï¼‰
         graph_id = None
         if enable_graph_memory_update:
-            # ä»Žæ¨¡æ‹ŸçŠ¶æ€æˆ–é¡¹ç›®ä¸­èŽ·å– graph_id
             graph_id = state.graph_id
             if not graph_id:
-                # å°è¯•ä»Žé¡¹ç›®ä¸­èŽ·å–
                 project = ProjectManager.get_project(state.project_id)
                 if project:
                     graph_id = project.graph_id
@@ -1602,7 +1381,6 @@ def start_simulation():
             
             logger.info(f"å¯ç”¨å›¾è°±è®°å¿†æ›´æ–°: simulation_id={simulation_id}, graph_id={graph_id}")
         
-        # å¯åŠ¨æ¨¡æ‹Ÿ
         run_state = SimulationRunner.start_simulation(
             simulation_id=simulation_id,
             platform=platform,
@@ -1611,7 +1389,6 @@ def start_simulation():
             graph_id=graph_id
         )
         
-        # æ›´æ–°æ¨¡æ‹ŸçŠ¶æ€
         state.status = SimulationStatus.RUNNING
         manager._save_simulation_state(state)
         
@@ -1646,14 +1423,10 @@ def start_simulation():
 @simulation_bp.route('/stop', methods=['POST'])
 def stop_simulation():
     """
-    åœæ­¢æ¨¡æ‹Ÿ
     
-    è¯·æ±‚ï¼ˆJSONï¼‰ï¼š
         {
-            "simulation_id": "sim_xxxx"  // å¿…å¡«ï¼Œæ¨¡æ‹ŸID
         }
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -1675,7 +1448,6 @@ def stop_simulation():
         
         run_state = SimulationRunner.stop_simulation(simulation_id)
         
-        # æ›´æ–°æ¨¡æ‹ŸçŠ¶æ€
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
         if state:
@@ -2175,14 +1947,11 @@ def get_simulation_cost(simulation_id: str):
         }), 500
 
 
-# ============== å®žæ—¶çŠ¶æ€ç›‘æŽ§æŽ¥å£ ==============
 
 @simulation_bp.route('/<simulation_id>/run-status', methods=['GET'])
 def get_run_status(simulation_id: str):
     """
-    èŽ·å–æ¨¡æ‹Ÿè¿è¡Œå®žæ—¶çŠ¶æ€ï¼ˆç”¨äºŽå‰ç«¯è½®è¯¢ï¼‰
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -2238,14 +2007,9 @@ def get_run_status(simulation_id: str):
 @simulation_bp.route('/<simulation_id>/run-status/detail', methods=['GET'])
 def get_run_status_detail(simulation_id: str):
     """
-    èŽ·å–æ¨¡æ‹Ÿè¿è¡Œè¯¦ç»†çŠ¶æ€ï¼ˆåŒ…å«æ‰€æœ‰åŠ¨ä½œï¼‰
     
-    ç”¨äºŽå‰ç«¯å±•ç¤ºå®žæ—¶åŠ¨æ€
     
-    Queryå‚æ•°ï¼š
-        platform: è¿‡æ»¤å¹³å°ï¼ˆtwitter/redditï¼Œå¯é€‰ï¼‰
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -2267,8 +2031,6 @@ def get_run_status_detail(simulation_id: str):
                     },
                     ...
                 ],
-                "twitter_actions": [...],  # Twitter å¹³å°çš„æ‰€æœ‰åŠ¨ä½œ
-                "reddit_actions": [...]    # Reddit å¹³å°çš„æ‰€æœ‰åŠ¨ä½œ
             }
         }
     """
@@ -2288,13 +2050,11 @@ def get_run_status_detail(simulation_id: str):
                 }
             })
         
-        # èŽ·å–å®Œæ•´çš„åŠ¨ä½œåˆ—è¡¨
         all_actions = SimulationRunner.get_all_actions(
             simulation_id=simulation_id,
             platform=platform_filter
         )
         
-        # åˆ†å¹³å°èŽ·å–åŠ¨ä½œ
         twitter_actions = SimulationRunner.get_all_actions(
             simulation_id=simulation_id,
             platform="twitter"
@@ -2305,7 +2065,6 @@ def get_run_status_detail(simulation_id: str):
             platform="reddit"
         ) if not platform_filter or platform_filter == "reddit" else []
         
-        # èŽ·å–å½“å‰è½®æ¬¡çš„åŠ¨ä½œï¼ˆrecent_actions åªå±•ç¤ºæœ€æ–°ä¸€è½®ï¼‰
         current_round = run_state.current_round
         recent_actions = SimulationRunner.get_all_actions(
             simulation_id=simulation_id,
@@ -2313,13 +2072,11 @@ def get_run_status_detail(simulation_id: str):
             round_num=current_round
         ) if current_round > 0 else []
         
-        # èŽ·å–åŸºç¡€çŠ¶æ€ä¿¡æ¯
         result = run_state.to_dict()
         result["all_actions"] = [a.to_dict() for a in all_actions]
         result["twitter_actions"] = [a.to_dict() for a in twitter_actions]
         result["reddit_actions"] = [a.to_dict() for a in reddit_actions]
         result["rounds_count"] = len(run_state.rounds)
-        # recent_actions åªå±•ç¤ºå½“å‰æœ€æ–°ä¸€è½®ä¸¤ä¸ªå¹³å°çš„å†…å®¹
         result["recent_actions"] = [a.to_dict() for a in recent_actions]
         
         return jsonify({
@@ -2339,16 +2096,8 @@ def get_run_status_detail(simulation_id: str):
 @simulation_bp.route('/<simulation_id>/actions', methods=['GET'])
 def get_simulation_actions(simulation_id: str):
     """
-    èŽ·å–æ¨¡æ‹Ÿä¸­çš„AgentåŠ¨ä½œåŽ†å²
     
-    Queryå‚æ•°ï¼š
-        limit: è¿”å›žæ•°é‡ï¼ˆé»˜è®¤100ï¼‰
-        offset: åç§»é‡ï¼ˆé»˜è®¤0ï¼‰
-        platform: è¿‡æ»¤å¹³å°ï¼ˆtwitter/redditï¼‰
-        agent_id: è¿‡æ»¤Agent ID
-        round_num: è¿‡æ»¤è½®æ¬¡
     
-    è¿”å›žï¼š
         {
             "success": true,
             "data": {
@@ -2393,15 +2142,9 @@ def get_simulation_actions(simulation_id: str):
 @simulation_bp.route('/<simulation_id>/timeline', methods=['GET'])
 def get_simulation_timeline(simulation_id: str):
     """
-    èŽ·å–æ¨¡æ‹Ÿæ—¶é—´çº¿ï¼ˆæŒ‰è½®æ¬¡æ±‡æ€»ï¼‰
     
-    ç”¨äºŽå‰ç«¯å±•ç¤ºè¿›åº¦æ¡å’Œæ—¶é—´çº¿è§†å›¾
     
-    Queryå‚æ•°ï¼š
-        start_round: èµ·å§‹è½®æ¬¡ï¼ˆé»˜è®¤0ï¼‰
-        end_round: ç»“æŸè½®æ¬¡ï¼ˆé»˜è®¤å…¨éƒ¨ï¼‰
     
-    è¿”å›žæ¯è½®çš„æ±‡æ€»ä¿¡æ¯
     """
     try:
         start_round = request.args.get('start_round', 0, type=int)
@@ -2433,9 +2176,7 @@ def get_simulation_timeline(simulation_id: str):
 @simulation_bp.route('/<simulation_id>/agent-stats', methods=['GET'])
 def get_agent_stats(simulation_id: str):
     """
-    èŽ·å–æ¯ä¸ªAgentçš„ç»Ÿè®¡ä¿¡æ¯
     
-    ç”¨äºŽå‰ç«¯å±•ç¤ºAgentæ´»è·ƒåº¦æŽ’è¡Œã€åŠ¨ä½œåˆ†å¸ƒç­‰
     """
     try:
         stats = SimulationRunner.get_agent_stats(simulation_id)
@@ -2457,19 +2198,12 @@ def get_agent_stats(simulation_id: str):
         }), 500
 
 
-# ============== æ•°æ®åº“æŸ¥è¯¢æŽ¥å£ ==============
 
 @simulation_bp.route('/<simulation_id>/posts', methods=['GET'])
 def get_simulation_posts(simulation_id: str):
     """
-    èŽ·å–æ¨¡æ‹Ÿä¸­çš„å¸–å­
     
-    Queryå‚æ•°ï¼š
-        platform: å¹³å°ç±»åž‹ï¼ˆtwitter/redditï¼‰
-        limit: è¿”å›žæ•°é‡ï¼ˆé»˜è®¤50ï¼‰
-        offset: åç§»é‡
     
-    è¿”å›žå¸–å­åˆ—è¡¨ï¼ˆä»ŽSQLiteæ•°æ®åº“è¯»å–ï¼‰
     """
     try:
         platform = request.args.get('platform', 'reddit')
@@ -2529,7 +2263,6 @@ def get_simulation_posts(simulation_id: str):
         })
         
     except Exception as e:
-        logger.error(f"èŽ·å–å¸–å­å¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -2604,7 +2337,6 @@ def get_simulation_comments(simulation_id: str):
         })
         
     except Exception as e:
-        logger.error(f"èŽ·å–è¯„è®ºå¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -2612,7 +2344,6 @@ def get_simulation_comments(simulation_id: str):
         }), 500
 
 
-# ============== Interview é‡‡è®¿æŽ¥å£ ==============
 
 @simulation_bp.route('/interview', methods=['POST'])
 def interview_agent():
@@ -2627,7 +2358,6 @@ def interview_agent():
             "agent_id": 0,                     // å¿…å¡«ï¼ŒAgent ID
             "prompt": "ä½ å¯¹è¿™ä»¶äº‹æœ‰ä»€ä¹ˆçœ‹æ³•ï¼Ÿ",  // å¿…å¡«ï¼Œé‡‡è®¿é—®é¢˜
             "platform": "twitter",             // å¯é€‰ï¼ŒæŒ‡å®šå¹³å°ï¼ˆtwitter/redditï¼‰
-                                               // ä¸æŒ‡å®šæ—¶ï¼šåŒå¹³å°æ¨¡æ‹ŸåŒæ—¶é‡‡è®¿ä¸¤ä¸ªå¹³å°
             "timeout": 60                      // å¯é€‰ï¼Œè¶…æ—¶æ—¶é—´ï¼ˆç§’ï¼‰ï¼Œé»˜è®¤60
         }
 
@@ -2671,7 +2401,6 @@ def interview_agent():
         simulation_id = data.get('simulation_id')
         agent_id = data.get('agent_id')
         prompt = data.get('prompt')
-        platform = data.get('platform')  # å¯é€‰ï¼štwitter/reddit/None
         timeout = data.get('timeout', 60)
         
         if not simulation_id:
@@ -2692,21 +2421,18 @@ def interview_agent():
                 "error": t('api.requirePrompt')
             }), 400
         
-        # éªŒè¯platformå‚æ•°
         if platform and platform not in ("twitter", "reddit"):
             return jsonify({
                 "success": False,
                 "error": t('api.invalidInterviewPlatform')
             }), 400
         
-        # æ£€æŸ¥çŽ¯å¢ƒçŠ¶æ€
         if not SimulationRunner.check_env_alive(simulation_id):
             return jsonify({
                 "success": False,
                 "error": t('api.envNotRunning')
             }), 400
         
-        # ä¼˜åŒ–promptï¼Œæ·»åŠ å‰ç¼€é¿å…Agentè°ƒç”¨å·¥å…·
         optimized_prompt = optimize_interview_prompt(prompt)
         
         result = SimulationRunner.interview_agent(
@@ -2735,7 +2461,6 @@ def interview_agent():
         }), 504
         
     except Exception as e:
-        logger.error(f"Interviewå¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -2765,7 +2490,6 @@ def interview_agents_batch():
                 }
             ],
             "platform": "reddit",              // å¯é€‰ï¼Œé»˜è®¤å¹³å°ï¼ˆè¢«æ¯é¡¹çš„platformè¦†ç›–ï¼‰
-                                               // ä¸æŒ‡å®šæ—¶ï¼šåŒå¹³å°æ¨¡æ‹Ÿæ¯ä¸ªAgentåŒæ—¶é‡‡è®¿ä¸¤ä¸ªå¹³å°
             "timeout": 120                     // å¯é€‰ï¼Œè¶…æ—¶æ—¶é—´ï¼ˆç§’ï¼‰ï¼Œé»˜è®¤120
         }
 
@@ -2792,7 +2516,6 @@ def interview_agents_batch():
 
         simulation_id = data.get('simulation_id')
         interviews = data.get('interviews')
-        platform = data.get('platform')  # å¯é€‰ï¼štwitter/reddit/None
         timeout = data.get('timeout', 120)
 
         if not simulation_id:
@@ -2807,14 +2530,12 @@ def interview_agents_batch():
                 "error": t('api.requireInterviews')
             }), 400
 
-        # éªŒè¯platformå‚æ•°
         if platform and platform not in ("twitter", "reddit"):
             return jsonify({
                 "success": False,
                 "error": t('api.invalidInterviewPlatform')
             }), 400
 
-        # éªŒè¯æ¯ä¸ªé‡‡è®¿é¡¹
         for i, interview in enumerate(interviews):
             if 'agent_id' not in interview:
                 return jsonify({
@@ -2826,7 +2547,6 @@ def interview_agents_batch():
                     "success": False,
                     "error": t('api.interviewListMissingPrompt', index=i+1)
                 }), 400
-            # éªŒè¯æ¯é¡¹çš„platformï¼ˆå¦‚æžœæœ‰ï¼‰
             item_platform = interview.get('platform')
             if item_platform and item_platform not in ("twitter", "reddit"):
                 return jsonify({
@@ -2834,14 +2554,12 @@ def interview_agents_batch():
                     "error": t('api.interviewListInvalidPlatform', index=i+1)
                 }), 400
 
-        # æ£€æŸ¥çŽ¯å¢ƒçŠ¶æ€
         if not SimulationRunner.check_env_alive(simulation_id):
             return jsonify({
                 "success": False,
                 "error": t('api.envNotRunning')
             }), 400
 
-        # ä¼˜åŒ–æ¯ä¸ªé‡‡è®¿é¡¹çš„promptï¼Œæ·»åŠ å‰ç¼€é¿å…Agentè°ƒç”¨å·¥å…·
         optimized_interviews = []
         for interview in interviews:
             optimized_interview = interview.copy()
@@ -2873,7 +2591,6 @@ def interview_agents_batch():
         }), 504
 
     except Exception as e:
-        logger.error(f"æ‰¹é‡Interviewå¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -2893,7 +2610,6 @@ def interview_all_agents():
             "simulation_id": "sim_xxxx",            // å¿…å¡«ï¼Œæ¨¡æ‹ŸID
             "prompt": "ä½ å¯¹è¿™ä»¶äº‹æ•´ä½“æœ‰ä»€ä¹ˆçœ‹æ³•ï¼Ÿ",  // å¿…å¡«ï¼Œé‡‡è®¿é—®é¢˜ï¼ˆæ‰€æœ‰Agentä½¿ç”¨ç›¸åŒé—®é¢˜ï¼‰
             "platform": "reddit",                   // å¯é€‰ï¼ŒæŒ‡å®šå¹³å°ï¼ˆtwitter/redditï¼‰
-                                                    // ä¸æŒ‡å®šæ—¶ï¼šåŒå¹³å°æ¨¡æ‹Ÿæ¯ä¸ªAgentåŒæ—¶é‡‡è®¿ä¸¤ä¸ªå¹³å°
             "timeout": 180                          // å¯é€‰ï¼Œè¶…æ—¶æ—¶é—´ï¼ˆç§’ï¼‰ï¼Œé»˜è®¤180
         }
 
@@ -2919,7 +2635,6 @@ def interview_all_agents():
 
         simulation_id = data.get('simulation_id')
         prompt = data.get('prompt')
-        platform = data.get('platform')  # å¯é€‰ï¼štwitter/reddit/None
         timeout = data.get('timeout', 180)
 
         if not simulation_id:
@@ -2934,21 +2649,18 @@ def interview_all_agents():
                 "error": t('api.requirePrompt')
             }), 400
 
-        # éªŒè¯platformå‚æ•°
         if platform and platform not in ("twitter", "reddit"):
             return jsonify({
                 "success": False,
                 "error": t('api.invalidInterviewPlatform')
             }), 400
 
-        # æ£€æŸ¥çŽ¯å¢ƒçŠ¶æ€
         if not SimulationRunner.check_env_alive(simulation_id):
             return jsonify({
                 "success": False,
                 "error": t('api.envNotRunning')
             }), 400
 
-        # ä¼˜åŒ–promptï¼Œæ·»åŠ å‰ç¼€é¿å…Agentè°ƒç”¨å·¥å…·
         optimized_prompt = optimize_interview_prompt(prompt)
 
         result = SimulationRunner.interview_all_agents(
@@ -2976,7 +2688,6 @@ def interview_all_agents():
         }), 504
 
     except Exception as e:
-        logger.error(f"å…¨å±€Interviewå¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -2995,7 +2706,6 @@ def get_interview_history():
         {
             "simulation_id": "sim_xxxx",  // å¿…å¡«ï¼Œæ¨¡æ‹ŸID
             "platform": "reddit",          // å¯é€‰ï¼Œå¹³å°ç±»åž‹ï¼ˆreddit/twitterï¼‰
-                                           // ä¸æŒ‡å®šåˆ™è¿”å›žä¸¤ä¸ªå¹³å°çš„æ‰€æœ‰åŽ†å²
             "agent_id": 0,                 // å¯é€‰ï¼ŒåªèŽ·å–è¯¥Agentçš„é‡‡è®¿åŽ†å²
             "limit": 100                   // å¯é€‰ï¼Œè¿”å›žæ•°é‡ï¼Œé»˜è®¤100
         }
@@ -3022,7 +2732,6 @@ def get_interview_history():
         data = request.get_json() or {}
         
         simulation_id = data.get('simulation_id')
-        platform = data.get('platform')  # ä¸æŒ‡å®šåˆ™è¿”å›žä¸¤ä¸ªå¹³å°çš„åŽ†å²
         agent_id = data.get('agent_id')
         limit = data.get('limit', 100)
         
@@ -3048,7 +2757,6 @@ def get_interview_history():
         })
 
     except Exception as e:
-        logger.error(f"èŽ·å–InterviewåŽ†å²å¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -3093,7 +2801,6 @@ def get_env_status():
 
         env_alive = SimulationRunner.check_env_alive(simulation_id)
         
-        # èŽ·å–æ›´è¯¦ç»†çš„çŠ¶æ€ä¿¡æ¯
         env_status = SimulationRunner.get_env_status_detail(simulation_id)
 
         if env_alive:
@@ -3113,7 +2820,6 @@ def get_env_status():
         })
 
     except Exception as e:
-        logger.error(f"èŽ·å–çŽ¯å¢ƒçŠ¶æ€å¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -3164,7 +2870,6 @@ def close_simulation_env():
             timeout=timeout
         )
         
-        # æ›´æ–°æ¨¡æ‹ŸçŠ¶æ€
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
         if state:
@@ -3183,7 +2888,6 @@ def close_simulation_env():
         }), 400
         
     except Exception as e:
-        logger.error(f"å…³é—­çŽ¯å¢ƒå¤±è´¥: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),

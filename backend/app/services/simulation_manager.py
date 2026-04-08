@@ -1,7 +1,7 @@
-"""
-OASISæ¨¡æ‹Ÿç®¡ç†å™¨
-ç®¡ç†Twitterå’ŒRedditåŒå¹³å°å¹¶è¡Œæ¨¡æ‹Ÿ
-ä½¿ç”¨é¢„è®¾è„šæœ¬ + LLMæ™ºèƒ½ç”Ÿæˆé…ç½®å‚æ•°
+﻿"""
+OASISÃ¦Â¨Â¡Ã¦â€¹Å¸Ã§Â®Â¡Ã§Ââ€ Ã¥â„¢Â¨
+Ã§Â®Â¡Ã§Ââ€ TwitterÃ¥â€™Å’RedditÃ¥ÂÅ’Ã¥Â¹Â³Ã¥ÂÂ°Ã¥Â¹Â¶Ã¨Â¡Å’Ã¦Â¨Â¡Ã¦â€¹Å¸
+Ã¤Â½Â¿Ã§â€Â¨Ã©Â¢â€žÃ¨Â®Â¾Ã¨â€žÅ¡Ã¦Å“Â¬ + LLMÃ¦â„¢ÂºÃ¨Æ’Â½Ã§â€Å¸Ã¦Ë†ÂÃ©â€¦ÂÃ§Â½Â®Ã¥Ââ€šÃ¦â€¢Â°
 """
 
 import os
@@ -23,60 +23,53 @@ logger = get_logger('posiedon.simulation')
 
 
 class SimulationStatus(str, Enum):
-    """æ¨¡æ‹ŸçŠ¶æ€"""
+    """Ã¦Â¨Â¡Ã¦â€¹Å¸Ã§Å Â¶Ã¦â‚¬Â"""
     CREATED = "created"
     PREPARING = "preparing"
     READY = "ready"
     RUNNING = "running"
     PAUSED = "paused"
-    STOPPED = "stopped"      # æ¨¡æ‹Ÿè¢«æ‰‹åŠ¨åœæ­¢
-    COMPLETED = "completed"  # æ¨¡æ‹Ÿè‡ªç„¶å®Œæˆ
+    STOPPED = "stopped"      # Ã¦Â¨Â¡Ã¦â€¹Å¸Ã¨Â¢Â«Ã¦â€°â€¹Ã¥Å Â¨Ã¥ÂÅ“Ã¦Â­Â¢
+    COMPLETED = "completed"  # Ã¦Â¨Â¡Ã¦â€¹Å¸Ã¨â€¡ÂªÃ§â€žÂ¶Ã¥Â®Å’Ã¦Ë†Â
     FAILED = "failed"
 
 
 class PlatformType(str, Enum):
-    """å¹³å°ç±»åž‹"""
+    """Ã¥Â¹Â³Ã¥ÂÂ°Ã§Â±Â»Ã¥Å¾â€¹"""
     TWITTER = "twitter"
     REDDIT = "reddit"
 
 
 @dataclass
 class SimulationState:
-    """æ¨¡æ‹ŸçŠ¶æ€"""
+    """Ã¦Â¨Â¡Ã¦â€¹Å¸Ã§Å Â¶Ã¦â‚¬Â"""
     simulation_id: str
     project_id: str
     graph_id: str
     
-    # å¹³å°å¯ç”¨çŠ¶æ€
     enable_twitter: bool = True
     enable_reddit: bool = True
     
-    # çŠ¶æ€
     status: SimulationStatus = SimulationStatus.CREATED
     
-    # å‡†å¤‡é˜¶æ®µæ•°æ®
     entities_count: int = 0
     profiles_count: int = 0
     entity_types: List[str] = field(default_factory=list)
     
-    # é…ç½®ç”Ÿæˆä¿¡æ¯
     config_generated: bool = False
     config_reasoning: str = ""
     
-    # è¿è¡Œæ—¶æ•°æ®
     current_round: int = 0
     twitter_status: str = "not_started"
     reddit_status: str = "not_started"
     
-    # æ—¶é—´æˆ³
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
     
-    # é”™è¯¯ä¿¡æ¯
     error: Optional[str] = None
     
     def to_dict(self) -> Dict[str, Any]:
-        """å®Œæ•´çŠ¶æ€å­—å…¸ï¼ˆå†…éƒ¨ä½¿ç”¨ï¼‰"""
+        """Ã¥Â®Å’Ã¦â€¢Â´Ã§Å Â¶Ã¦â‚¬ÂÃ¥Â­â€”Ã¥â€¦Â¸Ã¯Â¼Ë†Ã¥â€ â€¦Ã©Æ’Â¨Ã¤Â½Â¿Ã§â€Â¨Ã¯Â¼â€°"""
         return {
             "simulation_id": self.simulation_id,
             "project_id": self.project_id,
@@ -98,7 +91,7 @@ class SimulationState:
         }
     
     def to_simple_dict(self) -> Dict[str, Any]:
-        """ç®€åŒ–çŠ¶æ€å­—å…¸ï¼ˆAPIè¿”å›žä½¿ç”¨ï¼‰"""
+        """Ã§Â®â‚¬Ã¥Å’â€“Ã§Å Â¶Ã¦â‚¬ÂÃ¥Â­â€”Ã¥â€¦Â¸Ã¯Â¼Ë†APIÃ¨Â¿â€Ã¥â€ºÅ¾Ã¤Â½Â¿Ã§â€Â¨Ã¯Â¼â€°"""
         return {
             "simulation_id": self.simulation_id,
             "project_id": self.project_id,
@@ -114,36 +107,27 @@ class SimulationState:
 
 class SimulationManager:
     """
-    æ¨¡æ‹Ÿç®¡ç†å™¨
     
-    æ ¸å¿ƒåŠŸèƒ½ï¼š
-    1. ä»ŽZepå›¾è°±è¯»å–å®žä½“å¹¶è¿‡æ»¤
-    2. ç”ŸæˆOASIS Agent Profile
-    3. ä½¿ç”¨LLMæ™ºèƒ½ç”Ÿæˆæ¨¡æ‹Ÿé…ç½®å‚æ•°
-    4. å‡†å¤‡é¢„è®¾è„šæœ¬æ‰€éœ€çš„æ‰€æœ‰æ–‡ä»¶
     """
     
-    # æ¨¡æ‹Ÿæ•°æ®å­˜å‚¨ç›®å½•
     SIMULATION_DATA_DIR = os.path.join(
         os.path.dirname(__file__), 
         '../../uploads/simulations'
     )
     
     def __init__(self):
-        # ç¡®ä¿ç›®å½•å­˜åœ¨
         os.makedirs(self.SIMULATION_DATA_DIR, exist_ok=True)
         
-        # å†…å­˜ä¸­çš„æ¨¡æ‹ŸçŠ¶æ€ç¼“å­˜
         self._simulations: Dict[str, SimulationState] = {}
     
     def _get_simulation_dir(self, simulation_id: str) -> str:
-        """èŽ·å–æ¨¡æ‹Ÿæ•°æ®ç›®å½•"""
+        """Ã¨Å½Â·Ã¥Ââ€“Ã¦Â¨Â¡Ã¦â€¹Å¸Ã¦â€¢Â°Ã¦ÂÂ®Ã§â€ºÂ®Ã¥Â½â€¢"""
         sim_dir = os.path.join(self.SIMULATION_DATA_DIR, simulation_id)
         os.makedirs(sim_dir, exist_ok=True)
         return sim_dir
     
     def _save_simulation_state(self, state: SimulationState):
-        """ä¿å­˜æ¨¡æ‹ŸçŠ¶æ€åˆ°æ–‡ä»¶"""
+        """Ã¤Â¿ÂÃ¥Â­ËœÃ¦Â¨Â¡Ã¦â€¹Å¸Ã§Å Â¶Ã¦â‚¬ÂÃ¥Ë†Â°Ã¦â€“â€¡Ã¤Â»Â¶"""
         sim_dir = self._get_simulation_dir(state.simulation_id)
         state_file = os.path.join(sim_dir, "state.json")
         
@@ -155,7 +139,7 @@ class SimulationManager:
         self._simulations[state.simulation_id] = state
     
     def _load_simulation_state(self, simulation_id: str) -> Optional[SimulationState]:
-        """ä»Žæ–‡ä»¶åŠ è½½æ¨¡æ‹ŸçŠ¶æ€"""
+        """Ã¤Â»Å½Ã¦â€“â€¡Ã¤Â»Â¶Ã¥Å Â Ã¨Â½Â½Ã¦Â¨Â¡Ã¦â€¹Å¸Ã§Å Â¶Ã¦â‚¬Â"""
         if simulation_id in self._simulations:
             return self._simulations[simulation_id]
         
@@ -199,13 +183,8 @@ class SimulationManager:
         enable_reddit: bool = True,
     ) -> SimulationState:
         """
-        åˆ›å»ºæ–°çš„æ¨¡æ‹Ÿ
         
         Args:
-            project_id: é¡¹ç›®ID
-            graph_id: Zepå›¾è°±ID
-            enable_twitter: æ˜¯å¦å¯ç”¨Twitteræ¨¡æ‹Ÿ
-            enable_reddit: æ˜¯å¦å¯ç”¨Redditæ¨¡æ‹Ÿ
             
         Returns:
             SimulationState
@@ -223,7 +202,7 @@ class SimulationManager:
         )
         
         self._save_simulation_state(state)
-        logger.info(f"åˆ›å»ºæ¨¡æ‹Ÿ: {simulation_id}, project={project_id}, graph={graph_id}")
+        logger.info(f"Ã¥Ë†â€ºÃ¥Â»ÂºÃ¦Â¨Â¡Ã¦â€¹Å¸: {simulation_id}, project={project_id}, graph={graph_id}")
         
         return state
     
@@ -238,30 +217,16 @@ class SimulationManager:
         parallel_profile_count: int = 3
     ) -> SimulationState:
         """
-        å‡†å¤‡æ¨¡æ‹ŸçŽ¯å¢ƒï¼ˆå…¨ç¨‹è‡ªåŠ¨åŒ–ï¼‰
         
-        æ­¥éª¤ï¼š
-        1. ä»ŽZepå›¾è°±è¯»å–å¹¶è¿‡æ»¤å®žä½“
-        2. ä¸ºæ¯ä¸ªå®žä½“ç”ŸæˆOASIS Agent Profileï¼ˆå¯é€‰LLMå¢žå¼ºï¼Œæ”¯æŒå¹¶è¡Œï¼‰
-        3. ä½¿ç”¨LLMæ™ºèƒ½ç”Ÿæˆæ¨¡æ‹Ÿé…ç½®å‚æ•°ï¼ˆæ—¶é—´ã€æ´»è·ƒåº¦ã€å‘è¨€é¢‘çŽ‡ç­‰ï¼‰
-        4. ä¿å­˜é…ç½®æ–‡ä»¶å’ŒProfileæ–‡ä»¶
-        5. å¤åˆ¶é¢„è®¾è„šæœ¬åˆ°æ¨¡æ‹Ÿç›®å½•
         
         Args:
-            simulation_id: æ¨¡æ‹ŸID
-            simulation_requirement: æ¨¡æ‹Ÿéœ€æ±‚æè¿°ï¼ˆç”¨äºŽLLMç”Ÿæˆé…ç½®ï¼‰
-            document_text: åŽŸå§‹æ–‡æ¡£å†…å®¹ï¼ˆç”¨äºŽLLMç†è§£èƒŒæ™¯ï¼‰
-            defined_entity_types: é¢„å®šä¹‰çš„å®žä½“ç±»åž‹ï¼ˆå¯é€‰ï¼‰
-            use_llm_for_profiles: æ˜¯å¦ä½¿ç”¨LLMç”Ÿæˆè¯¦ç»†äººè®¾
-            progress_callback: è¿›åº¦å›žè°ƒå‡½æ•° (stage, progress, message)
-            parallel_profile_count: å¹¶è¡Œç”Ÿæˆäººè®¾çš„æ•°é‡ï¼Œé»˜è®¤3
             
         Returns:
             SimulationState
         """
         state = self._load_simulation_state(simulation_id)
         if not state:
-            raise ValueError(f"æ¨¡æ‹Ÿä¸å­˜åœ¨: {simulation_id}")
+            raise ValueError(f"Ã¦Â¨Â¡Ã¦â€¹Å¸Ã¤Â¸ÂÃ¥Â­ËœÃ¥Å“Â¨: {simulation_id}")
         
         try:
             state.status = SimulationStatus.PREPARING
@@ -269,7 +234,6 @@ class SimulationManager:
             
             sim_dir = self._get_simulation_dir(simulation_id)
             
-            # ========== é˜¶æ®µ1: è¯»å–å¹¶è¿‡æ»¤å®žä½“ ==========
             if progress_callback:
                 progress_callback("reading", 0, t('progress.connectingZepGraph'))
             
@@ -297,11 +261,10 @@ class SimulationManager:
             
             if filtered.filtered_count == 0:
                 state.status = SimulationStatus.FAILED
-                state.error = "æ²¡æœ‰æ‰¾åˆ°ç¬¦åˆæ¡ä»¶çš„å®žä½“ï¼Œè¯·æ£€æŸ¥å›¾è°±æ˜¯å¦æ­£ç¡®æž„å»º"
+                state.error = "Ã¦Â²Â¡Ã¦Å“â€°Ã¦â€°Â¾Ã¥Ë†Â°Ã§Â¬Â¦Ã¥ÂË†Ã¦ÂÂ¡Ã¤Â»Â¶Ã§Å¡â€žÃ¥Â®Å¾Ã¤Â½â€œÃ¯Â¼Å’Ã¨Â¯Â·Ã¦Â£â‚¬Ã¦Å¸Â¥Ã¥â€ºÂ¾Ã¨Â°Â±Ã¦ËœÂ¯Ã¥ÂÂ¦Ã¦Â­Â£Ã§Â¡Â®Ã¦Å¾â€žÃ¥Â»Âº"
                 self._save_simulation_state(state)
                 return state
             
-            # ========== é˜¶æ®µ2: ç”ŸæˆAgent Profile ==========
             total_entities = len(filtered.entities)
             
             if progress_callback:
@@ -312,7 +275,6 @@ class SimulationManager:
                     total=total_entities
                 )
             
-            # ä¼ å…¥graph_idä»¥å¯ç”¨Zepæ£€ç´¢åŠŸèƒ½ï¼ŒèŽ·å–æ›´ä¸°å¯Œçš„ä¸Šä¸‹æ–‡
             generator = OasisProfileGenerator(graph_id=state.graph_id)
             
             def profile_progress(current, total, msg):
@@ -326,7 +288,6 @@ class SimulationManager:
                         item_name=msg
                     )
             
-            # è®¾ç½®å®žæ—¶ä¿å­˜çš„æ–‡ä»¶è·¯å¾„ï¼ˆä¼˜å…ˆä½¿ç”¨ Reddit JSON æ ¼å¼ï¼‰
             realtime_output_path = None
             realtime_platform = "reddit"
             if state.enable_reddit:
@@ -340,16 +301,14 @@ class SimulationManager:
                 entities=filtered.entities,
                 use_llm=use_llm_for_profiles,
                 progress_callback=profile_progress,
-                graph_id=state.graph_id,  # ä¼ å…¥graph_idç”¨äºŽZepæ£€ç´¢
-                parallel_count=parallel_profile_count,  # å¹¶è¡Œç”Ÿæˆæ•°é‡
-                realtime_output_path=realtime_output_path,  # å®žæ—¶ä¿å­˜è·¯å¾„
-                output_platform=realtime_platform  # è¾“å‡ºæ ¼å¼
+                graph_id=state.graph_id,  # Ã¤Â¼Â Ã¥â€¦Â¥graph_idÃ§â€Â¨Ã¤ÂºÅ½ZepÃ¦Â£â‚¬Ã§Â´Â¢
+                parallel_count=parallel_profile_count,  # Ã¥Â¹Â¶Ã¨Â¡Å’Ã§â€Å¸Ã¦Ë†ÂÃ¦â€¢Â°Ã©â€¡Â
+                realtime_output_path=realtime_output_path,  # Ã¥Â®Å¾Ã¦â€”Â¶Ã¤Â¿ÂÃ¥Â­ËœÃ¨Â·Â¯Ã¥Â¾â€ž
+                output_platform=realtime_platform  # Ã¨Â¾â€œÃ¥â€¡ÂºÃ¦Â Â¼Ã¥Â¼Â
             )
             
             state.profiles_count = len(profiles)
             
-            # ä¿å­˜Profileæ–‡ä»¶ï¼ˆæ³¨æ„ï¼šTwitterä½¿ç”¨CSVæ ¼å¼ï¼ŒRedditä½¿ç”¨JSONæ ¼å¼ï¼‰
-            # Reddit å·²ç»åœ¨ç”Ÿæˆè¿‡ç¨‹ä¸­å®žæ—¶ä¿å­˜äº†ï¼Œè¿™é‡Œå†ä¿å­˜ä¸€æ¬¡ç¡®ä¿å®Œæ•´æ€§
             if progress_callback:
                 progress_callback(
                     "generating_profiles", 95,
@@ -366,7 +325,6 @@ class SimulationManager:
                 )
             
             if state.enable_twitter:
-                # Twitterä½¿ç”¨CSVæ ¼å¼ï¼è¿™æ˜¯OASISçš„è¦æ±‚
                 generator.save_profiles(
                     profiles=profiles,
                     file_path=os.path.join(sim_dir, "twitter_profiles.csv"),
@@ -381,7 +339,6 @@ class SimulationManager:
                     total=len(profiles)
                 )
             
-            # ========== é˜¶æ®µ3: LLMæ™ºèƒ½ç”Ÿæˆæ¨¡æ‹Ÿé…ç½® ==========
             if progress_callback:
                 progress_callback(
                     "generating_config", 0,
@@ -419,7 +376,6 @@ class SimulationManager:
                     total=3
                 )
             
-            # ä¿å­˜é…ç½®æ–‡ä»¶
             config_path = os.path.join(sim_dir, "simulation_config.json")
             with open(config_path, 'w', encoding='utf-8') as f:
                 f.write(sim_params.to_json())
@@ -435,20 +391,17 @@ class SimulationManager:
                     total=3
                 )
             
-            # æ³¨æ„ï¼šè¿è¡Œè„šæœ¬ä¿ç•™åœ¨ backend/scripts/ ç›®å½•ï¼Œä¸å†å¤åˆ¶åˆ°æ¨¡æ‹Ÿç›®å½•
-            # å¯åŠ¨æ¨¡æ‹Ÿæ—¶ï¼Œsimulation_runner ä¼šä»Ž scripts/ ç›®å½•è¿è¡Œè„šæœ¬
             
-            # æ›´æ–°çŠ¶æ€
             state.status = SimulationStatus.READY
             self._save_simulation_state(state)
             
-            logger.info(f"æ¨¡æ‹Ÿå‡†å¤‡å®Œæˆ: {simulation_id}, "
+            logger.info(f"Ã¦Â¨Â¡Ã¦â€¹Å¸Ã¥â€¡â€ Ã¥Â¤â€¡Ã¥Â®Å’Ã¦Ë†Â: {simulation_id}, "
                        f"entities={state.entities_count}, profiles={state.profiles_count}")
             
             return state
             
         except Exception as e:
-            logger.error(f"æ¨¡æ‹Ÿå‡†å¤‡å¤±è´¥: {simulation_id}, error={str(e)}")
+            logger.error(f"Ã¦Â¨Â¡Ã¦â€¹Å¸Ã¥â€¡â€ Ã¥Â¤â€¡Ã¥Â¤Â±Ã¨Â´Â¥: {simulation_id}, error={str(e)}")
             import traceback
             logger.error(traceback.format_exc())
             state.status = SimulationStatus.FAILED
@@ -457,16 +410,15 @@ class SimulationManager:
             raise
     
     def get_simulation(self, simulation_id: str) -> Optional[SimulationState]:
-        """èŽ·å–æ¨¡æ‹ŸçŠ¶æ€"""
+        """Ã¨Å½Â·Ã¥Ââ€“Ã¦Â¨Â¡Ã¦â€¹Å¸Ã§Å Â¶Ã¦â‚¬Â"""
         return self._load_simulation_state(simulation_id)
     
     def list_simulations(self, project_id: Optional[str] = None) -> List[SimulationState]:
-        """åˆ—å‡ºæ‰€æœ‰æ¨¡æ‹Ÿ"""
+        """Ã¥Ë†â€”Ã¥â€¡ÂºÃ¦â€°â‚¬Ã¦Å“â€°Ã¦Â¨Â¡Ã¦â€¹Å¸"""
         simulations = []
         
         if os.path.exists(self.SIMULATION_DATA_DIR):
             for sim_id in os.listdir(self.SIMULATION_DATA_DIR):
-                # è·³è¿‡éšè—æ–‡ä»¶ï¼ˆå¦‚ .DS_Storeï¼‰å’Œéžç›®å½•æ–‡ä»¶
                 sim_path = os.path.join(self.SIMULATION_DATA_DIR, sim_id)
                 if sim_id.startswith('.') or not os.path.isdir(sim_path):
                     continue
@@ -479,10 +431,10 @@ class SimulationManager:
         return simulations
     
     def get_profiles(self, simulation_id: str, platform: str = "reddit") -> List[Dict[str, Any]]:
-        """èŽ·å–æ¨¡æ‹Ÿçš„Agent Profile"""
+        """Ã¨Å½Â·Ã¥Ââ€“Ã¦Â¨Â¡Ã¦â€¹Å¸Ã§Å¡â€žAgent Profile"""
         state = self._load_simulation_state(simulation_id)
         if not state:
-            raise ValueError(f"æ¨¡æ‹Ÿä¸å­˜åœ¨: {simulation_id}")
+            raise ValueError(f"Ã¦Â¨Â¡Ã¦â€¹Å¸Ã¤Â¸ÂÃ¥Â­ËœÃ¥Å“Â¨: {simulation_id}")
         
         sim_dir = self._get_simulation_dir(simulation_id)
         profile_path = os.path.join(sim_dir, f"{platform}_profiles.json")
@@ -494,7 +446,7 @@ class SimulationManager:
             return json.load(f)
     
     def get_simulation_config(self, simulation_id: str) -> Optional[Dict[str, Any]]:
-        """èŽ·å–æ¨¡æ‹Ÿé…ç½®"""
+        """Ã¨Å½Â·Ã¥Ââ€“Ã¦Â¨Â¡Ã¦â€¹Å¸Ã©â€¦ÂÃ§Â½Â®"""
         sim_dir = self._get_simulation_dir(simulation_id)
         config_path = os.path.join(sim_dir, "simulation_config.json")
         
@@ -505,7 +457,7 @@ class SimulationManager:
             return json.load(f)
     
     def get_run_instructions(self, simulation_id: str) -> Dict[str, str]:
-        """èŽ·å–è¿è¡Œè¯´æ˜Ž"""
+        """Ã¨Å½Â·Ã¥Ââ€“Ã¨Â¿ÂÃ¨Â¡Å’Ã¨Â¯Â´Ã¦ËœÅ½"""
         sim_dir = self._get_simulation_dir(simulation_id)
         config_path = os.path.join(sim_dir, "simulation_config.json")
         scripts_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../scripts'))
@@ -520,10 +472,13 @@ class SimulationManager:
                 "parallel": f"python {scripts_dir}/run_parallel_simulation.py --config {config_path}",
             },
             "instructions": (
-                f"1. æ¿€æ´»condaçŽ¯å¢ƒ: conda activate Posiedon\n"
-                f"2. è¿è¡Œæ¨¡æ‹Ÿ (è„šæœ¬ä½äºŽ {scripts_dir}):\n"
-                f"   - å•ç‹¬è¿è¡ŒTwitter: python {scripts_dir}/run_twitter_simulation.py --config {config_path}\n"
-                f"   - å•ç‹¬è¿è¡ŒReddit: python {scripts_dir}/run_reddit_simulation.py --config {config_path}\n"
-                f"   - å¹¶è¡Œè¿è¡ŒåŒå¹³å°: python {scripts_dir}/run_parallel_simulation.py --config {config_path}"
+                f"1. Ã¦Â¿â‚¬Ã¦Â´Â»condaÃ§Å½Â¯Ã¥Â¢Æ’: conda activate Posiedon\n"
+                f"2. Ã¨Â¿ÂÃ¨Â¡Å’Ã¦Â¨Â¡Ã¦â€¹Å¸ (Ã¨â€žÅ¡Ã¦Å“Â¬Ã¤Â½ÂÃ¤ÂºÅ½ {scripts_dir}):\n"
+                f"   - Ã¥Ââ€¢Ã§â€¹Â¬Ã¨Â¿ÂÃ¨Â¡Å’Twitter: python {scripts_dir}/run_twitter_simulation.py --config {config_path}\n"
+                f"   - Ã¥Ââ€¢Ã§â€¹Â¬Ã¨Â¿ÂÃ¨Â¡Å’Reddit: python {scripts_dir}/run_reddit_simulation.py --config {config_path}\n"
+                f"   - Ã¥Â¹Â¶Ã¨Â¡Å’Ã¨Â¿ÂÃ¨Â¡Å’Ã¥ÂÅ’Ã¥Â¹Â³Ã¥ÂÂ°: python {scripts_dir}/run_parallel_simulation.py --config {config_path}"
             )
         }
+
+
+

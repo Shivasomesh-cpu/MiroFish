@@ -1,6 +1,4 @@
 """
-Zepå›¾è°±è®°å¿†æ›´æ–°æœåŠ¡
-å°†æ¨¡æ‹Ÿä¸­çš„Agentæ´»åŠ¨åŠ¨æ€æ›´æ–°åˆ°Zepå›¾è°±ä¸­
 """
 
 import os
@@ -34,12 +32,8 @@ class AgentActivity:
     
     def to_episode_text(self) -> str:
         """
-        å°†æ´»åŠ¨è½¬æ¢ä¸ºå¯ä»¥å‘é€ç»™Zepçš„æ–‡æœ¬æè¿°
         
-        é‡‡ç”¨è‡ªç„¶è¯­è¨€æè¿°æ ¼å¼ï¼Œè®©Zepèƒ½å¤Ÿä»Žä¸­æå–å®žä½“å’Œå…³ç³»
-        ä¸æ·»åŠ æ¨¡æ‹Ÿç›¸å…³çš„å‰ç¼€ï¼Œé¿å…è¯¯å¯¼å›¾è°±æ›´æ–°
         """
-        # æ ¹æ®ä¸åŒçš„åŠ¨ä½œç±»åž‹ç”Ÿæˆä¸åŒçš„æè¿°
         action_descriptions = {
             "CREATE_POST": self._describe_create_post,
             "LIKE_POST": self._describe_like_post,
@@ -58,7 +52,6 @@ class AgentActivity:
         describe_func = action_descriptions.get(self.action_type, self._describe_generic)
         description = describe_func()
         
-        # ç›´æŽ¥è¿”å›ž "agentåç§°: æ´»åŠ¨æè¿°" æ ¼å¼ï¼Œä¸æ·»åŠ æ¨¡æ‹Ÿå‰ç¼€
         return f"{self.agent_name}: {description}"
     
     def _describe_create_post(self) -> str:
@@ -195,47 +188,31 @@ class AgentActivity:
         return "å±è”½äº†ä¸€ä¸ªç”¨æˆ·"
     
     def _describe_generic(self) -> str:
-        # å¯¹äºŽæœªçŸ¥çš„åŠ¨ä½œç±»åž‹ï¼Œç”Ÿæˆé€šç”¨æè¿°
         return f"æ‰§è¡Œäº†{self.action_type}æ“ä½œ"
 
 
 class ZepGraphMemoryUpdater:
     """
-    Zepå›¾è°±è®°å¿†æ›´æ–°å™¨
     
-    ç›‘æŽ§æ¨¡æ‹Ÿçš„actionsæ—¥å¿—æ–‡ä»¶ï¼Œå°†æ–°çš„agentæ´»åŠ¨å®žæ—¶æ›´æ–°åˆ°Zepå›¾è°±ä¸­ã€‚
-    æŒ‰å¹³å°åˆ†ç»„ï¼Œæ¯ç´¯ç§¯BATCH_SIZEæ¡æ´»åŠ¨åŽæ‰¹é‡å‘é€åˆ°Zepã€‚
     
-    æ‰€æœ‰æœ‰æ„ä¹‰çš„è¡Œä¸ºéƒ½ä¼šè¢«æ›´æ–°åˆ°Zepï¼Œaction_argsä¸­ä¼šåŒ…å«å®Œæ•´çš„ä¸Šä¸‹æ–‡ä¿¡æ¯ï¼š
-    - ç‚¹èµž/è¸©çš„å¸–å­åŽŸæ–‡
-    - è½¬å‘/å¼•ç”¨çš„å¸–å­åŽŸæ–‡
-    - å…³æ³¨/å±è”½çš„ç”¨æˆ·å
-    - ç‚¹èµž/è¸©çš„è¯„è®ºåŽŸæ–‡
     """
     
-    # æ‰¹é‡å‘é€å¤§å°ï¼ˆæ¯ä¸ªå¹³å°ç´¯ç§¯å¤šå°‘æ¡åŽå‘é€ï¼‰
     BATCH_SIZE = 5
     
-    # å¹³å°åç§°æ˜ å°„ï¼ˆç”¨äºŽæŽ§åˆ¶å°æ˜¾ç¤ºï¼‰
     PLATFORM_DISPLAY_NAMES = {
         'twitter': 'ä¸–ç•Œ1',
         'reddit': 'ä¸–ç•Œ2',
     }
     
-    # å‘é€é—´éš”ï¼ˆç§’ï¼‰ï¼Œé¿å…è¯·æ±‚è¿‡å¿«
     SEND_INTERVAL = 0.5
     
-    # é‡è¯•é…ç½®
     MAX_RETRIES = 3
     RETRY_DELAY = 2  # ç§’
     
     def __init__(self, graph_id: str, api_key: Optional[str] = None):
         """
-        åˆå§‹åŒ–æ›´æ–°å™¨
         
         Args:
-            graph_id: Zepå›¾è°±ID
-            api_key: Zep API Keyï¼ˆå¯é€‰ï¼Œé»˜è®¤ä»Žé…ç½®è¯»å–ï¼‰
         """
         self.graph_id = graph_id
         self.api_key = api_key or Config.ZEP_API_KEY
@@ -245,21 +222,17 @@ class ZepGraphMemoryUpdater:
         
         self.client = Zep(api_key=self.api_key)
         
-        # æ´»åŠ¨é˜Ÿåˆ—
         self._activity_queue: Queue = Queue()
         
-        # æŒ‰å¹³å°åˆ†ç»„çš„æ´»åŠ¨ç¼“å†²åŒºï¼ˆæ¯ä¸ªå¹³å°å„è‡ªç´¯ç§¯åˆ°BATCH_SIZEåŽæ‰¹é‡å‘é€ï¼‰
         self._platform_buffers: Dict[str, List[AgentActivity]] = {
             'twitter': [],
             'reddit': [],
         }
         self._buffer_lock = threading.Lock()
         
-        # æŽ§åˆ¶æ ‡å¿—
         self._running = False
         self._worker_thread: Optional[threading.Thread] = None
         
-        # ç»Ÿè®¡
         self._total_activities = 0  # å®žé™…æ·»åŠ åˆ°é˜Ÿåˆ—çš„æ´»åŠ¨æ•°
         self._total_sent = 0        # æˆåŠŸå‘é€åˆ°Zepçš„æ‰¹æ¬¡æ•°
         self._total_items_sent = 0  # æˆåŠŸå‘é€åˆ°Zepçš„æ´»åŠ¨æ¡æ•°
@@ -294,7 +267,6 @@ class ZepGraphMemoryUpdater:
         """åœæ­¢åŽå°å·¥ä½œçº¿ç¨‹"""
         self._running = False
         
-        # å‘é€å‰©ä½™çš„æ´»åŠ¨
         self._flush_remaining()
         
         if self._worker_thread and self._worker_thread.is_alive():
@@ -309,26 +281,11 @@ class ZepGraphMemoryUpdater:
     
     def add_activity(self, activity: AgentActivity):
         """
-        æ·»åŠ ä¸€ä¸ªagentæ´»åŠ¨åˆ°é˜Ÿåˆ—
         
-        æ‰€æœ‰æœ‰æ„ä¹‰çš„è¡Œä¸ºéƒ½ä¼šè¢«æ·»åŠ åˆ°é˜Ÿåˆ—ï¼ŒåŒ…æ‹¬ï¼š
-        - CREATE_POSTï¼ˆå‘å¸–ï¼‰
-        - CREATE_COMMENTï¼ˆè¯„è®ºï¼‰
-        - QUOTE_POSTï¼ˆå¼•ç”¨å¸–å­ï¼‰
-        - SEARCH_POSTSï¼ˆæœç´¢å¸–å­ï¼‰
-        - SEARCH_USERï¼ˆæœç´¢ç”¨æˆ·ï¼‰
-        - LIKE_POST/DISLIKE_POSTï¼ˆç‚¹èµž/è¸©å¸–å­ï¼‰
-        - REPOSTï¼ˆè½¬å‘ï¼‰
-        - FOLLOWï¼ˆå…³æ³¨ï¼‰
-        - MUTEï¼ˆå±è”½ï¼‰
-        - LIKE_COMMENT/DISLIKE_COMMENTï¼ˆç‚¹èµž/è¸©è¯„è®ºï¼‰
         
-        action_argsä¸­ä¼šåŒ…å«å®Œæ•´çš„ä¸Šä¸‹æ–‡ä¿¡æ¯ï¼ˆå¦‚å¸–å­åŽŸæ–‡ã€ç”¨æˆ·åç­‰ï¼‰ã€‚
         
         Args:
-            activity: Agentæ´»åŠ¨è®°å½•
         """
-        # è·³è¿‡DO_NOTHINGç±»åž‹çš„æ´»åŠ¨
         if activity.action_type == "DO_NOTHING":
             self._skipped_count += 1
             return
@@ -339,13 +296,9 @@ class ZepGraphMemoryUpdater:
     
     def add_activity_from_dict(self, data: Dict[str, Any], platform: str):
         """
-        ä»Žå­—å…¸æ•°æ®æ·»åŠ æ´»åŠ¨
         
         Args:
-            data: ä»Žactions.jsonlè§£æžçš„å­—å…¸æ•°æ®
-            platform: å¹³å°åç§° (twitter/reddit)
         """
-        # è·³è¿‡äº‹ä»¶ç±»åž‹çš„æ¡ç›®
         if "event_type" in data:
             return
         
@@ -366,24 +319,19 @@ class ZepGraphMemoryUpdater:
         set_locale(locale)
         while self._running or not self._activity_queue.empty():
             try:
-                # å°è¯•ä»Žé˜Ÿåˆ—èŽ·å–æ´»åŠ¨ï¼ˆè¶…æ—¶1ç§’ï¼‰
                 try:
                     activity = self._activity_queue.get(timeout=1)
                     
-                    # å°†æ´»åŠ¨æ·»åŠ åˆ°å¯¹åº”å¹³å°çš„ç¼“å†²åŒº
                     platform = activity.platform.lower()
                     with self._buffer_lock:
                         if platform not in self._platform_buffers:
                             self._platform_buffers[platform] = []
                         self._platform_buffers[platform].append(activity)
                         
-                        # æ£€æŸ¥è¯¥å¹³å°æ˜¯å¦è¾¾åˆ°æ‰¹é‡å¤§å°
                         if len(self._platform_buffers[platform]) >= self.BATCH_SIZE:
                             batch = self._platform_buffers[platform][:self.BATCH_SIZE]
                             self._platform_buffers[platform] = self._platform_buffers[platform][self.BATCH_SIZE:]
-                            # é‡Šæ”¾é”åŽå†å‘é€
                             self._send_batch_activities(batch, platform)
-                            # å‘é€é—´éš”ï¼Œé¿å…è¯·æ±‚è¿‡å¿«
                             time.sleep(self.SEND_INTERVAL)
                     
                 except Empty:
@@ -395,20 +343,15 @@ class ZepGraphMemoryUpdater:
     
     def _send_batch_activities(self, activities: List[AgentActivity], platform: str):
         """
-        æ‰¹é‡å‘é€æ´»åŠ¨åˆ°Zepå›¾è°±ï¼ˆåˆå¹¶ä¸ºä¸€æ¡æ–‡æœ¬ï¼‰
         
         Args:
-            activities: Agentæ´»åŠ¨åˆ—è¡¨
-            platform: å¹³å°åç§°
         """
         if not activities:
             return
         
-        # å°†å¤šæ¡æ´»åŠ¨åˆå¹¶ä¸ºä¸€æ¡æ–‡æœ¬ï¼Œç”¨æ¢è¡Œåˆ†éš”
         episode_texts = [activity.to_episode_text() for activity in activities]
         combined_text = "\n".join(episode_texts)
         
-        # å¸¦é‡è¯•çš„å‘é€
         for attempt in range(self.MAX_RETRIES):
             try:
                 self.client.graph.add(
@@ -434,7 +377,6 @@ class ZepGraphMemoryUpdater:
     
     def _flush_remaining(self):
         """å‘é€é˜Ÿåˆ—å’Œç¼“å†²åŒºä¸­å‰©ä½™çš„æ´»åŠ¨"""
-        # é¦–å…ˆå¤„ç†é˜Ÿåˆ—ä¸­å‰©ä½™çš„æ´»åŠ¨ï¼Œæ·»åŠ åˆ°ç¼“å†²åŒº
         while not self._activity_queue.empty():
             try:
                 activity = self._activity_queue.get_nowait()
@@ -446,14 +388,12 @@ class ZepGraphMemoryUpdater:
             except Empty:
                 break
         
-        # ç„¶åŽå‘é€å„å¹³å°ç¼“å†²åŒºä¸­å‰©ä½™çš„æ´»åŠ¨ï¼ˆå³ä½¿ä¸è¶³BATCH_SIZEæ¡ï¼‰
         with self._buffer_lock:
             for platform, buffer in self._platform_buffers.items():
                 if buffer:
                     display_name = self._get_platform_display_name(platform)
                     logger.info(f"å‘é€{display_name}å¹³å°å‰©ä½™çš„ {len(buffer)} æ¡æ´»åŠ¨")
                     self._send_batch_activities(buffer, platform)
-            # æ¸…ç©ºæ‰€æœ‰ç¼“å†²åŒº
             for platform in self._platform_buffers:
                 self._platform_buffers[platform] = []
     
@@ -478,9 +418,7 @@ class ZepGraphMemoryUpdater:
 
 class ZepGraphMemoryManager:
     """
-    ç®¡ç†å¤šä¸ªæ¨¡æ‹Ÿçš„Zepå›¾è°±è®°å¿†æ›´æ–°å™¨
     
-    æ¯ä¸ªæ¨¡æ‹Ÿå¯ä»¥æœ‰è‡ªå·±çš„æ›´æ–°å™¨å®žä¾‹
     """
     
     _updaters: Dict[str, ZepGraphMemoryUpdater] = {}
@@ -489,17 +427,12 @@ class ZepGraphMemoryManager:
     @classmethod
     def create_updater(cls, simulation_id: str, graph_id: str) -> ZepGraphMemoryUpdater:
         """
-        ä¸ºæ¨¡æ‹Ÿåˆ›å»ºå›¾è°±è®°å¿†æ›´æ–°å™¨
         
         Args:
-            simulation_id: æ¨¡æ‹ŸID
-            graph_id: Zepå›¾è°±ID
             
         Returns:
-            ZepGraphMemoryUpdaterå®žä¾‹
         """
         with cls._lock:
-            # å¦‚æžœå·²å­˜åœ¨ï¼Œå…ˆåœæ­¢æ—§çš„
             if simulation_id in cls._updaters:
                 cls._updaters[simulation_id].stop()
             
@@ -524,13 +457,11 @@ class ZepGraphMemoryManager:
                 del cls._updaters[simulation_id]
                 logger.info(f"å·²åœæ­¢å›¾è°±è®°å¿†æ›´æ–°å™¨: simulation_id={simulation_id}")
     
-    # é˜²æ­¢ stop_all é‡å¤è°ƒç”¨çš„æ ‡å¿—
     _stop_all_done = False
     
     @classmethod
     def stop_all(cls):
         """åœæ­¢æ‰€æœ‰æ›´æ–°å™¨"""
-        # é˜²æ­¢é‡å¤è°ƒç”¨
         if cls._stop_all_done:
             return
         cls._stop_all_done = True

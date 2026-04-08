@@ -1,30 +1,30 @@
 {
   "zh": {
-    "label": "中文",
-    "llmInstruction": "请使用中文回答。"
+    "label": "English",
+    "llmInstruction": "Please respond in English."
   },
   "en": {
     "label": "English",
     "llmInstruction": "Please respond in English."
   },
   "es": {
-    "label": "Español",
-    "llmInstruction": "Por favor, responde en español."
+    "label": "Spanish",
+    "llmInstruction": "Please respond in English."
   },
   "fr": {
-    "label": "Français",
-    "llmInstruction": "Veuillez répondre en français."
+    "label": "French",
+    "llmInstruction": "Please respond in English."
   },
   "pt": {
-    "label": "Português",
-    "llmInstruction": "Por favor, responda em português."
+    "label": "Portuguese",
+    "llmInstruction": "Please respond in English."
   },
   "ru": {
-    "label": "Русский",
-    "llmInstruction": "Пожалуйста, отвечайте на русском языке."
+    "label": "Russian",
+    "llmInstruction": "Please respond in English."
   },
   "de": {
-    "label": "Deutsch",
-    "llmInstruction": "Bitte antworten Sie auf Deutsch."
+    "label": "German",
+    "llmInstruction": "Please respond in English."
   }
 }

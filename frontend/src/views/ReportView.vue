@@ -49,7 +49,6 @@
         />
       </div>
 
-      <!-- Right Panel: Step4 æŠ¥å‘Šç”Ÿæˆ -->
       <div class="panel-wrapper right" :style="rightPanelStyle">
         <Step4Report
           :reportId="currentReportId"
@@ -83,7 +82,6 @@ const props = defineProps({
   reportId: String
 })
 
-// Layout State - é»˜è®¤åˆ‡æ¢åˆ°å·¥ä½œå°è§†è§’
 const viewMode = ref('workbench')
 
 // Data State
@@ -146,26 +144,22 @@ const loadReportData = async () => {
   try {
     addLog(t('log.loadReportData', { id: currentReportId.value }))
 
-    // èŽ·å– report ä¿¡æ¯ä»¥èŽ·å– simulation_id
     const reportRes = await getReport(currentReportId.value)
     if (reportRes.success && reportRes.data) {
       const reportData = reportRes.data
       simulationId.value = reportData.simulation_id
 
       if (simulationId.value) {
-        // èŽ·å– simulation ä¿¡æ¯
         const simRes = await getSimulation(simulationId.value)
         if (simRes.success && simRes.data) {
           const simData = simRes.data
 
-          // èŽ·å– project ä¿¡æ¯
           if (simData.project_id) {
             const projRes = await getProject(simData.project_id)
             if (projRes.success && projRes.data) {
               projectData.value = projRes.data
               addLog(t('log.projectLoadSuccess', { id: projRes.data.project_id }))
 
-              // èŽ·å– graph æ•°æ®
               if (projRes.data.graph_id) {
                 await loadGraph(projRes.data.graph_id)
               }

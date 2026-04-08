@@ -1,15 +1,6 @@
 """
-动作日志记录器
-用于记录OASIS模拟中每个Agent的动作，供后端监控使用
 
-日志结构:
     sim_xxx/
-    ├── twitter/
-    │   └── actions.jsonl    # Twitter 平台动作日志
-    ├── reddit/
-    │   └── actions.jsonl    # Reddit 平台动作日志
-    ├── simulation.log       # 主模拟进程日志
-    └── run_state.json       # 运行状态（API 查询用）
 """
 
 import json
@@ -24,11 +15,8 @@ class PlatformActionLogger:
     
     def __init__(self, platform: str, base_dir: str):
         """
-        初始化日志记录器
         
         Args:
-            platform: 平台名称 (twitter/reddit)
-            base_dir: 模拟目录的基础路径
         """
         self.platform = platform
         self.base_dir = base_dir
@@ -118,35 +106,28 @@ class PlatformActionLogger:
 
 class SimulationLogManager:
     """
-    模拟日志管理器
-    统一管理所有日志文件，按平台分离
     """
     
     def __init__(self, simulation_dir: str):
         """
-        初始化日志管理器
         
         Args:
-            simulation_dir: 模拟目录路径
         """
         self.simulation_dir = simulation_dir
         self.twitter_logger: Optional[PlatformActionLogger] = None
         self.reddit_logger: Optional[PlatformActionLogger] = None
         self._main_logger: Optional[logging.Logger] = None
         
-        # 设置主日志
         self._setup_main_logger()
     
     def _setup_main_logger(self):
         """设置主模拟日志"""
         log_path = os.path.join(self.simulation_dir, "simulation.log")
         
-        # 创建 logger
         self._main_logger = logging.getLogger(f"simulation.{os.path.basename(self.simulation_dir)}")
         self._main_logger.setLevel(logging.INFO)
         self._main_logger.handlers.clear()
         
-        # 文件处理器
         file_handler = logging.FileHandler(log_path, encoding='utf-8', mode='w')
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(logging.Formatter(
@@ -155,7 +136,6 @@ class SimulationLogManager:
         ))
         self._main_logger.addHandler(file_handler)
         
-        # 控制台处理器
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.INFO)
         console_handler.setFormatter(logging.Formatter(
@@ -196,12 +176,9 @@ class SimulationLogManager:
         self.log(message, "debug")
 
 
-# ============ 兼容旧接口 ============
 
 class ActionLogger:
     """
-    动作日志记录器（兼容旧接口）
-    建议使用 SimulationLogManager 代替
     """
     
     def __init__(self, log_path: str):
@@ -288,7 +265,6 @@ class ActionLogger:
             f.write(json.dumps(entry, ensure_ascii=False) + '\n')
 
 
-# 全局日志实例（兼容旧接口）
 _global_logger: Optional[ActionLogger] = None
 
 

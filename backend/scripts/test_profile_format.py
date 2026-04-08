@@ -1,8 +1,4 @@
 """
-测试Profile格式生成是否符合OASIS要求
-验证：
-1. Twitter Profile生成CSV格式
-2. Reddit Profile生成JSON详细格式
 """
 
 import os
@@ -11,7 +7,6 @@ import json
 import csv
 import tempfile
 
-# 添加项目路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.services.oasis_profile_generator import OasisProfileGenerator, OasisAgentProfile
@@ -23,7 +18,6 @@ def test_profile_formats():
     print("OASIS Profile格式测试")
     print("=" * 60)
     
-    # 创建测试Profile数据
     test_profiles = [
         OasisAgentProfile(
             user_id=0,
@@ -63,17 +57,14 @@ def test_profile_formats():
     
     generator = OasisProfileGenerator.__new__(OasisProfileGenerator)
     
-    # 使用临时目录
     with tempfile.TemporaryDirectory() as temp_dir:
         twitter_path = os.path.join(temp_dir, "twitter_profiles.csv")
         reddit_path = os.path.join(temp_dir, "reddit_profiles.json")
         
-        # 测试Twitter CSV格式
         print("\n1. 测试Twitter Profile (CSV格式)")
         print("-" * 40)
         generator._save_twitter_csv(test_profiles, twitter_path)
         
-        # 读取并验证CSV
         with open(twitter_path, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             rows = list(reader)
@@ -85,7 +76,6 @@ def test_profile_formats():
         for key, value in rows[0].items():
             print(f"     {key}: {value}")
         
-        # 验证必需字段
         required_twitter_fields = ['user_id', 'user_name', 'name', 'bio', 
                                    'friend_count', 'follower_count', 'statuses_count', 'created_at']
         missing = set(required_twitter_fields) - set(rows[0].keys())
@@ -94,12 +84,10 @@ def test_profile_formats():
         else:
             print(f"\n   [通过] 所有必需字段都存在")
         
-        # 测试Reddit JSON格式
         print("\n2. 测试Reddit Profile (JSON详细格式)")
         print("-" * 40)
         generator._save_reddit_json(test_profiles, reddit_path)
         
-        # 读取并验证JSON
         with open(reddit_path, 'r', encoding='utf-8') as f:
             reddit_data = json.load(f)
         
@@ -109,7 +97,6 @@ def test_profile_formats():
         print(f"\n   示例数据 (第1条):")
         print(json.dumps(reddit_data[0], ensure_ascii=False, indent=4))
         
-        # 验证详细格式字段
         required_reddit_fields = ['realname', 'username', 'bio', 'persona']
         optional_reddit_fields = ['age', 'gender', 'mbti', 'country', 'profession', 'interested_topics']
         

@@ -1,6 +1,4 @@
 """
-OASISæ¨¡æ‹Ÿè¿è¡Œå™¨
-åœ¨åŽå°è¿è¡Œæ¨¡æ‹Ÿå¹¶è®°å½•æ¯ä¸ªAgentçš„åŠ¨ä½œï¼Œæ”¯æŒå®žæ—¶çŠ¶æ€ç›‘æŽ§
 """
 
 import os
@@ -27,10 +25,8 @@ from .hallucination_gate import HallucinationGate, HallucinationScore
 
 logger = get_logger('posiedon.simulation_runner')
 
-# æ ‡è®°æ˜¯å¦å·²æ³¨å†Œæ¸…ç†å‡½æ•°
 _cleanup_registered = False
 
-# å¹³å°æ£€æµ‹
 IS_WINDOWS = sys.platform == 'win32'
 
 
@@ -108,44 +104,35 @@ class SimulationRunState:
     simulation_id: str
     runner_status: RunnerStatus = RunnerStatus.IDLE
     
-    # è¿›åº¦ä¿¡æ¯
     current_round: int = 0
     total_rounds: int = 0
     simulated_hours: int = 0
     total_simulation_hours: int = 0
     
-    # å„å¹³å°ç‹¬ç«‹è½®æ¬¡å’Œæ¨¡æ‹Ÿæ—¶é—´ï¼ˆç”¨äºŽåŒå¹³å°å¹¶è¡Œæ˜¾ç¤ºï¼‰
     twitter_current_round: int = 0
     reddit_current_round: int = 0
     twitter_simulated_hours: int = 0
     reddit_simulated_hours: int = 0
     
-    # å¹³å°çŠ¶æ€
     twitter_running: bool = False
     reddit_running: bool = False
     twitter_actions_count: int = 0
     reddit_actions_count: int = 0
     
-    # å¹³å°å®ŒæˆçŠ¶æ€ï¼ˆé€šè¿‡æ£€æµ‹ actions.jsonl ä¸­çš„ simulation_end äº‹ä»¶ï¼‰
     twitter_completed: bool = False
     reddit_completed: bool = False
     
-    # æ¯è½®æ‘˜è¦
     rounds: List[RoundSummary] = field(default_factory=list)
     
-    # æœ€è¿‘åŠ¨ä½œï¼ˆç”¨äºŽå‰ç«¯å®žæ—¶å±•ç¤ºï¼‰
     recent_actions: List[AgentAction] = field(default_factory=list)
     max_recent_actions: int = 50
     
-    # æ—¶é—´æˆ³
     started_at: Optional[str] = None
     updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
     completed_at: Optional[str] = None
     
-    # é”™è¯¯ä¿¡æ¯
     error: Optional[str] = None
     
-    # è¿›ç¨‹IDï¼ˆç”¨äºŽåœæ­¢ï¼‰
     process_pid: Optional[int] = None
     
     def add_action(self, action: AgentAction):
@@ -170,7 +157,6 @@ class SimulationRunState:
             "simulated_hours": self.simulated_hours,
             "total_simulation_hours": self.total_simulation_hours,
             "progress_percent": round(self.current_round / max(self.total_rounds, 1) * 100, 1),
-            # å„å¹³å°ç‹¬ç«‹è½®æ¬¡å’Œæ—¶é—´
             "twitter_current_round": self.twitter_current_round,
             "reddit_current_round": self.reddit_current_round,
             "twitter_simulated_hours": self.twitter_simulated_hours,
@@ -199,28 +185,19 @@ class SimulationRunState:
 
 class SimulationRunner:
     """
-    æ¨¡æ‹Ÿè¿è¡Œå™¨
     
-    è´Ÿè´£ï¼š
-    1. åœ¨åŽå°è¿›ç¨‹ä¸­è¿è¡ŒOASISæ¨¡æ‹Ÿ
-    2. è§£æžè¿è¡Œæ—¥å¿—ï¼Œè®°å½•æ¯ä¸ªAgentçš„åŠ¨ä½œ
-    3. æä¾›å®žæ—¶çŠ¶æ€æŸ¥è¯¢æŽ¥å£
-    4. æ”¯æŒæš‚åœ/åœæ­¢/æ¢å¤æ“ä½œ
     """
     
-    # è¿è¡ŒçŠ¶æ€å­˜å‚¨ç›®å½•
     RUN_STATE_DIR = os.path.join(
         os.path.dirname(__file__),
         '../../uploads/simulations'
     )
     
-    # è„šæœ¬ç›®å½•
     SCRIPTS_DIR = os.path.join(
         os.path.dirname(__file__),
         '../../scripts'
     )
     
-    # å†…å­˜ä¸­çš„è¿è¡ŒçŠ¶æ€
     _run_states: Dict[str, SimulationRunState] = {}
     _processes: Dict[str, subprocess.Popen] = {}
     _action_queues: Dict[str, Queue] = {}
@@ -228,7 +205,6 @@ class SimulationRunner:
     _stdout_files: Dict[str, Any] = {}  # å­˜å‚¨ stdout æ–‡ä»¶å¥æŸ„
     _stderr_files: Dict[str, Any] = {}  # å­˜å‚¨ stderr æ–‡ä»¶å¥æŸ„
     
-    # å›¾è°±è®°å¿†æ›´æ–°é…ç½®
     _graph_memory_enabled: Dict[str, bool] = {}  # simulation_id -> enabled
     
     @classmethod
@@ -237,7 +213,6 @@ class SimulationRunner:
         if simulation_id in cls._run_states:
             return cls._run_states[simulation_id]
         
-        # å°è¯•ä»Žæ–‡ä»¶åŠ è½½
         state = cls._load_run_state(simulation_id)
         if state:
             cls._run_states[simulation_id] = state
@@ -261,7 +236,6 @@ class SimulationRunner:
                 total_rounds=data.get("total_rounds", 0),
                 simulated_hours=data.get("simulated_hours", 0),
                 total_simulation_hours=data.get("total_simulation_hours", 0),
-                # å„å¹³å°ç‹¬ç«‹è½®æ¬¡å’Œæ—¶é—´
                 twitter_current_round=data.get("twitter_current_round", 0),
                 reddit_current_round=data.get("reddit_current_round", 0),
                 twitter_simulated_hours=data.get("twitter_simulated_hours", 0),
@@ -279,7 +253,6 @@ class SimulationRunner:
                 process_pid=data.get("process_pid"),
             )
             
-            # åŠ è½½æœ€è¿‘åŠ¨ä½œ
             actions_data = data.get("recent_actions", [])
             for a in actions_data:
                 state.recent_actions.append(AgentAction(
@@ -323,24 +296,16 @@ class SimulationRunner:
         graph_id: str = None  # Zepå›¾è°±IDï¼ˆå¯ç”¨å›¾è°±æ›´æ–°æ—¶å¿…éœ€ï¼‰
     ) -> SimulationRunState:
         """
-        å¯åŠ¨æ¨¡æ‹Ÿ
         
         Args:
-            simulation_id: æ¨¡æ‹ŸID
-            platform: è¿è¡Œå¹³å° (twitter/reddit/parallel)
-            max_rounds: æœ€å¤§æ¨¡æ‹Ÿè½®æ•°ï¼ˆå¯é€‰ï¼Œç”¨äºŽæˆªæ–­è¿‡é•¿çš„æ¨¡æ‹Ÿï¼‰
-            enable_graph_memory_update: æ˜¯å¦å°†Agentæ´»åŠ¨åŠ¨æ€æ›´æ–°åˆ°Zepå›¾è°±
-            graph_id: Zepå›¾è°±IDï¼ˆå¯ç”¨å›¾è°±æ›´æ–°æ—¶å¿…éœ€ï¼‰
             
         Returns:
             SimulationRunState
         """
-        # æ£€æŸ¥æ˜¯å¦å·²åœ¨è¿è¡Œ
         existing = cls.get_run_state(simulation_id)
         if existing and existing.runner_status in [RunnerStatus.RUNNING, RunnerStatus.STARTING]:
             raise ValueError(f"æ¨¡æ‹Ÿå·²åœ¨è¿è¡Œä¸­: {simulation_id}")
         
-        # åŠ è½½æ¨¡æ‹Ÿé…ç½®
         sim_dir = os.path.join(cls.RUN_STATE_DIR, simulation_id)
         config_path = os.path.join(sim_dir, "simulation_config.json")
         
@@ -350,13 +315,11 @@ class SimulationRunner:
         with open(config_path, 'r', encoding='utf-8') as f:
             config = json.load(f)
         
-        # åˆå§‹åŒ–è¿è¡ŒçŠ¶æ€
         time_config = config.get("time_config", {})
         total_hours = time_config.get("total_simulation_hours", 72)
         minutes_per_round = time_config.get("minutes_per_round", 30)
         total_rounds = int(total_hours * 60 / minutes_per_round)
         
-        # å¦‚æžœæŒ‡å®šäº†æœ€å¤§è½®æ•°ï¼Œåˆ™æˆªæ–­
         if max_rounds is not None and max_rounds > 0:
             original_rounds = total_rounds
             total_rounds = min(total_rounds, max_rounds)
@@ -373,7 +336,6 @@ class SimulationRunner:
         
         cls._save_run_state(state)
         
-        # å¦‚æžœå¯ç”¨å›¾è°±è®°å¿†æ›´æ–°ï¼Œåˆ›å»ºæ›´æ–°å™¨
         if enable_graph_memory_update:
             if not graph_id:
                 raise ValueError("å¯ç”¨å›¾è°±è®°å¿†æ›´æ–°æ—¶å¿…é¡»æä¾› graph_id")
@@ -388,7 +350,6 @@ class SimulationRunner:
         else:
             cls._graph_memory_enabled[simulation_id] = False
         
-        # ç¡®å®šè¿è¡Œå“ªä¸ªè„šæœ¬ï¼ˆè„šæœ¬ä½äºŽ backend/scripts/ ç›®å½•ï¼‰
         if platform == "twitter":
             script_name = "run_twitter_simulation.py"
             state.twitter_running = True
@@ -405,17 +366,10 @@ class SimulationRunner:
         if not os.path.exists(script_path):
             raise ValueError(f"è„šæœ¬ä¸å­˜åœ¨: {script_path}")
         
-        # åˆ›å»ºåŠ¨ä½œé˜Ÿåˆ—
         action_queue = Queue()
         cls._action_queues[simulation_id] = action_queue
         
-        # å¯åŠ¨æ¨¡æ‹Ÿè¿›ç¨‹
         try:
-            # æž„å»ºè¿è¡Œå‘½ä»¤ï¼Œä½¿ç”¨å®Œæ•´è·¯å¾„
-            # æ–°çš„æ—¥å¿—ç»“æž„ï¼š
-            #   twitter/actions.jsonl - Twitter åŠ¨ä½œæ—¥å¿—
-            #   reddit/actions.jsonl  - Reddit åŠ¨ä½œæ—¥å¿—
-            #   simulation.log        - ä¸»è¿›ç¨‹æ—¥å¿—
             
             cmd = [
                 sys.executable,  # Pythonè§£é‡Šå™¨
@@ -423,21 +377,16 @@ class SimulationRunner:
                 "--config", config_path,  # ä½¿ç”¨å®Œæ•´é…ç½®æ–‡ä»¶è·¯å¾„
             ]
             
-            # å¦‚æžœæŒ‡å®šäº†æœ€å¤§è½®æ•°ï¼Œæ·»åŠ åˆ°å‘½ä»¤è¡Œå‚æ•°
             if max_rounds is not None and max_rounds > 0:
                 cmd.extend(["--max-rounds", str(max_rounds)])
             
-            # åˆ›å»ºä¸»æ—¥å¿—æ–‡ä»¶ï¼Œé¿å… stdout/stderr ç®¡é“ç¼“å†²åŒºæ»¡å¯¼è‡´è¿›ç¨‹é˜»å¡ž
             main_log_path = os.path.join(sim_dir, "simulation.log")
             main_log_file = open(main_log_path, 'w', encoding='utf-8')
             
-            # è®¾ç½®å­è¿›ç¨‹çŽ¯å¢ƒå˜é‡ï¼Œç¡®ä¿ Windows ä¸Šä½¿ç”¨ UTF-8 ç¼–ç 
-            # è¿™å¯ä»¥ä¿®å¤ç¬¬ä¸‰æ–¹åº“ï¼ˆå¦‚ OASISï¼‰è¯»å–æ–‡ä»¶æ—¶æœªæŒ‡å®šç¼–ç çš„é—®é¢˜
             env = os.environ.copy()
             env['PYTHONUTF8'] = '1'  # Python 3.7+ æ”¯æŒï¼Œè®©æ‰€æœ‰ open() é»˜è®¤ä½¿ç”¨ UTF-8
             env['PYTHONIOENCODING'] = 'utf-8'  # ç¡®ä¿ stdout/stderr ä½¿ç”¨ UTF-8
             
-            # è®¾ç½®å·¥ä½œç›®å½•ä¸ºæ¨¡æ‹Ÿç›®å½•ï¼ˆæ•°æ®åº“ç­‰æ–‡ä»¶ä¼šç”Ÿæˆåœ¨æ­¤ï¼‰
             # Cross-platform process creation:
             # - Unix: start_new_session=True creates new process group for os.killpg
             # - Windows: CREATE_NEW_PROCESS_GROUP flag for job control
@@ -460,7 +409,6 @@ class SimulationRunner:
             
             process = subprocess.Popen(cmd, **popen_kwargs)
             
-            # ä¿å­˜æ–‡ä»¶å¥æŸ„ä»¥ä¾¿åŽç»­å…³é—­
             cls._stdout_files[simulation_id] = main_log_file
             cls._stderr_files[simulation_id] = None  # ä¸å†éœ€è¦å•ç‹¬çš„ stderr
             
@@ -472,7 +420,6 @@ class SimulationRunner:
             # Capture locale before spawning monitor thread
             current_locale = get_locale()
 
-            # å¯åŠ¨ç›‘æŽ§çº¿ç¨‹
             monitor_thread = threading.Thread(
                 target=cls._monitor_simulation,
                 args=(simulation_id, current_locale),
@@ -497,7 +444,6 @@ class SimulationRunner:
         set_locale(locale)
         sim_dir = os.path.join(cls.RUN_STATE_DIR, simulation_id)
         
-        # æ–°çš„æ—¥å¿—ç»“æž„ï¼šåˆ†å¹³å°çš„åŠ¨ä½œæ—¥å¿—
         twitter_actions_log = os.path.join(sim_dir, "twitter", "actions.jsonl")
         reddit_actions_log = os.path.join(sim_dir, "reddit", "actions.jsonl")
         
@@ -512,29 +458,24 @@ class SimulationRunner:
         
         try:
             while process.poll() is None:  # è¿›ç¨‹ä»åœ¨è¿è¡Œ
-                # è¯»å– Twitter åŠ¨ä½œæ—¥å¿—
                 if os.path.exists(twitter_actions_log):
                     twitter_position = cls._read_action_log(
                         twitter_actions_log, twitter_position, state, "twitter"
                     )
                 
-                # è¯»å– Reddit åŠ¨ä½œæ—¥å¿—
                 if os.path.exists(reddit_actions_log):
                     reddit_position = cls._read_action_log(
                         reddit_actions_log, reddit_position, state, "reddit"
                     )
                 
-                # æ›´æ–°çŠ¶æ€
                 cls._save_run_state(state)
                 time.sleep(2)
             
-            # è¿›ç¨‹ç»“æŸåŽï¼Œæœ€åŽè¯»å–ä¸€æ¬¡æ—¥å¿—
             if os.path.exists(twitter_actions_log):
                 cls._read_action_log(twitter_actions_log, twitter_position, state, "twitter")
             if os.path.exists(reddit_actions_log):
                 cls._read_action_log(reddit_actions_log, reddit_position, state, "reddit")
             
-            # è¿›ç¨‹ç»“æŸ
             exit_code = process.returncode
             
             if exit_code == 0:
@@ -543,7 +484,6 @@ class SimulationRunner:
                 logger.info(f"æ¨¡æ‹Ÿå®Œæˆ: {simulation_id}")
             else:
                 state.runner_status = RunnerStatus.FAILED
-                # ä»Žä¸»æ—¥å¿—æ–‡ä»¶è¯»å–é”™è¯¯ä¿¡æ¯
                 main_log_path = os.path.join(sim_dir, "simulation.log")
                 error_info = ""
                 try:
@@ -566,7 +506,6 @@ class SimulationRunner:
             cls._save_run_state(state)
         
         finally:
-            # åœæ­¢å›¾è°±è®°å¿†æ›´æ–°å™¨
             if cls._graph_memory_enabled.get(simulation_id, False):
                 try:
                     ZepGraphMemoryManager.stop_updater(simulation_id)
@@ -575,11 +514,9 @@ class SimulationRunner:
                     logger.error(f"åœæ­¢å›¾è°±è®°å¿†æ›´æ–°å™¨å¤±è´¥: {e}")
                 cls._graph_memory_enabled.pop(simulation_id, None)
             
-            # æ¸…ç†è¿›ç¨‹èµ„æº
             cls._processes.pop(simulation_id, None)
             cls._action_queues.pop(simulation_id, None)
             
-            # å…³é—­æ—¥å¿—æ–‡ä»¶å¥æŸ„
             if simulation_id in cls._stdout_files:
                 try:
                     cls._stdout_files[simulation_id].close()
@@ -602,18 +539,11 @@ class SimulationRunner:
         platform: str
     ) -> int:
         """
-        è¯»å–åŠ¨ä½œæ—¥å¿—æ–‡ä»¶
         
         Args:
-            log_path: æ—¥å¿—æ–‡ä»¶è·¯å¾„
-            position: ä¸Šæ¬¡è¯»å–ä½ç½®
-            state: è¿è¡ŒçŠ¶æ€å¯¹è±¡
-            platform: å¹³å°åç§° (twitter/reddit)
             
         Returns:
-            æ–°çš„è¯»å–ä½ç½®
         """
-        # æ£€æŸ¥æ˜¯å¦å¯ç”¨äº†å›¾è°±è®°å¿†æ›´æ–°
         graph_memory_enabled = cls._graph_memory_enabled.get(state.simulation_id, False)
         graph_updater = None
         if graph_memory_enabled:
@@ -628,11 +558,9 @@ class SimulationRunner:
                         try:
                             action_data = json.loads(line)
                             
-                            # å¤„ç†äº‹ä»¶ç±»åž‹çš„æ¡ç›®
                             if "event_type" in action_data:
                                 event_type = action_data.get("event_type")
                                 
-                                # æ£€æµ‹ simulation_end äº‹ä»¶ï¼Œæ ‡è®°å¹³å°å·²å®Œæˆ
                                 if event_type == "simulation_end":
                                     if platform == "twitter":
                                         state.twitter_completed = True
@@ -643,21 +571,16 @@ class SimulationRunner:
                                         state.reddit_running = False
                                         logger.info(f"Reddit æ¨¡æ‹Ÿå·²å®Œæˆ: {state.simulation_id}, total_rounds={action_data.get('total_rounds')}, total_actions={action_data.get('total_actions')}")
                                     
-                                    # æ£€æŸ¥æ˜¯å¦æ‰€æœ‰å¯ç”¨çš„å¹³å°éƒ½å·²å®Œæˆ
-                                    # å¦‚æžœåªè¿è¡Œäº†ä¸€ä¸ªå¹³å°ï¼Œåªæ£€æŸ¥é‚£ä¸ªå¹³å°
-                                    # å¦‚æžœè¿è¡Œäº†ä¸¤ä¸ªå¹³å°ï¼Œéœ€è¦ä¸¤ä¸ªéƒ½å®Œæˆ
                                     all_completed = cls._check_all_platforms_completed(state)
                                     if all_completed:
                                         state.runner_status = RunnerStatus.COMPLETED
                                         state.completed_at = datetime.now().isoformat()
                                         logger.info(f"æ‰€æœ‰å¹³å°æ¨¡æ‹Ÿå·²å®Œæˆ: {state.simulation_id}")
                                 
-                                # æ›´æ–°è½®æ¬¡ä¿¡æ¯ï¼ˆä»Ž round_end äº‹ä»¶ï¼‰
                                 elif event_type == "round_end":
                                     round_num = action_data.get("round", 0)
                                     simulated_hours = action_data.get("simulated_hours", 0)
                                     
-                                    # æ›´æ–°å„å¹³å°ç‹¬ç«‹çš„è½®æ¬¡å’Œæ—¶é—´
                                     if platform == "twitter":
                                         if round_num > state.twitter_current_round:
                                             state.twitter_current_round = round_num
@@ -667,10 +590,8 @@ class SimulationRunner:
                                             state.reddit_current_round = round_num
                                         state.reddit_simulated_hours = simulated_hours
                                     
-                                    # æ€»ä½“è½®æ¬¡å–ä¸¤ä¸ªå¹³å°çš„æœ€å¤§å€¼
                                     if round_num > state.current_round:
                                         state.current_round = round_num
-                                    # æ€»ä½“æ—¶é—´å–ä¸¤ä¸ªå¹³å°çš„æœ€å¤§å€¼
                                     state.simulated_hours = max(state.twitter_simulated_hours, state.reddit_simulated_hours)
                                     
                                     # Trigger opinion drift processing at end of round
@@ -695,11 +616,9 @@ class SimulationRunner:
                             )
                             state.add_action(action)
                             
-                            # æ›´æ–°è½®æ¬¡
                             if action.round_num and action.round_num > state.current_round:
                                 state.current_round = action.round_num
                             
-                            # å¦‚æžœå¯ç”¨äº†å›¾è°±è®°å¿†æ›´æ–°ï¼Œå°†æ´»åŠ¨å‘é€åˆ°Zep
                             if graph_updater:
                                 graph_updater.add_activity_from_dict(action_data, platform)
                             
@@ -713,28 +632,22 @@ class SimulationRunner:
     @classmethod
     def _check_all_platforms_completed(cls, state: SimulationRunState) -> bool:
         """
-        æ£€æŸ¥æ‰€æœ‰å¯ç”¨çš„å¹³å°æ˜¯å¦éƒ½å·²å®Œæˆæ¨¡æ‹Ÿ
         
-        é€šè¿‡æ£€æŸ¥å¯¹åº”çš„ actions.jsonl æ–‡ä»¶æ˜¯å¦å­˜åœ¨æ¥åˆ¤æ–­å¹³å°æ˜¯å¦è¢«å¯ç”¨
         
         Returns:
-            True å¦‚æžœæ‰€æœ‰å¯ç”¨çš„å¹³å°éƒ½å·²å®Œæˆ
         """
         sim_dir = os.path.join(cls.RUN_STATE_DIR, state.simulation_id)
         twitter_log = os.path.join(sim_dir, "twitter", "actions.jsonl")
         reddit_log = os.path.join(sim_dir, "reddit", "actions.jsonl")
         
-        # æ£€æŸ¥å“ªäº›å¹³å°è¢«å¯ç”¨ï¼ˆé€šè¿‡æ–‡ä»¶æ˜¯å¦å­˜åœ¨åˆ¤æ–­ï¼‰
         twitter_enabled = os.path.exists(twitter_log)
         reddit_enabled = os.path.exists(reddit_log)
         
-        # å¦‚æžœå¹³å°è¢«å¯ç”¨ä½†æœªå®Œæˆï¼Œåˆ™è¿”å›ž False
         if twitter_enabled and not state.twitter_completed:
             return False
         if reddit_enabled and not state.reddit_completed:
             return False
         
-        # è‡³å°‘æœ‰ä¸€ä¸ªå¹³å°è¢«å¯ç”¨ä¸”å·²å®Œæˆ
         return twitter_enabled or reddit_enabled
     
     # Opinion drift state - track last processed round per simulation/platform
@@ -843,19 +756,12 @@ class SimulationRunner:
     @classmethod
     def _terminate_process(cls, process: subprocess.Popen, simulation_id: str, timeout: int = 10):
         """
-        è·¨å¹³å°ç»ˆæ­¢è¿›ç¨‹åŠå…¶å­è¿›ç¨‹
         
         Args:
-            process: è¦ç»ˆæ­¢çš„è¿›ç¨‹
-            simulation_id: æ¨¡æ‹ŸIDï¼ˆç”¨äºŽæ—¥å¿—ï¼‰
-            timeout: ç­‰å¾…è¿›ç¨‹é€€å‡ºçš„è¶…æ—¶æ—¶é—´ï¼ˆç§’ï¼‰
         """
         if IS_WINDOWS:
-            # Windows: ä½¿ç”¨ taskkill å‘½ä»¤ç»ˆæ­¢è¿›ç¨‹æ ‘
-            # /F = å¼ºåˆ¶ç»ˆæ­¢, /T = ç»ˆæ­¢è¿›ç¨‹æ ‘ï¼ˆåŒ…æ‹¬å­è¿›ç¨‹ï¼‰
             logger.info(f"ç»ˆæ­¢è¿›ç¨‹æ ‘ (Windows): simulation={simulation_id}, pid={process.pid}")
             try:
-                # å…ˆå°è¯•ä¼˜é›…ç»ˆæ­¢
                 subprocess.run(
                     ['taskkill', '/PID', str(process.pid), '/T'],
                     capture_output=True,
@@ -864,7 +770,6 @@ class SimulationRunner:
                 try:
                     process.wait(timeout=timeout)
                 except subprocess.TimeoutExpired:
-                    # å¼ºåˆ¶ç»ˆæ­¢
                     logger.warning(f"è¿›ç¨‹æœªå“åº”ï¼Œå¼ºåˆ¶ç»ˆæ­¢: {simulation_id}")
                     subprocess.run(
                         ['taskkill', '/F', '/PID', str(process.pid), '/T'],
@@ -880,18 +785,14 @@ class SimulationRunner:
                 except subprocess.TimeoutExpired:
                     process.kill()
         else:
-            # Unix: ä½¿ç”¨è¿›ç¨‹ç»„ç»ˆæ­¢
-            # ç”±äºŽä½¿ç”¨äº† start_new_session=Trueï¼Œè¿›ç¨‹ç»„ ID ç­‰äºŽä¸»è¿›ç¨‹ PID
             pgid = os.getpgid(process.pid)
             logger.info(f"ç»ˆæ­¢è¿›ç¨‹ç»„ (Unix): simulation={simulation_id}, pgid={pgid}")
             
-            # å…ˆå‘é€ SIGTERM ç»™æ•´ä¸ªè¿›ç¨‹ç»„
             os.killpg(pgid, signal.SIGTERM)
             
             try:
                 process.wait(timeout=timeout)
             except subprocess.TimeoutExpired:
-                # å¦‚æžœè¶…æ—¶åŽè¿˜æ²¡ç»“æŸï¼Œå¼ºåˆ¶å‘é€ SIGKILL
                 logger.warning(f"è¿›ç¨‹ç»„æœªå“åº” SIGTERMï¼Œå¼ºåˆ¶ç»ˆæ­¢: {simulation_id}")
                 os.killpg(pgid, signal.SIGKILL)
                 process.wait(timeout=5)
@@ -909,17 +810,14 @@ class SimulationRunner:
         state.runner_status = RunnerStatus.STOPPING
         cls._save_run_state(state)
         
-        # ç»ˆæ­¢è¿›ç¨‹
         process = cls._processes.get(simulation_id)
         if process and process.poll() is None:
             try:
                 cls._terminate_process(process, simulation_id)
             except ProcessLookupError:
-                # è¿›ç¨‹å·²ç»ä¸å­˜åœ¨
                 pass
             except Exception as e:
                 logger.error(f"ç»ˆæ­¢è¿›ç¨‹ç»„å¤±è´¥: {simulation_id}, error={e}")
-                # å›žé€€åˆ°ç›´æŽ¥ç»ˆæ­¢è¿›ç¨‹
                 try:
                     process.terminate()
                     process.wait(timeout=5)
@@ -932,7 +830,6 @@ class SimulationRunner:
         state.completed_at = datetime.now().isoformat()
         cls._save_run_state(state)
         
-        # åœæ­¢å›¾è°±è®°å¿†æ›´æ–°å™¨
         if cls._graph_memory_enabled.get(simulation_id, False):
             try:
                 ZepGraphMemoryManager.stop_updater(simulation_id)
@@ -954,14 +851,8 @@ class SimulationRunner:
         round_num: Optional[int] = None
     ) -> List[AgentAction]:
         """
-        ä»Žå•ä¸ªåŠ¨ä½œæ–‡ä»¶ä¸­è¯»å–åŠ¨ä½œ
         
         Args:
-            file_path: åŠ¨ä½œæ—¥å¿—æ–‡ä»¶è·¯å¾„
-            default_platform: é»˜è®¤å¹³å°ï¼ˆå½“åŠ¨ä½œè®°å½•ä¸­æ²¡æœ‰ platform å­—æ®µæ—¶ä½¿ç”¨ï¼‰
-            platform_filter: è¿‡æ»¤å¹³å°
-            agent_id: è¿‡æ»¤ Agent ID
-            round_num: è¿‡æ»¤è½®æ¬¡
         """
         if not os.path.exists(file_path):
             return []
@@ -977,18 +868,14 @@ class SimulationRunner:
                 try:
                     data = json.loads(line)
                     
-                    # è·³è¿‡éžåŠ¨ä½œè®°å½•ï¼ˆå¦‚ simulation_start, round_start, round_end ç­‰äº‹ä»¶ï¼‰
                     if "event_type" in data:
                         continue
                     
-                    # è·³è¿‡æ²¡æœ‰ agent_id çš„è®°å½•ï¼ˆéž Agent åŠ¨ä½œï¼‰
                     if "agent_id" not in data:
                         continue
                     
-                    # èŽ·å–å¹³å°ï¼šä¼˜å…ˆä½¿ç”¨è®°å½•ä¸­çš„ platformï¼Œå¦åˆ™ä½¿ç”¨é»˜è®¤å¹³å°
                     record_platform = data.get("platform") or default_platform or ""
                     
-                    # è¿‡æ»¤
                     if platform_filter and record_platform != platform_filter:
                         continue
                     if agent_id is not None and data.get("agent_id") != agent_id:
@@ -1023,21 +910,14 @@ class SimulationRunner:
         round_num: Optional[int] = None
     ) -> List[AgentAction]:
         """
-        èŽ·å–æ‰€æœ‰å¹³å°çš„å®Œæ•´åŠ¨ä½œåŽ†å²ï¼ˆæ— åˆ†é¡µé™åˆ¶ï¼‰
         
         Args:
-            simulation_id: æ¨¡æ‹ŸID
-            platform: è¿‡æ»¤å¹³å°ï¼ˆtwitter/redditï¼‰
-            agent_id: è¿‡æ»¤Agent
-            round_num: è¿‡æ»¤è½®æ¬¡
             
         Returns:
-            å®Œæ•´çš„åŠ¨ä½œåˆ—è¡¨ï¼ˆæŒ‰æ—¶é—´æˆ³æŽ’åºï¼Œæ–°çš„åœ¨å‰ï¼‰
         """
         sim_dir = os.path.join(cls.RUN_STATE_DIR, simulation_id)
         actions = []
         
-        # è¯»å– Twitter åŠ¨ä½œæ–‡ä»¶ï¼ˆæ ¹æ®æ–‡ä»¶è·¯å¾„è‡ªåŠ¨è®¾ç½® platform ä¸º twitterï¼‰
         twitter_actions_log = os.path.join(sim_dir, "twitter", "actions.jsonl")
         if not platform or platform == "twitter":
             actions.extend(cls._read_actions_from_file(
@@ -1048,7 +928,6 @@ class SimulationRunner:
                 round_num=round_num
             ))
         
-        # è¯»å– Reddit åŠ¨ä½œæ–‡ä»¶ï¼ˆæ ¹æ®æ–‡ä»¶è·¯å¾„è‡ªåŠ¨è®¾ç½® platform ä¸º redditï¼‰
         reddit_actions_log = os.path.join(sim_dir, "reddit", "actions.jsonl")
         if not platform or platform == "reddit":
             actions.extend(cls._read_actions_from_file(
@@ -1059,7 +938,6 @@ class SimulationRunner:
                 round_num=round_num
             ))
         
-        # å¦‚æžœåˆ†å¹³å°æ–‡ä»¶ä¸å­˜åœ¨ï¼Œå°è¯•è¯»å–æ—§çš„å•ä¸€æ–‡ä»¶æ ¼å¼
         if not actions:
             actions_log = os.path.join(sim_dir, "actions.jsonl")
             actions = cls._read_actions_from_file(
@@ -1070,7 +948,6 @@ class SimulationRunner:
                 round_num=round_num
             )
         
-        # æŒ‰æ—¶é—´æˆ³æŽ’åºï¼ˆæ–°çš„åœ¨å‰ï¼‰
         actions.sort(key=lambda x: x.timestamp, reverse=True)
         
         return actions
@@ -1086,18 +963,10 @@ class SimulationRunner:
         round_num: Optional[int] = None
     ) -> List[AgentAction]:
         """
-        èŽ·å–åŠ¨ä½œåŽ†å²ï¼ˆå¸¦åˆ†é¡µï¼‰
         
         Args:
-            simulation_id: æ¨¡æ‹ŸID
-            limit: è¿”å›žæ•°é‡é™åˆ¶
-            offset: åç§»é‡
-            platform: è¿‡æ»¤å¹³å°
-            agent_id: è¿‡æ»¤Agent
-            round_num: è¿‡æ»¤è½®æ¬¡
             
         Returns:
-            åŠ¨ä½œåˆ—è¡¨
         """
         actions = cls.get_all_actions(
             simulation_id=simulation_id,
@@ -1106,7 +975,6 @@ class SimulationRunner:
             round_num=round_num
         )
         
-        # åˆ†é¡µ
         return actions[offset:offset + limit]
     
     @classmethod
@@ -1117,19 +985,13 @@ class SimulationRunner:
         end_round: Optional[int] = None
     ) -> List[Dict[str, Any]]:
         """
-        èŽ·å–æ¨¡æ‹Ÿæ—¶é—´çº¿ï¼ˆæŒ‰è½®æ¬¡æ±‡æ€»ï¼‰
         
         Args:
-            simulation_id: æ¨¡æ‹ŸID
-            start_round: èµ·å§‹è½®æ¬¡
-            end_round: ç»“æŸè½®æ¬¡
             
         Returns:
-            æ¯è½®çš„æ±‡æ€»ä¿¡æ¯
         """
         actions = cls.get_actions(simulation_id, limit=10000)
         
-        # æŒ‰è½®æ¬¡åˆ†ç»„
         rounds: Dict[int, Dict[str, Any]] = {}
         
         for action in actions:
@@ -1162,7 +1024,6 @@ class SimulationRunner:
             r["action_types"][action.action_type] = r["action_types"].get(action.action_type, 0) + 1
             r["last_action_time"] = action.timestamp
         
-        # è½¬æ¢ä¸ºåˆ—è¡¨
         result = []
         for round_num in sorted(rounds.keys()):
             r = rounds[round_num]
@@ -1183,10 +1044,8 @@ class SimulationRunner:
     @classmethod
     def get_agent_stats(cls, simulation_id: str) -> List[Dict[str, Any]]:
         """
-        èŽ·å–æ¯ä¸ªAgentçš„ç»Ÿè®¡ä¿¡æ¯
         
         Returns:
-            Agentç»Ÿè®¡åˆ—è¡¨
         """
         actions = cls.get_actions(simulation_id, limit=10000)
         
@@ -1218,7 +1077,6 @@ class SimulationRunner:
             stats["action_types"][action.action_type] = stats["action_types"].get(action.action_type, 0) + 1
             stats["last_action_time"] = action.timestamp
         
-        # æŒ‰æ€»åŠ¨ä½œæ•°æŽ’åº
         result = sorted(agent_stats.values(), key=lambda x: x["total_actions"], reverse=True)
         
         return result
@@ -1226,25 +1084,17 @@ class SimulationRunner:
     @classmethod
     def cleanup_simulation_logs(cls, simulation_id: str) -> Dict[str, Any]:
         """
-        æ¸…ç†æ¨¡æ‹Ÿçš„è¿è¡Œæ—¥å¿—ï¼ˆç”¨äºŽå¼ºåˆ¶é‡æ–°å¼€å§‹æ¨¡æ‹Ÿï¼‰
         
-        ä¼šåˆ é™¤ä»¥ä¸‹æ–‡ä»¶ï¼š
         - run_state.json
         - twitter/actions.jsonl
         - reddit/actions.jsonl
         - simulation.log
         - stdout.log / stderr.log
-        - twitter_simulation.dbï¼ˆæ¨¡æ‹Ÿæ•°æ®åº“ï¼‰
-        - reddit_simulation.dbï¼ˆæ¨¡æ‹Ÿæ•°æ®åº“ï¼‰
-        - env_status.jsonï¼ˆçŽ¯å¢ƒçŠ¶æ€ï¼‰
         
-        æ³¨æ„ï¼šä¸ä¼šåˆ é™¤é…ç½®æ–‡ä»¶ï¼ˆsimulation_config.jsonï¼‰å’Œ profile æ–‡ä»¶
         
         Args:
-            simulation_id: æ¨¡æ‹ŸID
             
         Returns:
-            æ¸…ç†ç»“æžœä¿¡æ¯
         """
         import shutil
         
@@ -1256,7 +1106,6 @@ class SimulationRunner:
         cleaned_files = []
         errors = []
         
-        # è¦åˆ é™¤çš„æ–‡ä»¶åˆ—è¡¨ï¼ˆåŒ…æ‹¬æ•°æ®åº“æ–‡ä»¶ï¼‰
         files_to_delete = [
             "run_state.json",
             "simulation.log",
@@ -1267,10 +1116,8 @@ class SimulationRunner:
             "env_status.json",        # çŽ¯å¢ƒçŠ¶æ€æ–‡ä»¶
         ]
         
-        # è¦åˆ é™¤çš„ç›®å½•åˆ—è¡¨ï¼ˆåŒ…å«åŠ¨ä½œæ—¥å¿—ï¼‰
         dirs_to_clean = ["twitter", "reddit"]
         
-        # åˆ é™¤æ–‡ä»¶
         for filename in files_to_delete:
             file_path = os.path.join(sim_dir, filename)
             if os.path.exists(file_path):
@@ -1280,7 +1127,6 @@ class SimulationRunner:
                 except Exception as e:
                     errors.append(f"åˆ é™¤ {filename} å¤±è´¥: {str(e)}")
         
-        # æ¸…ç†å¹³å°ç›®å½•ä¸­çš„åŠ¨ä½œæ—¥å¿—
         for dir_name in dirs_to_clean:
             dir_path = os.path.join(sim_dir, dir_name)
             if os.path.exists(dir_path):
@@ -1292,7 +1138,6 @@ class SimulationRunner:
                     except Exception as e:
                         errors.append(f"åˆ é™¤ {dir_name}/actions.jsonl å¤±è´¥: {str(e)}")
         
-        # æ¸…ç†å†…å­˜ä¸­çš„è¿è¡ŒçŠ¶æ€
         if simulation_id in cls._run_states:
             del cls._run_states[simulation_id]
         
@@ -1304,22 +1149,17 @@ class SimulationRunner:
             "errors": errors if errors else None
         }
     
-    # é˜²æ­¢é‡å¤æ¸…ç†çš„æ ‡å¿—
     _cleanup_done = False
     
     @classmethod
     def cleanup_all_simulations(cls):
         """
-        æ¸…ç†æ‰€æœ‰è¿è¡Œä¸­çš„æ¨¡æ‹Ÿè¿›ç¨‹
         
-        åœ¨æœåŠ¡å™¨å…³é—­æ—¶è°ƒç”¨ï¼Œç¡®ä¿æ‰€æœ‰å­è¿›ç¨‹è¢«ç»ˆæ­¢
         """
-        # é˜²æ­¢é‡å¤æ¸…ç†
         if cls._cleanup_done:
             return
         cls._cleanup_done = True
         
-        # æ£€æŸ¥æ˜¯å¦æœ‰å†…å®¹éœ€è¦æ¸…ç†ï¼ˆé¿å…ç©ºè¿›ç¨‹çš„è¿›ç¨‹æ‰“å°æ— ç”¨æ—¥å¿—ï¼‰
         has_processes = bool(cls._processes)
         has_updaters = bool(cls._graph_memory_enabled)
         
@@ -1328,14 +1168,12 @@ class SimulationRunner:
         
         logger.info("æ­£åœ¨æ¸…ç†æ‰€æœ‰æ¨¡æ‹Ÿè¿›ç¨‹...")
         
-        # é¦–å…ˆåœæ­¢æ‰€æœ‰å›¾è°±è®°å¿†æ›´æ–°å™¨ï¼ˆstop_all å†…éƒ¨ä¼šæ‰“å°æ—¥å¿—ï¼‰
         try:
             ZepGraphMemoryManager.stop_all()
         except Exception as e:
             logger.error(f"åœæ­¢å›¾è°±è®°å¿†æ›´æ–°å™¨å¤±è´¥: {e}")
         cls._graph_memory_enabled.clear()
         
-        # å¤åˆ¶å­—å…¸ä»¥é¿å…åœ¨è¿­ä»£æ—¶ä¿®æ”¹
         processes = list(cls._processes.items())
         
         for simulation_id, process in processes:
@@ -1344,17 +1182,14 @@ class SimulationRunner:
                     logger.info(f"ç»ˆæ­¢æ¨¡æ‹Ÿè¿›ç¨‹: {simulation_id}, pid={process.pid}")
                     
                     try:
-                        # ä½¿ç”¨è·¨å¹³å°çš„è¿›ç¨‹ç»ˆæ­¢æ–¹æ³•
                         cls._terminate_process(process, simulation_id, timeout=5)
                     except (ProcessLookupError, OSError):
-                        # è¿›ç¨‹å¯èƒ½å·²ç»ä¸å­˜åœ¨ï¼Œå°è¯•ç›´æŽ¥ç»ˆæ­¢
                         try:
                             process.terminate()
                             process.wait(timeout=3)
                         except Exception:
                             process.kill()
                     
-                    # æ›´æ–° run_state.json
                     state = cls.get_run_state(simulation_id)
                     if state:
                         state.runner_status = RunnerStatus.STOPPED
@@ -1364,7 +1199,6 @@ class SimulationRunner:
                         state.error = "æœåŠ¡å™¨å…³é—­ï¼Œæ¨¡æ‹Ÿè¢«ç»ˆæ­¢"
                         cls._save_run_state(state)
                     
-                    # åŒæ—¶æ›´æ–° state.jsonï¼Œå°†çŠ¶æ€è®¾ä¸º stopped
                     try:
                         sim_dir = os.path.join(cls.RUN_STATE_DIR, simulation_id)
                         state_file = os.path.join(sim_dir, "state.json")
@@ -1385,7 +1219,6 @@ class SimulationRunner:
             except Exception as e:
                 logger.error(f"æ¸…ç†è¿›ç¨‹å¤±è´¥: {simulation_id}, error={e}")
         
-        # æ¸…ç†æ–‡ä»¶å¥æŸ„
         for simulation_id, file_handle in list(cls._stdout_files.items()):
             try:
                 if file_handle:
@@ -1402,7 +1235,6 @@ class SimulationRunner:
                 pass
         cls._stderr_files.clear()
         
-        # æ¸…ç†å†…å­˜ä¸­çš„çŠ¶æ€
         cls._processes.clear()
         cls._action_queues.clear()
         
@@ -1411,30 +1243,22 @@ class SimulationRunner:
     @classmethod
     def register_cleanup(cls):
         """
-        æ³¨å†Œæ¸…ç†å‡½æ•°
         
-        åœ¨ Flask åº”ç”¨å¯åŠ¨æ—¶è°ƒç”¨ï¼Œç¡®ä¿æœåŠ¡å™¨å…³é—­æ—¶æ¸…ç†æ‰€æœ‰æ¨¡æ‹Ÿè¿›ç¨‹
         """
         global _cleanup_registered
         
         if _cleanup_registered:
             return
         
-        # Flask debug æ¨¡å¼ä¸‹ï¼Œåªåœ¨ reloader å­è¿›ç¨‹ä¸­æ³¨å†Œæ¸…ç†ï¼ˆå®žé™…è¿è¡Œåº”ç”¨çš„è¿›ç¨‹ï¼‰
-        # WERKZEUG_RUN_MAIN=true è¡¨ç¤ºæ˜¯ reloader å­è¿›ç¨‹
-        # å¦‚æžœä¸æ˜¯ debug æ¨¡å¼ï¼Œåˆ™æ²¡æœ‰è¿™ä¸ªçŽ¯å¢ƒå˜é‡ï¼Œä¹Ÿéœ€è¦æ³¨å†Œ
         is_reloader_process = os.environ.get('WERKZEUG_RUN_MAIN') == 'true'
         is_debug_mode = os.environ.get('FLASK_DEBUG') == '1' or os.environ.get('WERKZEUG_RUN_MAIN') is not None
         
-        # åœ¨ debug æ¨¡å¼ä¸‹ï¼Œåªåœ¨ reloader å­è¿›ç¨‹ä¸­æ³¨å†Œï¼›éž debug æ¨¡å¼ä¸‹å§‹ç»ˆæ³¨å†Œ
         if is_debug_mode and not is_reloader_process:
             _cleanup_registered = True  # æ ‡è®°å·²æ³¨å†Œï¼Œé˜²æ­¢å­è¿›ç¨‹å†æ¬¡å°è¯•
             return
         
-        # ä¿å­˜åŽŸæœ‰çš„ä¿¡å·å¤„ç†å™¨
         original_sigint = signal.getsignal(signal.SIGINT)
         original_sigterm = signal.getsignal(signal.SIGTERM)
-        # SIGHUP åªåœ¨ Unix ç³»ç»Ÿå­˜åœ¨ï¼ˆmacOS/Linuxï¼‰ï¼ŒWindows æ²¡æœ‰
         original_sighup = None
         has_sighup = hasattr(signal, 'SIGHUP')
         if has_sighup:
@@ -1442,41 +1266,31 @@ class SimulationRunner:
         
         def cleanup_handler(signum=None, frame=None):
             """ä¿¡å·å¤„ç†å™¨ï¼šå…ˆæ¸…ç†æ¨¡æ‹Ÿè¿›ç¨‹ï¼Œå†è°ƒç”¨åŽŸå¤„ç†å™¨"""
-            # åªæœ‰åœ¨æœ‰è¿›ç¨‹éœ€è¦æ¸…ç†æ—¶æ‰æ‰“å°æ—¥å¿—
             if cls._processes or cls._graph_memory_enabled:
                 logger.info(f"æ”¶åˆ°ä¿¡å· {signum}ï¼Œå¼€å§‹æ¸…ç†...")
             cls.cleanup_all_simulations()
             
-            # è°ƒç”¨åŽŸæœ‰çš„ä¿¡å·å¤„ç†å™¨ï¼Œè®© Flask æ­£å¸¸é€€å‡º
             if signum == signal.SIGINT and callable(original_sigint):
                 original_sigint(signum, frame)
             elif signum == signal.SIGTERM and callable(original_sigterm):
                 original_sigterm(signum, frame)
             elif has_sighup and signum == signal.SIGHUP:
-                # SIGHUP: ç»ˆç«¯å…³é—­æ—¶å‘é€
                 if callable(original_sighup):
                     original_sighup(signum, frame)
                 else:
-                    # é»˜è®¤è¡Œä¸ºï¼šæ­£å¸¸é€€å‡º
                     sys.exit(0)
             else:
-                # å¦‚æžœåŽŸå¤„ç†å™¨ä¸å¯è°ƒç”¨ï¼ˆå¦‚ SIG_DFLï¼‰ï¼Œåˆ™ä½¿ç”¨é»˜è®¤è¡Œä¸º
                 raise KeyboardInterrupt
         
-        # æ³¨å†Œ atexit å¤„ç†å™¨ï¼ˆä½œä¸ºå¤‡ç”¨ï¼‰
         atexit.register(cls.cleanup_all_simulations)
         
-        # æ³¨å†Œä¿¡å·å¤„ç†å™¨ï¼ˆä»…åœ¨ä¸»çº¿ç¨‹ä¸­ï¼‰
         try:
-            # SIGTERM: kill å‘½ä»¤é»˜è®¤ä¿¡å·
             signal.signal(signal.SIGTERM, cleanup_handler)
             # SIGINT: Ctrl+C
             signal.signal(signal.SIGINT, cleanup_handler)
-            # SIGHUP: ç»ˆç«¯å…³é—­ï¼ˆä»… Unix ç³»ç»Ÿï¼‰
             if has_sighup:
                 signal.signal(signal.SIGHUP, cleanup_handler)
         except ValueError:
-            # ä¸åœ¨ä¸»çº¿ç¨‹ä¸­ï¼Œåªèƒ½ä½¿ç”¨ atexit
             logger.warning("æ— æ³•æ³¨å†Œä¿¡å·å¤„ç†å™¨ï¼ˆä¸åœ¨ä¸»çº¿ç¨‹ï¼‰ï¼Œä»…ä½¿ç”¨ atexit")
         
         _cleanup_registered = True
@@ -1484,7 +1298,6 @@ class SimulationRunner:
     @classmethod
     def get_running_simulations(cls) -> List[str]:
         """
-        èŽ·å–æ‰€æœ‰æ­£åœ¨è¿è¡Œçš„æ¨¡æ‹ŸIDåˆ—è¡¨
         """
         running = []
         for sim_id, process in cls._processes.items():
@@ -1492,18 +1305,14 @@ class SimulationRunner:
                 running.append(sim_id)
         return running
     
-    # ============== Interview åŠŸèƒ½ ==============
     
     @classmethod
     def check_env_alive(cls, simulation_id: str) -> bool:
         """
-        æ£€æŸ¥æ¨¡æ‹ŸçŽ¯å¢ƒæ˜¯å¦å­˜æ´»ï¼ˆå¯ä»¥æŽ¥æ”¶Interviewå‘½ä»¤ï¼‰
 
         Args:
-            simulation_id: æ¨¡æ‹ŸID
 
         Returns:
-            True è¡¨ç¤ºçŽ¯å¢ƒå­˜æ´»ï¼ŒFalse è¡¨ç¤ºçŽ¯å¢ƒå·²å…³é—­
         """
         sim_dir = os.path.join(cls.RUN_STATE_DIR, simulation_id)
         if not os.path.exists(sim_dir):
@@ -1515,13 +1324,10 @@ class SimulationRunner:
     @classmethod
     def get_env_status_detail(cls, simulation_id: str) -> Dict[str, Any]:
         """
-        èŽ·å–æ¨¡æ‹ŸçŽ¯å¢ƒçš„è¯¦ç»†çŠ¶æ€ä¿¡æ¯
 
         Args:
-            simulation_id: æ¨¡æ‹ŸID
 
         Returns:
-            çŠ¶æ€è¯¦æƒ…å­—å…¸ï¼ŒåŒ…å« status, twitter_available, reddit_available, timestamp
         """
         sim_dir = os.path.join(cls.RUN_STATE_DIR, simulation_id)
         status_file = os.path.join(sim_dir, "env_status.json")
@@ -1558,24 +1364,13 @@ class SimulationRunner:
         timeout: float = 60.0
     ) -> Dict[str, Any]:
         """
-        é‡‡è®¿å•ä¸ªAgent
 
         Args:
-            simulation_id: æ¨¡æ‹ŸID
             agent_id: Agent ID
-            prompt: é‡‡è®¿é—®é¢˜
-            platform: æŒ‡å®šå¹³å°ï¼ˆå¯é€‰ï¼‰
-                - "twitter": åªé‡‡è®¿Twitterå¹³å°
-                - "reddit": åªé‡‡è®¿Redditå¹³å°
-                - None: åŒå¹³å°æ¨¡æ‹Ÿæ—¶åŒæ—¶é‡‡è®¿ä¸¤ä¸ªå¹³å°ï¼Œè¿”å›žæ•´åˆç»“æžœ
-            timeout: è¶…æ—¶æ—¶é—´ï¼ˆç§’ï¼‰
 
         Returns:
-            é‡‡è®¿ç»“æžœå­—å…¸
 
         Raises:
-            ValueError: æ¨¡æ‹Ÿä¸å­˜åœ¨æˆ–çŽ¯å¢ƒæœªè¿è¡Œ
-            TimeoutError: ç­‰å¾…å“åº”è¶…æ—¶
         """
         sim_dir = os.path.join(cls.RUN_STATE_DIR, simulation_id)
         if not os.path.exists(sim_dir):
@@ -1621,23 +1416,12 @@ class SimulationRunner:
         timeout: float = 120.0
     ) -> Dict[str, Any]:
         """
-        æ‰¹é‡é‡‡è®¿å¤šä¸ªAgent
 
         Args:
-            simulation_id: æ¨¡æ‹ŸID
-            interviews: é‡‡è®¿åˆ—è¡¨ï¼Œæ¯ä¸ªå…ƒç´ åŒ…å« {"agent_id": int, "prompt": str, "platform": str(å¯é€‰)}
-            platform: é»˜è®¤å¹³å°ï¼ˆå¯é€‰ï¼Œä¼šè¢«æ¯ä¸ªé‡‡è®¿é¡¹çš„platformè¦†ç›–ï¼‰
-                - "twitter": é»˜è®¤åªé‡‡è®¿Twitterå¹³å°
-                - "reddit": é»˜è®¤åªé‡‡è®¿Redditå¹³å°
-                - None: åŒå¹³å°æ¨¡æ‹Ÿæ—¶æ¯ä¸ªAgentåŒæ—¶é‡‡è®¿ä¸¤ä¸ªå¹³å°
-            timeout: è¶…æ—¶æ—¶é—´ï¼ˆç§’ï¼‰
 
         Returns:
-            æ‰¹é‡é‡‡è®¿ç»“æžœå­—å…¸
 
         Raises:
-            ValueError: æ¨¡æ‹Ÿä¸å­˜åœ¨æˆ–çŽ¯å¢ƒæœªè¿è¡Œ
-            TimeoutError: ç­‰å¾…å“åº”è¶…æ—¶
         """
         sim_dir = os.path.join(cls.RUN_STATE_DIR, simulation_id)
         if not os.path.exists(sim_dir):
@@ -1680,27 +1464,16 @@ class SimulationRunner:
         timeout: float = 180.0
     ) -> Dict[str, Any]:
         """
-        é‡‡è®¿æ‰€æœ‰Agentï¼ˆå…¨å±€é‡‡è®¿ï¼‰
 
-        ä½¿ç”¨ç›¸åŒçš„é—®é¢˜é‡‡è®¿æ¨¡æ‹Ÿä¸­çš„æ‰€æœ‰Agent
 
         Args:
-            simulation_id: æ¨¡æ‹ŸID
-            prompt: é‡‡è®¿é—®é¢˜ï¼ˆæ‰€æœ‰Agentä½¿ç”¨ç›¸åŒé—®é¢˜ï¼‰
-            platform: æŒ‡å®šå¹³å°ï¼ˆå¯é€‰ï¼‰
-                - "twitter": åªé‡‡è®¿Twitterå¹³å°
-                - "reddit": åªé‡‡è®¿Redditå¹³å°
-                - None: åŒå¹³å°æ¨¡æ‹Ÿæ—¶æ¯ä¸ªAgentåŒæ—¶é‡‡è®¿ä¸¤ä¸ªå¹³å°
-            timeout: è¶…æ—¶æ—¶é—´ï¼ˆç§’ï¼‰
 
         Returns:
-            å…¨å±€é‡‡è®¿ç»“æžœå­—å…¸
         """
         sim_dir = os.path.join(cls.RUN_STATE_DIR, simulation_id)
         if not os.path.exists(sim_dir):
             raise ValueError(f"æ¨¡æ‹Ÿä¸å­˜åœ¨: {simulation_id}")
 
-        # ä»Žé…ç½®æ–‡ä»¶èŽ·å–æ‰€æœ‰Agentä¿¡æ¯
         config_path = os.path.join(sim_dir, "simulation_config.json")
         if not os.path.exists(config_path):
             raise ValueError(f"æ¨¡æ‹Ÿé…ç½®ä¸å­˜åœ¨: {simulation_id}")
@@ -1712,7 +1485,6 @@ class SimulationRunner:
         if not agent_configs:
             raise ValueError(f"æ¨¡æ‹Ÿé…ç½®ä¸­æ²¡æœ‰Agent: {simulation_id}")
 
-        # æž„å»ºæ‰¹é‡é‡‡è®¿åˆ—è¡¨
         interviews = []
         for agent_config in agent_configs:
             agent_id = agent_config.get("agent_id")
@@ -1738,16 +1510,11 @@ class SimulationRunner:
         timeout: float = 30.0
     ) -> Dict[str, Any]:
         """
-        å…³é—­æ¨¡æ‹ŸçŽ¯å¢ƒï¼ˆè€Œä¸æ˜¯åœæ­¢æ¨¡æ‹Ÿè¿›ç¨‹ï¼‰
         
-        å‘æ¨¡æ‹Ÿå‘é€å…³é—­çŽ¯å¢ƒå‘½ä»¤ï¼Œä½¿å…¶ä¼˜é›…é€€å‡ºç­‰å¾…å‘½ä»¤æ¨¡å¼
         
         Args:
-            simulation_id: æ¨¡æ‹ŸID
-            timeout: è¶…æ—¶æ—¶é—´ï¼ˆç§’ï¼‰
             
         Returns:
-            æ“ä½œç»“æžœå­—å…¸
         """
         sim_dir = os.path.join(cls.RUN_STATE_DIR, simulation_id)
         if not os.path.exists(sim_dir):
@@ -1773,7 +1540,6 @@ class SimulationRunner:
                 "timestamp": response.timestamp
             }
         except TimeoutError:
-            # è¶…æ—¶å¯èƒ½æ˜¯å› ä¸ºçŽ¯å¢ƒæ­£åœ¨å…³é—­
             return {
                 "success": True,
                 "message": "çŽ¯å¢ƒå…³é—­å‘½ä»¤å·²å‘é€ï¼ˆç­‰å¾…å“åº”è¶…æ—¶ï¼ŒçŽ¯å¢ƒå¯èƒ½æ­£åœ¨å…³é—­ï¼‰"
@@ -1833,7 +1599,6 @@ class SimulationRunner:
             conn.close()
             
         except Exception as e:
-            logger.error(f"è¯»å–InterviewåŽ†å²å¤±è´¥ ({platform_name}): {e}")
         
         return results
 
@@ -1864,11 +1629,9 @@ class SimulationRunner:
         
         results = []
         
-        # ç¡®å®šè¦æŸ¥è¯¢çš„å¹³å°
         if platform in ("reddit", "twitter"):
             platforms = [platform]
         else:
-            # ä¸æŒ‡å®šplatformæ—¶ï¼ŒæŸ¥è¯¢ä¸¤ä¸ªå¹³å°
             platforms = ["twitter", "reddit"]
         
         for p in platforms:
@@ -1881,10 +1644,8 @@ class SimulationRunner:
             )
             results.extend(platform_results)
         
-        # æŒ‰æ—¶é—´é™åºæŽ’åº
         results.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
         
-        # å¦‚æžœæŸ¥è¯¢äº†å¤šä¸ªå¹³å°ï¼Œé™åˆ¶æ€»æ•°
         if len(platforms) > 1 and len(results) > limit:
             results = results[:limit]
         

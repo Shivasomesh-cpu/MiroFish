@@ -1,4 +1,4 @@
-name: Windows CI
+﻿name: Windows CI
 
 on:
   push:
@@ -41,7 +41,7 @@ jobs:
         working-directory: backend
         run: |
           New-Item -ItemType Directory -Path tests -Force
-          "# MiroFish Backend Tests" | Out-File -FilePath tests/__init__.py -Encoding utf8
+          "# Posiedon Backend Tests" | Out-File -FilePath tests/__init__.py -Encoding utf8
 
       - name: Install frontend dependencies
         run: |
@@ -71,7 +71,7 @@ jobs:
           import os
 
           # Create test file with UTF-8 content
-          test_content = 'Hello World! 你好世界！'
+          test_content = 'Hello World! ä½ å¥½ä¸–ç•Œï¼'
           with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
               f.write(test_content)
               temp_path = f.name
@@ -106,3 +106,5 @@ jobs:
       - name: Frontend build test
         working-directory: frontend
         run: npm run build
+
+

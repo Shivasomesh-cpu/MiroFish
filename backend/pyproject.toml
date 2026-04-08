@@ -1,7 +1,7 @@
 [project]
 name = "posiedon-backend"
 version = "0.1.0"
-description = "Posiedon - ç®€æ´é€šç”¨çš„ç¾¤ä½“æ™ºèƒ½å¼•æ“Žï¼Œé¢„æµ‹ä¸‡ç‰©"
+description = "Posiedon backend for multi-agent prediction and simulation"
 requires-python = ">=3.11"
 license = { text = "AGPL-3.0" }
 authors = [
@@ -9,27 +9,27 @@ authors = [
 ]
 
 dependencies = [
-    # æ ¸å¿ƒæ¡†æž¶
+    # Core framework
     "flask>=3.0.0",
     "flask-cors>=6.0.0",
-    
-    # LLM ç›¸å…³
+
+    # LLM integration
     "openai>=1.0.0",
-    
+
     # Zep Cloud
     "zep-cloud==3.13.0",
-    
-    # OASIS ç¤¾äº¤åª’ä½“æ¨¡æ‹Ÿ
+
+    # OASIS social simulation
     "camel-oasis==0.2.5",
     "camel-ai==0.2.78",
-    
-    # æ–‡ä»¶å¤„ç†
+
+    # File processing
     "PyMuPDF>=1.24.0",
-    # ç¼–ç æ£€æµ‹ï¼ˆæ”¯æŒéžUTF-8ç¼–ç çš„æ–‡æœ¬æ–‡ä»¶ï¼‰
+    # Encoding detection for non-UTF-8 text files
     "charset-normalizer>=3.0.0",
     "chardet>=5.0.0",
-    
-    # å·¥å…·åº“
+
+    # Utilities
     "python-dotenv>=1.0.0",
     "pydantic>=2.0.0",
 ]

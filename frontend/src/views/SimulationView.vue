@@ -48,7 +48,6 @@
         />
       </div>
 
-      <!-- Right Panel: Step2 çŽ¯å¢ƒæ­å»º -->
       <div class="panel-wrapper right" :style="rightPanelStyle">
         <Step2EnvSetup
           :simulationId="currentSimulationId"
@@ -142,7 +141,6 @@ const toggleMaximize = (target) => {
 }
 
 const handleGoBack = () => {
-  // è¿”å›žåˆ° process é¡µé¢
   if (projectData.value?.project_id) {
     router.push({ name: 'Process', params: { projectId: projectData.value.project_id } })
   } else {
@@ -153,25 +151,21 @@ const handleGoBack = () => {
 const handleNextStep = (params = {}) => {
   addLog(t('log.enterStep3'))
 
-  // è®°å½•æ¨¡æ‹Ÿè½®æ•°é…ç½®
   if (params.maxRounds) {
     addLog(t('log.customRoundsConfig', { rounds: params.maxRounds }))
   } else {
     addLog(t('log.useAutoRounds'))
   }
   
-  // æž„å»ºè·¯ç”±å‚æ•°
   const routeParams = {
     name: 'SimulationRun',
     params: { simulationId: currentSimulationId.value }
   }
   
-  // å¦‚æžœæœ‰è‡ªå®šä¹‰è½®æ•°ï¼Œé€šè¿‡ query å‚æ•°ä¼ é€’
   if (params.maxRounds) {
     routeParams.query = { maxRounds: params.maxRounds }
   }
   
-  // è·³è½¬åˆ° Step 3 é¡µé¢
   router.push(routeParams)
 }
 
@@ -185,13 +179,11 @@ const checkAndStopRunningSimulation = async () => {
   if (!currentSimulationId.value) return
   
   try {
-    // å…ˆæ£€æŸ¥æ¨¡æ‹ŸçŽ¯å¢ƒæ˜¯å¦å­˜æ´»
     const envStatusRes = await getEnvStatus({ simulation_id: currentSimulationId.value })
     
     if (envStatusRes.success && envStatusRes.data?.env_alive) {
       addLog(t('log.detectedSimEnvRunning'))
       
-      // å°è¯•ä¼˜é›…å…³é—­æ¨¡æ‹ŸçŽ¯å¢ƒ
       try {
         const closeRes = await closeSimulationEnv({ 
           simulation_id: currentSimulationId.value,
@@ -202,16 +194,13 @@ const checkAndStopRunningSimulation = async () => {
           addLog(t('log.simEnvClosed'))
         } else {
           addLog(t('log.closeSimEnvFailedWithError', { error: closeRes.error || t('common.unknownError') }))
-          // å¦‚æžœä¼˜é›…å…³é—­å¤±è´¥ï¼Œå°è¯•å¼ºåˆ¶åœæ­¢
           await forceStopSimulation()
         }
       } catch (closeErr) {
         addLog(t('log.closeSimEnvException', { error: closeErr.message }))
-        // å¦‚æžœä¼˜é›…å…³é—­å¼‚å¸¸ï¼Œå°è¯•å¼ºåˆ¶åœæ­¢
         await forceStopSimulation()
       }
     } else {
-      // çŽ¯å¢ƒæœªè¿è¡Œï¼Œä½†å¯èƒ½è¿›ç¨‹è¿˜åœ¨ï¼Œæ£€æŸ¥æ¨¡æ‹ŸçŠ¶æ€
       const simRes = await getSimulation(currentSimulationId.value)
       if (simRes.success && simRes.data?.status === 'running') {
         addLog(t('log.detectedSimRunning'))
@@ -219,7 +208,6 @@ const checkAndStopRunningSimulation = async () => {
       }
     }
   } catch (err) {
-    // æ£€æŸ¥çŽ¯å¢ƒçŠ¶æ€å¤±è´¥ä¸å½±å“åŽç»­æµç¨‹
     console.warn('æ£€æŸ¥æ¨¡æ‹ŸçŠ¶æ€å¤±è´¥:', err)
   }
 }
@@ -244,19 +232,16 @@ const loadSimulationData = async () => {
   try {
     addLog(t('log.loadingSimData', { id: currentSimulationId.value }))
 
-    // èŽ·å– simulation ä¿¡æ¯
     const simRes = await getSimulation(currentSimulationId.value)
     if (simRes.success && simRes.data) {
       const simData = simRes.data
 
-      // èŽ·å– project ä¿¡æ¯
       if (simData.project_id) {
         const projRes = await getProject(simData.project_id)
         if (projRes.success && projRes.data) {
           projectData.value = projRes.data
           addLog(t('log.projectLoadSuccess', { id: projRes.data.project_id }))
           
-          // èŽ·å– graph æ•°æ®
           if (projRes.data.graph_id) {
             await loadGraph(projRes.data.graph_id)
           }
@@ -294,10 +279,8 @@ const refreshGraph = () => {
 onMounted(async () => {
   addLog(t('log.simViewInit'))
   
-  // æ£€æŸ¥å¹¶å…³é—­æ­£åœ¨è¿è¡Œçš„æ¨¡æ‹Ÿï¼ˆç”¨æˆ·ä»Ž Step 3 è¿”å›žæ—¶ï¼‰
   await checkAndStopRunningSimulation()
   
-  // åŠ è½½æ¨¡æ‹Ÿæ•°æ®
   loadSimulationData()
 })
 </script>

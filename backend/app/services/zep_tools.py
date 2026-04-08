@@ -1,11 +1,5 @@
 """
-Zepæ£€ç´¢å·¥å…·æœåŠ¡
-å°è£…å›¾è°±æœç´¢ã€èŠ‚ç‚¹è¯»å–ã€è¾¹æŸ¥è¯¢ç­‰å·¥å…·ï¼Œä¾›Report Agentä½¿ç”¨
 
-æ ¸å¿ƒæ£€ç´¢å·¥å…·ï¼ˆä¼˜åŒ–åŽï¼‰ï¼š
-1. InsightForgeï¼ˆæ·±åº¦æ´žå¯Ÿæ£€ç´¢ï¼‰- æœ€å¼ºå¤§çš„æ··åˆæ£€ç´¢ï¼Œè‡ªåŠ¨ç”Ÿæˆå­é—®é¢˜å¹¶å¤šç»´åº¦æ£€ç´¢
-2. PanoramaSearchï¼ˆå¹¿åº¦æœç´¢ï¼‰- èŽ·å–å…¨è²Œï¼ŒåŒ…æ‹¬è¿‡æœŸå†…å®¹
-3. QuickSearchï¼ˆç®€å•æœç´¢ï¼‰- å¿«é€Ÿæ£€ç´¢
 """
 
 import time
@@ -88,7 +82,6 @@ class EdgeInfo:
     target_node_uuid: str
     source_node_name: Optional[str] = None
     target_node_name: Optional[str] = None
-    # æ—¶é—´ä¿¡æ¯
     created_at: Optional[str] = None
     valid_at: Optional[str] = None
     invalid_at: Optional[str] = None
@@ -138,19 +131,15 @@ class EdgeInfo:
 @dataclass
 class InsightForgeResult:
     """
-    æ·±åº¦æ´žå¯Ÿæ£€ç´¢ç»“æžœ (InsightForge)
-    åŒ…å«å¤šä¸ªå­é—®é¢˜çš„æ£€ç´¢ç»“æžœï¼Œä»¥åŠç»¼åˆåˆ†æž
     """
     query: str
     simulation_requirement: str
     sub_queries: List[str]
     
-    # å„ç»´åº¦æ£€ç´¢ç»“æžœ
     semantic_facts: List[str] = field(default_factory=list)  # è¯­ä¹‰æœç´¢ç»“æžœ
     entity_insights: List[Dict[str, Any]] = field(default_factory=list)  # å®žä½“æ´žå¯Ÿ
     relationship_chains: List[str] = field(default_factory=list)  # å…³ç³»é“¾
     
-    # ç»Ÿè®¡ä¿¡æ¯
     total_facts: int = 0
     total_entities: int = 0
     total_relationships: int = 0
@@ -180,19 +169,16 @@ class InsightForgeResult:
             f"- å…³ç³»é“¾: {self.total_relationships}æ¡"
         ]
         
-        # å­é—®é¢˜
         if self.sub_queries:
             text_parts.append(f"\n### åˆ†æžçš„å­é—®é¢˜")
             for i, sq in enumerate(self.sub_queries, 1):
                 text_parts.append(f"{i}. {sq}")
         
-        # è¯­ä¹‰æœç´¢ç»“æžœ
         if self.semantic_facts:
             text_parts.append(f"\n### ã€å…³é”®äº‹å®žã€‘(è¯·åœ¨æŠ¥å‘Šä¸­å¼•ç”¨è¿™äº›åŽŸæ–‡)")
             for i, fact in enumerate(self.semantic_facts, 1):
                 text_parts.append(f"{i}. \"{fact}\"")
         
-        # å®žä½“æ´žå¯Ÿ
         if self.entity_insights:
             text_parts.append(f"\n### ã€æ ¸å¿ƒå®žä½“ã€‘")
             for entity in self.entity_insights:
@@ -202,7 +188,6 @@ class InsightForgeResult:
                 if entity.get('related_facts'):
                     text_parts.append(f"  ç›¸å…³äº‹å®ž: {len(entity.get('related_facts', []))}æ¡")
         
-        # å…³ç³»é“¾
         if self.relationship_chains:
             text_parts.append(f"\n### ã€å…³ç³»é“¾ã€‘")
             for chain in self.relationship_chains:
@@ -214,21 +199,14 @@ class InsightForgeResult:
 @dataclass
 class PanoramaResult:
     """
-    å¹¿åº¦æœç´¢ç»“æžœ (Panorama)
-    åŒ…å«æ‰€æœ‰ç›¸å…³ä¿¡æ¯ï¼ŒåŒ…æ‹¬è¿‡æœŸå†…å®¹
     """
     query: str
     
-    # å…¨éƒ¨èŠ‚ç‚¹
     all_nodes: List[NodeInfo] = field(default_factory=list)
-    # å…¨éƒ¨è¾¹ï¼ˆåŒ…æ‹¬è¿‡æœŸçš„ï¼‰
     all_edges: List[EdgeInfo] = field(default_factory=list)
-    # å½“å‰æœ‰æ•ˆçš„äº‹å®ž
     active_facts: List[str] = field(default_factory=list)
-    # å·²è¿‡æœŸ/å¤±æ•ˆçš„äº‹å®žï¼ˆåŽ†å²è®°å½•ï¼‰
     historical_facts: List[str] = field(default_factory=list)
     
-    # ç»Ÿè®¡
     total_nodes: int = 0
     total_edges: int = 0
     active_count: int = 0
@@ -259,19 +237,16 @@ class PanoramaResult:
             f"- åŽ†å²/è¿‡æœŸäº‹å®ž: {self.historical_count}æ¡"
         ]
         
-        # å½“å‰æœ‰æ•ˆçš„äº‹å®žï¼ˆå®Œæ•´è¾“å‡ºï¼Œä¸æˆªæ–­ï¼‰
         if self.active_facts:
             text_parts.append(f"\n### ã€å½“å‰æœ‰æ•ˆäº‹å®žã€‘(æ¨¡æ‹Ÿç»“æžœåŽŸæ–‡)")
             for i, fact in enumerate(self.active_facts, 1):
                 text_parts.append(f"{i}. \"{fact}\"")
         
-        # åŽ†å²/è¿‡æœŸäº‹å®žï¼ˆå®Œæ•´è¾“å‡ºï¼Œä¸æˆªæ–­ï¼‰
         if self.historical_facts:
             text_parts.append(f"\n### ã€åŽ†å²/è¿‡æœŸäº‹å®žã€‘(æ¼”å˜è¿‡ç¨‹è®°å½•)")
             for i, fact in enumerate(self.historical_facts, 1):
                 text_parts.append(f"{i}. \"{fact}\"")
         
-        # å…³é”®å®žä½“ï¼ˆå®Œæ•´è¾“å‡ºï¼Œä¸æˆªæ–­ï¼‰
         if self.all_nodes:
             text_parts.append(f"\n### ã€æ¶‰åŠå®žä½“ã€‘")
             for node in self.all_nodes:
@@ -303,21 +278,17 @@ class AgentInterview:
     
     def to_text(self) -> str:
         text = f"**{self.agent_name}** ({self.agent_role})\n"
-        # æ˜¾ç¤ºå®Œæ•´çš„agent_bioï¼Œä¸æˆªæ–­
         text += f"_ç®€ä»‹: {self.agent_bio}_\n\n"
         text += f"**Q:** {self.question}\n\n"
         text += f"**A:** {self.response}\n"
         if self.key_quotes:
             text += "\n**å…³é”®å¼•è¨€:**\n"
             for quote in self.key_quotes:
-                # æ¸…ç†å„ç§å¼•å·
                 clean_quote = quote.replace('\u201c', '').replace('\u201d', '').replace('"', '')
                 clean_quote = clean_quote.replace('\u300c', '').replace('\u300d', '')
                 clean_quote = clean_quote.strip()
-                # åŽ»æŽ‰å¼€å¤´çš„æ ‡ç‚¹
                 while clean_quote and clean_quote[0] in 'ï¼Œ,ï¼›;ï¼š:ã€ã€‚ï¼ï¼Ÿ\n\r\t ':
                     clean_quote = clean_quote[1:]
-                # è¿‡æ»¤åŒ…å«é—®é¢˜ç¼–å·çš„åžƒåœ¾å†…å®¹ï¼ˆé—®é¢˜1-9ï¼‰
                 skip = False
                 for d in '123456789':
                     if f'\u95ee\u9898{d}' in clean_quote:
@@ -325,7 +296,6 @@ class AgentInterview:
                         break
                 if skip:
                     continue
-                # æˆªæ–­è¿‡é•¿å†…å®¹ï¼ˆæŒ‰å¥å·æˆªæ–­ï¼Œè€Œéžç¡¬æˆªæ–­ï¼‰
                 if len(clean_quote) > 150:
                     dot_pos = clean_quote.find('\u3002', 80)
                     if dot_pos > 0:
@@ -340,23 +310,16 @@ class AgentInterview:
 @dataclass
 class InterviewResult:
     """
-    é‡‡è®¿ç»“æžœ (Interview)
-    åŒ…å«å¤šä¸ªæ¨¡æ‹ŸAgentçš„é‡‡è®¿å›žç­”
     """
     interview_topic: str  # é‡‡è®¿ä¸»é¢˜
     interview_questions: List[str]  # é‡‡è®¿é—®é¢˜åˆ—è¡¨
     
-    # é‡‡è®¿é€‰æ‹©çš„Agent
     selected_agents: List[Dict[str, Any]] = field(default_factory=list)
-    # å„Agentçš„é‡‡è®¿å›žç­”
     interviews: List[AgentInterview] = field(default_factory=list)
     
-    # é€‰æ‹©Agentçš„ç†ç”±
     selection_reasoning: str = ""
-    # æ•´åˆåŽçš„é‡‡è®¿æ‘˜è¦
     summary: str = ""
     
-    # ç»Ÿè®¡
     total_agents: int = 0
     interviewed_count: int = 0
     
@@ -400,25 +363,10 @@ class InterviewResult:
 
 class ZepToolsService:
     """
-    Zepæ£€ç´¢å·¥å…·æœåŠ¡
     
-    ã€æ ¸å¿ƒæ£€ç´¢å·¥å…· - ä¼˜åŒ–åŽã€‘
-    1. insight_forge - æ·±åº¦æ´žå¯Ÿæ£€ç´¢ï¼ˆæœ€å¼ºå¤§ï¼Œè‡ªåŠ¨ç”Ÿæˆå­é—®é¢˜ï¼Œå¤šç»´åº¦æ£€ç´¢ï¼‰
-    2. panorama_search - å¹¿åº¦æœç´¢ï¼ˆèŽ·å–å…¨è²Œï¼ŒåŒ…æ‹¬è¿‡æœŸå†…å®¹ï¼‰
-    3. quick_search - ç®€å•æœç´¢ï¼ˆå¿«é€Ÿæ£€ç´¢ï¼‰
-    4. interview_agents - æ·±åº¦é‡‡è®¿ï¼ˆé‡‡è®¿æ¨¡æ‹ŸAgentï¼ŒèŽ·å–å¤šè§†è§’è§‚ç‚¹ï¼‰
     
-    ã€åŸºç¡€å·¥å…·ã€‘
-    - search_graph - å›¾è°±è¯­ä¹‰æœç´¢
-    - get_all_nodes - èŽ·å–å›¾è°±æ‰€æœ‰èŠ‚ç‚¹
-    - get_all_edges - èŽ·å–å›¾è°±æ‰€æœ‰è¾¹ï¼ˆå«æ—¶é—´ä¿¡æ¯ï¼‰
-    - get_node_detail - èŽ·å–èŠ‚ç‚¹è¯¦ç»†ä¿¡æ¯
-    - get_node_edges - èŽ·å–èŠ‚ç‚¹ç›¸å…³çš„è¾¹
-    - get_entities_by_type - æŒ‰ç±»åž‹èŽ·å–å®žä½“
-    - get_entity_summary - èŽ·å–å®žä½“çš„å…³ç³»æ‘˜è¦
     """
     
-    # é‡è¯•é…ç½®
     MAX_RETRIES = 3
     RETRY_DELAY = 2.0
     
@@ -428,7 +376,6 @@ class ZepToolsService:
             raise ValueError("ZEP_API_KEY æœªé…ç½®")
         
         self.client = Zep(api_key=self.api_key)
-        # LLMå®¢æˆ·ç«¯ç”¨äºŽInsightForgeç”Ÿæˆå­é—®é¢˜
         self._llm_client = llm_client
         logger.info(t("console.zepToolsInitialized"))
     
@@ -469,23 +416,14 @@ class ZepToolsService:
         scope: str = "edges"
     ) -> SearchResult:
         """
-        å›¾è°±è¯­ä¹‰æœç´¢
         
-        ä½¿ç”¨æ··åˆæœç´¢ï¼ˆè¯­ä¹‰+BM25ï¼‰åœ¨å›¾è°±ä¸­æœç´¢ç›¸å…³ä¿¡æ¯ã€‚
-        å¦‚æžœZep Cloudçš„search APIä¸å¯ç”¨ï¼Œåˆ™é™çº§ä¸ºæœ¬åœ°å…³é”®è¯åŒ¹é…ã€‚
         
         Args:
-            graph_id: å›¾è°±ID (Standalone Graph)
-            query: æœç´¢æŸ¥è¯¢
-            limit: è¿”å›žç»“æžœæ•°é‡
-            scope: æœç´¢èŒƒå›´ï¼Œ"edges" æˆ– "nodes"
             
         Returns:
-            SearchResult: æœç´¢ç»“æžœ
         """
         logger.info(t("console.graphSearch", graphId=graph_id, query=query[:50]))
         
-        # å°è¯•ä½¿ç”¨Zep Cloud Search API
         try:
             search_results = self._call_with_retry(
                 func=lambda: self.client.graph.search(
@@ -502,7 +440,6 @@ class ZepToolsService:
             edges = []
             nodes = []
             
-            # è§£æžè¾¹æœç´¢ç»“æžœ
             if hasattr(search_results, 'edges') and search_results.edges:
                 for edge in search_results.edges:
                     if hasattr(edge, 'fact') and edge.fact:
@@ -515,7 +452,6 @@ class ZepToolsService:
                         "target_node_uuid": getattr(edge, 'target_node_uuid', ''),
                     })
             
-            # è§£æžèŠ‚ç‚¹æœç´¢ç»“æžœ
             if hasattr(search_results, 'nodes') and search_results.nodes:
                 for node in search_results.nodes:
                     nodes.append({
@@ -524,7 +460,6 @@ class ZepToolsService:
                         "labels": getattr(node, 'labels', []),
                         "summary": getattr(node, 'summary', ''),
                     })
-                    # èŠ‚ç‚¹æ‘˜è¦ä¹Ÿç®—ä½œäº‹å®ž
                     if hasattr(node, 'summary') and node.summary:
                         facts.append(f"[{node.name}]: {node.summary}")
             
@@ -540,7 +475,6 @@ class ZepToolsService:
             
         except Exception as e:
             logger.warning(t("console.zepSearchApiFallback", error=str(e)))
-            # é™çº§ï¼šä½¿ç”¨æœ¬åœ°å…³é”®è¯åŒ¹é…æœç´¢
             return self._local_search(graph_id, query, limit, scope)
     
     def _local_search(
@@ -551,18 +485,11 @@ class ZepToolsService:
         scope: str = "edges"
     ) -> SearchResult:
         """
-        æœ¬åœ°å…³é”®è¯åŒ¹é…æœç´¢ï¼ˆä½œä¸ºZep Search APIçš„é™çº§æ–¹æ¡ˆï¼‰
         
-        èŽ·å–æ‰€æœ‰è¾¹/èŠ‚ç‚¹ï¼Œç„¶åŽåœ¨æœ¬åœ°è¿›è¡Œå…³é”®è¯åŒ¹é…
         
         Args:
-            graph_id: å›¾è°±ID
-            query: æœç´¢æŸ¥è¯¢
-            limit: è¿”å›žç»“æžœæ•°é‡
-            scope: æœç´¢èŒƒå›´
             
         Returns:
-            SearchResult: æœç´¢ç»“æžœ
         """
         logger.info(t("console.usingLocalSearch", query=query[:30]))
         
@@ -570,7 +497,6 @@ class ZepToolsService:
         edges_result = []
         nodes_result = []
         
-        # æå–æŸ¥è¯¢å…³é”®è¯ï¼ˆç®€å•åˆ†è¯ï¼‰
         query_lower = query.lower()
         keywords = [w.strip() for w in query_lower.replace(',', ' ').replace('ï¼Œ', ' ').split() if len(w.strip()) > 1]
         
@@ -579,10 +505,8 @@ class ZepToolsService:
             if not text:
                 return 0
             text_lower = text.lower()
-            # å®Œå…¨åŒ¹é…æŸ¥è¯¢
             if query_lower in text_lower:
                 return 100
-            # å…³é”®è¯åŒ¹é…
             score = 0
             for keyword in keywords:
                 if keyword in text_lower:
@@ -591,7 +515,6 @@ class ZepToolsService:
         
         try:
             if scope in ["edges", "both"]:
-                # èŽ·å–æ‰€æœ‰è¾¹å¹¶åŒ¹é…
                 all_edges = self.get_all_edges(graph_id)
                 scored_edges = []
                 for edge in all_edges:
@@ -599,7 +522,6 @@ class ZepToolsService:
                     if score > 0:
                         scored_edges.append((score, edge))
                 
-                # æŒ‰åˆ†æ•°æŽ’åº
                 scored_edges.sort(key=lambda x: x[0], reverse=True)
                 
                 for score, edge in scored_edges[:limit]:
@@ -614,7 +536,6 @@ class ZepToolsService:
                     })
             
             if scope in ["nodes", "both"]:
-                # èŽ·å–æ‰€æœ‰èŠ‚ç‚¹å¹¶åŒ¹é…
                 all_nodes = self.get_all_nodes(graph_id)
                 scored_nodes = []
                 for node in all_nodes:
@@ -649,13 +570,10 @@ class ZepToolsService:
     
     def get_all_nodes(self, graph_id: str) -> List[NodeInfo]:
         """
-        èŽ·å–å›¾è°±çš„æ‰€æœ‰èŠ‚ç‚¹ï¼ˆåˆ†é¡µèŽ·å–ï¼‰
 
         Args:
-            graph_id: å›¾è°±ID
 
         Returns:
-            èŠ‚ç‚¹åˆ—è¡¨
         """
         logger.info(t("console.fetchingAllNodes", graphId=graph_id))
 
@@ -677,14 +595,10 @@ class ZepToolsService:
 
     def get_all_edges(self, graph_id: str, include_temporal: bool = True) -> List[EdgeInfo]:
         """
-        èŽ·å–å›¾è°±çš„æ‰€æœ‰è¾¹ï¼ˆåˆ†é¡µèŽ·å–ï¼ŒåŒ…å«æ—¶é—´ä¿¡æ¯ï¼‰
 
         Args:
-            graph_id: å›¾è°±ID
-            include_temporal: æ˜¯å¦åŒ…å«æ—¶é—´ä¿¡æ¯ï¼ˆé»˜è®¤Trueï¼‰
 
         Returns:
-            è¾¹åˆ—è¡¨ï¼ˆåŒ…å«created_at, valid_at, invalid_at, expired_atï¼‰
         """
         logger.info(t("console.fetchingAllEdges", graphId=graph_id))
 
@@ -701,7 +615,6 @@ class ZepToolsService:
                 target_node_uuid=edge.target_node_uuid or ""
             )
 
-            # æ·»åŠ æ—¶é—´ä¿¡æ¯
             if include_temporal:
                 edge_info.created_at = getattr(edge, 'created_at', None)
                 edge_info.valid_at = getattr(edge, 'valid_at', None)
@@ -715,13 +628,10 @@ class ZepToolsService:
     
     def get_node_detail(self, node_uuid: str) -> Optional[NodeInfo]:
         """
-        èŽ·å–å•ä¸ªèŠ‚ç‚¹çš„è¯¦ç»†ä¿¡æ¯
         
         Args:
-            node_uuid: èŠ‚ç‚¹UUID
             
         Returns:
-            èŠ‚ç‚¹ä¿¡æ¯æˆ–None
         """
         logger.info(t("console.fetchingNodeDetail", uuid=node_uuid[:8]))
         
@@ -747,26 +657,19 @@ class ZepToolsService:
     
     def get_node_edges(self, graph_id: str, node_uuid: str) -> List[EdgeInfo]:
         """
-        èŽ·å–èŠ‚ç‚¹ç›¸å…³çš„æ‰€æœ‰è¾¹
         
-        é€šè¿‡èŽ·å–å›¾è°±æ‰€æœ‰è¾¹ï¼Œç„¶åŽè¿‡æ»¤å‡ºä¸ŽæŒ‡å®šèŠ‚ç‚¹ç›¸å…³çš„è¾¹
         
         Args:
-            graph_id: å›¾è°±ID
-            node_uuid: èŠ‚ç‚¹UUID
             
         Returns:
-            è¾¹åˆ—è¡¨
         """
         logger.info(t("console.fetchingNodeEdges", uuid=node_uuid[:8]))
         
         try:
-            # èŽ·å–å›¾è°±æ‰€æœ‰è¾¹ï¼Œç„¶åŽè¿‡æ»¤
             all_edges = self.get_all_edges(graph_id)
             
             result = []
             for edge in all_edges:
-                # æ£€æŸ¥è¾¹æ˜¯å¦ä¸ŽæŒ‡å®šèŠ‚ç‚¹ç›¸å…³ï¼ˆä½œä¸ºæºæˆ–ç›®æ ‡ï¼‰
                 if edge.source_node_uuid == node_uuid or edge.target_node_uuid == node_uuid:
                     result.append(edge)
             
@@ -783,14 +686,10 @@ class ZepToolsService:
         entity_type: str
     ) -> List[NodeInfo]:
         """
-        æŒ‰ç±»åž‹èŽ·å–å®žä½“
         
         Args:
-            graph_id: å›¾è°±ID
-            entity_type: å®žä½“ç±»åž‹ï¼ˆå¦‚ Student, PublicFigure ç­‰ï¼‰
             
         Returns:
-            ç¬¦åˆç±»åž‹çš„å®žä½“åˆ—è¡¨
         """
         logger.info(t("console.fetchingEntitiesByType", type=entity_type))
         
@@ -798,7 +697,6 @@ class ZepToolsService:
         
         filtered = []
         for node in all_nodes:
-            # æ£€æŸ¥labelsæ˜¯å¦åŒ…å«æŒ‡å®šç±»åž‹
             if entity_type in node.labels:
                 filtered.append(node)
         
@@ -811,27 +709,20 @@ class ZepToolsService:
         entity_name: str
     ) -> Dict[str, Any]:
         """
-        èŽ·å–æŒ‡å®šå®žä½“çš„å…³ç³»æ‘˜è¦
         
-        æœç´¢ä¸Žè¯¥å®žä½“ç›¸å…³çš„æ‰€æœ‰ä¿¡æ¯ï¼Œå¹¶ç”Ÿæˆæ‘˜è¦
         
         Args:
-            graph_id: å›¾è°±ID
-            entity_name: å®žä½“åç§°
             
         Returns:
-            å®žä½“æ‘˜è¦ä¿¡æ¯
         """
         logger.info(t("console.fetchingEntitySummary", name=entity_name))
         
-        # å…ˆæœç´¢è¯¥å®žä½“ç›¸å…³çš„ä¿¡æ¯
         search_result = self.search_graph(
             graph_id=graph_id,
             query=entity_name,
             limit=20
         )
         
-        # å°è¯•åœ¨æ‰€æœ‰èŠ‚ç‚¹ä¸­æ‰¾åˆ°è¯¥å®žä½“
         all_nodes = self.get_all_nodes(graph_id)
         entity_node = None
         for node in all_nodes:
@@ -841,7 +732,6 @@ class ZepToolsService:
         
         related_edges = []
         if entity_node:
-            # ä¼ å…¥graph_idå‚æ•°
             related_edges = self.get_node_edges(graph_id, entity_node.uuid)
         
         return {
@@ -854,27 +744,22 @@ class ZepToolsService:
     
     def get_graph_statistics(self, graph_id: str) -> Dict[str, Any]:
         """
-        èŽ·å–å›¾è°±çš„ç»Ÿè®¡ä¿¡æ¯
         
         Args:
-            graph_id: å›¾è°±ID
             
         Returns:
-            ç»Ÿè®¡ä¿¡æ¯
         """
         logger.info(t("console.fetchingGraphStats", graphId=graph_id))
         
         nodes = self.get_all_nodes(graph_id)
         edges = self.get_all_edges(graph_id)
         
-        # ç»Ÿè®¡å®žä½“ç±»åž‹åˆ†å¸ƒ
         entity_types = {}
         for node in nodes:
             for label in node.labels:
                 if label not in ["Entity", "Node"]:
                     entity_types[label] = entity_types.get(label, 0) + 1
         
-        # ç»Ÿè®¡å…³ç³»ç±»åž‹åˆ†å¸ƒ
         relation_types = {}
         for edge in edges:
             relation_types[edge.name] = relation_types.get(edge.name, 0) + 1
@@ -894,34 +779,24 @@ class ZepToolsService:
         limit: int = 30
     ) -> Dict[str, Any]:
         """
-        èŽ·å–æ¨¡æ‹Ÿç›¸å…³çš„ä¸Šä¸‹æ–‡ä¿¡æ¯
         
-        ç»¼åˆæœç´¢ä¸Žæ¨¡æ‹Ÿéœ€æ±‚ç›¸å…³çš„æ‰€æœ‰ä¿¡æ¯
         
         Args:
-            graph_id: å›¾è°±ID
-            simulation_requirement: æ¨¡æ‹Ÿéœ€æ±‚æè¿°
-            limit: æ¯ç±»ä¿¡æ¯çš„æ•°é‡é™åˆ¶
             
         Returns:
-            æ¨¡æ‹Ÿä¸Šä¸‹æ–‡ä¿¡æ¯
         """
         logger.info(t("console.fetchingSimContext", requirement=simulation_requirement[:50]))
         
-        # æœç´¢ä¸Žæ¨¡æ‹Ÿéœ€æ±‚ç›¸å…³çš„ä¿¡æ¯
         search_result = self.search_graph(
             graph_id=graph_id,
             query=simulation_requirement,
             limit=limit
         )
         
-        # èŽ·å–å›¾è°±ç»Ÿè®¡
         stats = self.get_graph_statistics(graph_id)
         
-        # èŽ·å–æ‰€æœ‰å®žä½“èŠ‚ç‚¹
         all_nodes = self.get_all_nodes(graph_id)
         
-        # ç­›é€‰æœ‰å®žé™…ç±»åž‹çš„å®žä½“ï¼ˆéžçº¯EntityèŠ‚ç‚¹ï¼‰
         entities = []
         for node in all_nodes:
             custom_labels = [l for l in node.labels if l not in ["Entity", "Node"]]
@@ -940,7 +815,6 @@ class ZepToolsService:
             "total_entities": len(entities)
         }
     
-    # ========== æ ¸å¿ƒæ£€ç´¢å·¥å…·ï¼ˆä¼˜åŒ–åŽï¼‰ ==========
     
     def insight_forge(
         self,
@@ -951,24 +825,11 @@ class ZepToolsService:
         max_sub_queries: int = 5
     ) -> InsightForgeResult:
         """
-        ã€InsightForge - æ·±åº¦æ´žå¯Ÿæ£€ç´¢ã€‘
         
-        æœ€å¼ºå¤§çš„æ··åˆæ£€ç´¢å‡½æ•°ï¼Œè‡ªåŠ¨åˆ†è§£é—®é¢˜å¹¶å¤šç»´åº¦æ£€ç´¢ï¼š
-        1. ä½¿ç”¨LLMå°†é—®é¢˜åˆ†è§£ä¸ºå¤šä¸ªå­é—®é¢˜
-        2. å¯¹æ¯ä¸ªå­é—®é¢˜è¿›è¡Œè¯­ä¹‰æœç´¢
-        3. æå–ç›¸å…³å®žä½“å¹¶èŽ·å–å…¶è¯¦ç»†ä¿¡æ¯
-        4. è¿½è¸ªå…³ç³»é“¾
-        5. æ•´åˆæ‰€æœ‰ç»“æžœï¼Œç”Ÿæˆæ·±åº¦æ´žå¯Ÿ
         
         Args:
-            graph_id: å›¾è°±ID
-            query: ç”¨æˆ·é—®é¢˜
-            simulation_requirement: æ¨¡æ‹Ÿéœ€æ±‚æè¿°
-            report_context: æŠ¥å‘Šä¸Šä¸‹æ–‡ï¼ˆå¯é€‰ï¼Œç”¨äºŽæ›´ç²¾å‡†çš„å­é—®é¢˜ç”Ÿæˆï¼‰
-            max_sub_queries: æœ€å¤§å­é—®é¢˜æ•°é‡
             
         Returns:
-            InsightForgeResult: æ·±åº¦æ´žå¯Ÿæ£€ç´¢ç»“æžœ
         """
         logger.info(t("console.insightForgeStart", query=query[:50]))
         
@@ -978,7 +839,6 @@ class ZepToolsService:
             sub_queries=[]
         )
         
-        # Step 1: ä½¿ç”¨LLMç”Ÿæˆå­é—®é¢˜
         sub_queries = self._generate_sub_queries(
             query=query,
             simulation_requirement=simulation_requirement,
@@ -988,7 +848,6 @@ class ZepToolsService:
         result.sub_queries = sub_queries
         logger.info(t("console.generatedSubQueries", count=len(sub_queries)))
         
-        # Step 2: å¯¹æ¯ä¸ªå­é—®é¢˜è¿›è¡Œè¯­ä¹‰æœç´¢
         all_facts = []
         all_edges = []
         seen_facts = set()
@@ -1008,7 +867,6 @@ class ZepToolsService:
             
             all_edges.extend(search_result.edges)
         
-        # å¯¹åŽŸå§‹é—®é¢˜ä¹Ÿè¿›è¡Œæœç´¢
         main_search = self.search_graph(
             graph_id=graph_id,
             query=query,
@@ -1023,7 +881,6 @@ class ZepToolsService:
         result.semantic_facts = all_facts
         result.total_facts = len(all_facts)
         
-        # Step 3: ä»Žè¾¹ä¸­æå–ç›¸å…³å®žä½“UUIDï¼ŒåªèŽ·å–è¿™äº›å®žä½“çš„ä¿¡æ¯ï¼ˆä¸èŽ·å–å…¨éƒ¨èŠ‚ç‚¹ï¼‰
         entity_uuids = set()
         for edge_data in all_edges:
             if isinstance(edge_data, dict):
@@ -1034,7 +891,6 @@ class ZepToolsService:
                 if target_uuid:
                     entity_uuids.add(target_uuid)
         
-        # èŽ·å–æ‰€æœ‰ç›¸å…³å®žä½“çš„è¯¦æƒ…ï¼ˆä¸é™åˆ¶æ•°é‡ï¼Œå®Œæ•´è¾“å‡ºï¼‰
         entity_insights = []
         node_map = {}  # ç”¨äºŽåŽç»­å…³ç³»é“¾æž„å»º
         
@@ -1042,13 +898,11 @@ class ZepToolsService:
             if not uuid:
                 continue
             try:
-                # å•ç‹¬èŽ·å–æ¯ä¸ªç›¸å…³èŠ‚ç‚¹çš„ä¿¡æ¯
                 node = self.get_node_detail(uuid)
                 if node:
                     node_map[uuid] = node
                     entity_type = next((l for l in node.labels if l not in ["Entity", "Node"]), "å®žä½“")
                     
-                    # èŽ·å–è¯¥å®žä½“ç›¸å…³çš„æ‰€æœ‰äº‹å®žï¼ˆä¸æˆªæ–­ï¼‰
                     related_facts = [
                         f for f in all_facts 
                         if node.name.lower() in f.lower()
@@ -1068,7 +922,6 @@ class ZepToolsService:
         result.entity_insights = entity_insights
         result.total_entities = len(entity_insights)
         
-        # Step 4: æž„å»ºæ‰€æœ‰å…³ç³»é“¾ï¼ˆä¸é™åˆ¶æ•°é‡ï¼‰
         relationship_chains = []
         for edge_data in all_edges:  # å¤„ç†æ‰€æœ‰è¾¹ï¼Œä¸æˆªæ–­
             if isinstance(edge_data, dict):
@@ -1097,9 +950,7 @@ class ZepToolsService:
         max_queries: int = 5
     ) -> List[str]:
         """
-        ä½¿ç”¨LLMç”Ÿæˆå­é—®é¢˜
         
-        å°†å¤æ‚é—®é¢˜åˆ†è§£ä¸ºå¤šä¸ªå¯ä»¥ç‹¬ç«‹æ£€ç´¢çš„å­é—®é¢˜
         """
         system_prompt = """ä½ æ˜¯ä¸€ä¸ªä¸“ä¸šçš„é—®é¢˜åˆ†æžä¸“å®¶ã€‚ä½ çš„ä»»åŠ¡æ˜¯å°†ä¸€ä¸ªå¤æ‚é—®é¢˜åˆ†è§£ä¸ºå¤šä¸ªå¯ä»¥åœ¨æ¨¡æ‹Ÿä¸–ç•Œä¸­ç‹¬ç«‹è§‚å¯Ÿçš„å­é—®é¢˜ã€‚
 
@@ -1129,12 +980,10 @@ class ZepToolsService:
             )
             
             sub_queries = response.get("sub_queries", [])
-            # ç¡®ä¿æ˜¯å­—ç¬¦ä¸²åˆ—è¡¨
             return [str(sq) for sq in sub_queries[:max_queries]]
             
         except Exception as e:
             logger.warning(t("console.generateSubQueriesFailed", error=str(e)))
-            # é™çº§ï¼šè¿”å›žåŸºäºŽåŽŸé—®é¢˜çš„å˜ä½“
             return [
                 query,
                 f"{query} çš„ä¸»è¦å‚ä¸Žè€…",
@@ -1150,40 +999,26 @@ class ZepToolsService:
         limit: int = 50
     ) -> PanoramaResult:
         """
-        ã€PanoramaSearch - å¹¿åº¦æœç´¢ã€‘
         
-        èŽ·å–å…¨è²Œè§†å›¾ï¼ŒåŒ…æ‹¬æ‰€æœ‰ç›¸å…³å†…å®¹å’ŒåŽ†å²/è¿‡æœŸä¿¡æ¯ï¼š
-        1. èŽ·å–æ‰€æœ‰ç›¸å…³èŠ‚ç‚¹
-        2. èŽ·å–æ‰€æœ‰è¾¹ï¼ˆåŒ…æ‹¬å·²è¿‡æœŸ/å¤±æ•ˆçš„ï¼‰
-        3. åˆ†ç±»æ•´ç†å½“å‰æœ‰æ•ˆå’ŒåŽ†å²ä¿¡æ¯
         
-        è¿™ä¸ªå·¥å…·é€‚ç”¨äºŽéœ€è¦äº†è§£äº‹ä»¶å…¨è²Œã€è¿½è¸ªæ¼”å˜è¿‡ç¨‹çš„åœºæ™¯ã€‚
         
         Args:
-            graph_id: å›¾è°±ID
-            query: æœç´¢æŸ¥è¯¢ï¼ˆç”¨äºŽç›¸å…³æ€§æŽ’åºï¼‰
-            include_expired: æ˜¯å¦åŒ…å«è¿‡æœŸå†…å®¹ï¼ˆé»˜è®¤Trueï¼‰
-            limit: è¿”å›žç»“æžœæ•°é‡é™åˆ¶
             
         Returns:
-            PanoramaResult: å¹¿åº¦æœç´¢ç»“æžœ
         """
         logger.info(t("console.panoramaSearchStart", query=query[:50]))
         
         result = PanoramaResult(query=query)
         
-        # èŽ·å–æ‰€æœ‰èŠ‚ç‚¹
         all_nodes = self.get_all_nodes(graph_id)
         node_map = {n.uuid: n for n in all_nodes}
         result.all_nodes = all_nodes
         result.total_nodes = len(all_nodes)
         
-        # èŽ·å–æ‰€æœ‰è¾¹ï¼ˆåŒ…å«æ—¶é—´ä¿¡æ¯ï¼‰
         all_edges = self.get_all_edges(graph_id, include_temporal=True)
         result.all_edges = all_edges
         result.total_edges = len(all_edges)
         
-        # åˆ†ç±»äº‹å®ž
         active_facts = []
         historical_facts = []
         
@@ -1191,24 +1026,19 @@ class ZepToolsService:
             if not edge.fact:
                 continue
             
-            # ä¸ºäº‹å®žæ·»åŠ å®žä½“åç§°
             source_name = node_map.get(edge.source_node_uuid, NodeInfo('', '', [], '', {})).name or edge.source_node_uuid[:8]
             target_name = node_map.get(edge.target_node_uuid, NodeInfo('', '', [], '', {})).name or edge.target_node_uuid[:8]
             
-            # åˆ¤æ–­æ˜¯å¦è¿‡æœŸ/å¤±æ•ˆ
             is_historical = edge.is_expired or edge.is_invalid
             
             if is_historical:
-                # åŽ†å²/è¿‡æœŸäº‹å®žï¼Œæ·»åŠ æ—¶é—´æ ‡è®°
                 valid_at = edge.valid_at or "æœªçŸ¥"
                 invalid_at = edge.invalid_at or edge.expired_at or "æœªçŸ¥"
                 fact_with_time = f"[{valid_at} - {invalid_at}] {edge.fact}"
                 historical_facts.append(fact_with_time)
             else:
-                # å½“å‰æœ‰æ•ˆäº‹å®ž
                 active_facts.append(edge.fact)
         
-        # åŸºäºŽæŸ¥è¯¢è¿›è¡Œç›¸å…³æ€§æŽ’åº
         query_lower = query.lower()
         keywords = [w.strip() for w in query_lower.replace(',', ' ').replace('ï¼Œ', ' ').split() if len(w.strip()) > 1]
         
@@ -1222,7 +1052,6 @@ class ZepToolsService:
                     score += 10
             return score
         
-        # æŽ’åºå¹¶é™åˆ¶æ•°é‡
         active_facts.sort(key=relevance_score, reverse=True)
         historical_facts.sort(key=relevance_score, reverse=True)
         
@@ -1241,24 +1070,14 @@ class ZepToolsService:
         limit: int = 10
     ) -> SearchResult:
         """
-        ã€QuickSearch - ç®€å•æœç´¢ã€‘
         
-        å¿«é€Ÿã€è½»é‡çº§çš„æ£€ç´¢å·¥å…·ï¼š
-        1. ç›´æŽ¥è°ƒç”¨Zepè¯­ä¹‰æœç´¢
-        2. è¿”å›žæœ€ç›¸å…³çš„ç»“æžœ
-        3. é€‚ç”¨äºŽç®€å•ã€ç›´æŽ¥çš„æ£€ç´¢éœ€æ±‚
         
         Args:
-            graph_id: å›¾è°±ID
-            query: æœç´¢æŸ¥è¯¢
-            limit: è¿”å›žç»“æžœæ•°é‡
             
         Returns:
-            SearchResult: æœç´¢ç»“æžœ
         """
         logger.info(t("console.quickSearchStart", query=query[:50]))
         
-        # ç›´æŽ¥è°ƒç”¨çŽ°æœ‰çš„search_graphæ–¹æ³•
         result = self.search_graph(
             graph_id=graph_id,
             query=query,
@@ -1278,31 +1097,13 @@ class ZepToolsService:
         custom_questions: List[str] = None
     ) -> InterviewResult:
         """
-        ã€InterviewAgents - æ·±åº¦é‡‡è®¿ã€‘
         
-        è°ƒç”¨çœŸå®žçš„OASISé‡‡è®¿APIï¼Œé‡‡è®¿æ¨¡æ‹Ÿä¸­æ­£åœ¨è¿è¡Œçš„Agentï¼š
-        1. è‡ªåŠ¨è¯»å–äººè®¾æ–‡ä»¶ï¼Œäº†è§£æ‰€æœ‰æ¨¡æ‹ŸAgent
-        2. ä½¿ç”¨LLMåˆ†æžé‡‡è®¿éœ€æ±‚ï¼Œæ™ºèƒ½é€‰æ‹©æœ€ç›¸å…³çš„Agent
-        3. ä½¿ç”¨LLMç”Ÿæˆé‡‡è®¿é—®é¢˜
-        4. è°ƒç”¨ /api/simulation/interview/batch æŽ¥å£è¿›è¡ŒçœŸå®žé‡‡è®¿ï¼ˆåŒå¹³å°åŒæ—¶é‡‡è®¿ï¼‰
-        5. æ•´åˆæ‰€æœ‰é‡‡è®¿ç»“æžœï¼Œç”Ÿæˆé‡‡è®¿æŠ¥å‘Š
         
-        ã€é‡è¦ã€‘æ­¤åŠŸèƒ½éœ€è¦æ¨¡æ‹ŸçŽ¯å¢ƒå¤„äºŽè¿è¡ŒçŠ¶æ€ï¼ˆOASISçŽ¯å¢ƒæœªå…³é—­ï¼‰
         
-        ã€ä½¿ç”¨åœºæ™¯ã€‘
-        - éœ€è¦ä»Žä¸åŒè§’è‰²è§†è§’äº†è§£äº‹ä»¶çœ‹æ³•
-        - éœ€è¦æ”¶é›†å¤šæ–¹æ„è§å’Œè§‚ç‚¹
-        - éœ€è¦èŽ·å–æ¨¡æ‹ŸAgentçš„çœŸå®žå›žç­”ï¼ˆéžLLMæ¨¡æ‹Ÿï¼‰
         
         Args:
-            simulation_id: æ¨¡æ‹ŸIDï¼ˆç”¨äºŽå®šä½äººè®¾æ–‡ä»¶å’Œè°ƒç”¨é‡‡è®¿APIï¼‰
-            interview_requirement: é‡‡è®¿éœ€æ±‚æè¿°ï¼ˆéžç»“æž„åŒ–ï¼Œå¦‚"äº†è§£å­¦ç”Ÿå¯¹äº‹ä»¶çš„çœ‹æ³•"ï¼‰
-            simulation_requirement: æ¨¡æ‹Ÿéœ€æ±‚èƒŒæ™¯ï¼ˆå¯é€‰ï¼‰
-            max_agents: æœ€å¤šé‡‡è®¿çš„Agentæ•°é‡
-            custom_questions: è‡ªå®šä¹‰é‡‡è®¿é—®é¢˜ï¼ˆå¯é€‰ï¼Œè‹¥ä¸æä¾›åˆ™è‡ªåŠ¨ç”Ÿæˆï¼‰
             
         Returns:
-            InterviewResult: é‡‡è®¿ç»“æžœ
         """
         from .simulation_runner import SimulationRunner
         
@@ -1313,7 +1114,6 @@ class ZepToolsService:
             interview_questions=custom_questions or []
         )
         
-        # Step 1: è¯»å–äººè®¾æ–‡ä»¶
         profiles = self._load_agent_profiles(simulation_id)
         
         if not profiles:
@@ -1324,7 +1124,6 @@ class ZepToolsService:
         result.total_agents = len(profiles)
         logger.info(t("console.loadedProfiles", count=len(profiles)))
         
-        # Step 2: ä½¿ç”¨LLMé€‰æ‹©è¦é‡‡è®¿çš„Agentï¼ˆè¿”å›žagent_idåˆ—è¡¨ï¼‰
         selected_agents, selected_indices, selection_reasoning = self._select_agents_for_interview(
             profiles=profiles,
             interview_requirement=interview_requirement,
@@ -1336,7 +1135,6 @@ class ZepToolsService:
         result.selection_reasoning = selection_reasoning
         logger.info(t("console.selectedAgentsForInterview", count=len(selected_agents), indices=selected_indices))
         
-        # Step 3: ç”Ÿæˆé‡‡è®¿é—®é¢˜ï¼ˆå¦‚æžœæ²¡æœ‰æä¾›ï¼‰
         if not result.interview_questions:
             result.interview_questions = self._generate_interview_questions(
                 interview_requirement=interview_requirement,
@@ -1345,10 +1143,8 @@ class ZepToolsService:
             )
             logger.info(t("console.generatedInterviewQuestions", count=len(result.interview_questions)))
         
-        # å°†é—®é¢˜åˆå¹¶ä¸ºä¸€ä¸ªé‡‡è®¿prompt
         combined_prompt = "\n".join([f"{i+1}. {q}" for i, q in enumerate(result.interview_questions)])
         
-        # æ·»åŠ ä¼˜åŒ–å‰ç¼€ï¼Œçº¦æŸAgentå›žå¤æ ¼å¼
         INTERVIEW_PROMPT_PREFIX = (
             "ä½ æ­£åœ¨æŽ¥å—ä¸€æ¬¡é‡‡è®¿ã€‚è¯·ç»“åˆä½ çš„äººè®¾ã€æ‰€æœ‰çš„è¿‡å¾€è®°å¿†ä¸Žè¡ŒåŠ¨ï¼Œ"
             "ä»¥çº¯æ–‡æœ¬æ–¹å¼ç›´æŽ¥å›žç­”ä»¥ä¸‹é—®é¢˜ã€‚\n"
@@ -1362,20 +1158,16 @@ class ZepToolsService:
         )
         optimized_prompt = f"{INTERVIEW_PROMPT_PREFIX}{combined_prompt}"
         
-        # Step 4: è°ƒç”¨çœŸå®žçš„é‡‡è®¿APIï¼ˆä¸æŒ‡å®šplatformï¼Œé»˜è®¤åŒå¹³å°åŒæ—¶é‡‡è®¿ï¼‰
         try:
-            # æž„å»ºæ‰¹é‡é‡‡è®¿åˆ—è¡¨ï¼ˆä¸æŒ‡å®šplatformï¼ŒåŒå¹³å°é‡‡è®¿ï¼‰
             interviews_request = []
             for agent_idx in selected_indices:
                 interviews_request.append({
                     "agent_id": agent_idx,
                     "prompt": optimized_prompt  # ä½¿ç”¨ä¼˜åŒ–åŽçš„prompt
-                    # ä¸æŒ‡å®šplatformï¼ŒAPIä¼šåœ¨twitterå’Œredditä¸¤ä¸ªå¹³å°éƒ½é‡‡è®¿
                 })
             
             logger.info(t("console.callingBatchInterviewApi", count=len(interviews_request)))
             
-            # è°ƒç”¨ SimulationRunner çš„æ‰¹é‡é‡‡è®¿æ–¹æ³•ï¼ˆä¸ä¼ platformï¼ŒåŒå¹³å°é‡‡è®¿ï¼‰
             api_result = SimulationRunner.interview_agents_batch(
                 simulation_id=simulation_id,
                 interviews=interviews_request,
@@ -1385,15 +1177,12 @@ class ZepToolsService:
             
             logger.info(t("console.interviewApiReturned", count=api_result.get('interviews_count', 0), success=api_result.get('success')))
             
-            # æ£€æŸ¥APIè°ƒç”¨æ˜¯å¦æˆåŠŸ
             if not api_result.get("success", False):
                 error_msg = api_result.get("error", "æœªçŸ¥é”™è¯¯")
                 logger.warning(t("console.interviewApiReturnedFailure", error=error_msg))
                 result.summary = f"é‡‡è®¿APIè°ƒç”¨å¤±è´¥ï¼š{error_msg}ã€‚è¯·æ£€æŸ¥OASISæ¨¡æ‹ŸçŽ¯å¢ƒçŠ¶æ€ã€‚"
                 return result
             
-            # Step 5: è§£æžAPIè¿”å›žç»“æžœï¼Œæž„å»ºAgentInterviewå¯¹è±¡
-            # åŒå¹³å°æ¨¡å¼è¿”å›žæ ¼å¼: {"twitter_0": {...}, "reddit_0": {...}, "twitter_1": {...}, ...}
             api_data = api_result.get("result", {})
             results_dict = api_data.get("results", {}) if isinstance(api_data, dict) else {}
             
@@ -1403,34 +1192,28 @@ class ZepToolsService:
                 agent_role = agent.get("profession", "æœªçŸ¥")
                 agent_bio = agent.get("bio", "")
                 
-                # èŽ·å–è¯¥Agentåœ¨ä¸¤ä¸ªå¹³å°çš„é‡‡è®¿ç»“æžœ
                 twitter_result = results_dict.get(f"twitter_{agent_idx}", {})
                 reddit_result = results_dict.get(f"reddit_{agent_idx}", {})
                 
                 twitter_response = twitter_result.get("response", "")
                 reddit_response = reddit_result.get("response", "")
 
-                # æ¸…ç†å¯èƒ½çš„å·¥å…·è°ƒç”¨ JSON åŒ…è£¹
                 twitter_response = self._clean_tool_call_response(twitter_response)
                 reddit_response = self._clean_tool_call_response(reddit_response)
 
-                # å§‹ç»ˆè¾“å‡ºåŒå¹³å°æ ‡è®°
                 twitter_text = twitter_response if twitter_response else "ï¼ˆè¯¥å¹³å°æœªèŽ·å¾—å›žå¤ï¼‰"
                 reddit_text = reddit_response if reddit_response else "ï¼ˆè¯¥å¹³å°æœªèŽ·å¾—å›žå¤ï¼‰"
                 response_text = f"ã€Twitterå¹³å°å›žç­”ã€‘\n{twitter_text}\n\nã€Redditå¹³å°å›žç­”ã€‘\n{reddit_text}"
 
-                # æå–å…³é”®å¼•è¨€ï¼ˆä»Žä¸¤ä¸ªå¹³å°çš„å›žç­”ä¸­ï¼‰
                 import re
                 combined_responses = f"{twitter_response} {reddit_response}"
 
-                # æ¸…ç†å“åº”æ–‡æœ¬ï¼šåŽ»æŽ‰æ ‡è®°ã€ç¼–å·ã€Markdown ç­‰å¹²æ‰°
                 clean_text = re.sub(r'#{1,6}\s+', '', combined_responses)
                 clean_text = re.sub(r'\{[^}]*tool_name[^}]*\}', '', clean_text)
                 clean_text = re.sub(r'[*_`|>~\-]{2,}', '', clean_text)
                 clean_text = re.sub(r'é—®é¢˜\d+[ï¼š:]\s*', '', clean_text)
                 clean_text = re.sub(r'ã€[^ã€‘]+ã€‘', '', clean_text)
 
-                # ç­–ç•¥1ï¼ˆä¸»ï¼‰: æå–å®Œæ•´çš„æœ‰å®žè´¨å†…å®¹çš„å¥å­
                 sentences = re.split(r'[ã€‚ï¼ï¼Ÿ]', clean_text)
                 meaningful = [
                     s.strip() for s in sentences
@@ -1441,7 +1224,6 @@ class ZepToolsService:
                 meaningful.sort(key=len, reverse=True)
                 key_quotes = [s + "ã€‚" for s in meaningful[:3]]
 
-                # ç­–ç•¥2ï¼ˆè¡¥å……ï¼‰: æ­£ç¡®é…å¯¹çš„ä¸­æ–‡å¼•å·ã€Œã€å†…é•¿æ–‡æœ¬
                 if not key_quotes:
                     paired = re.findall(r'\u201c([^\u201c\u201d]{15,100})\u201d', clean_text)
                     paired += re.findall(r'\u300c([^\u300c\u300d]{15,100})\u300d', clean_text)
@@ -1460,7 +1242,6 @@ class ZepToolsService:
             result.interviewed_count = len(result.interviews)
             
         except ValueError as e:
-            # æ¨¡æ‹ŸçŽ¯å¢ƒæœªè¿è¡Œ
             logger.warning(t("console.interviewApiCallFailed", error=e))
             result.summary = f"é‡‡è®¿å¤±è´¥ï¼š{str(e)}ã€‚æ¨¡æ‹ŸçŽ¯å¢ƒå¯èƒ½å·²å…³é—­ï¼Œè¯·ç¡®ä¿OASISçŽ¯å¢ƒæ­£åœ¨è¿è¡Œã€‚"
             return result
@@ -1471,7 +1252,6 @@ class ZepToolsService:
             result.summary = f"é‡‡è®¿è¿‡ç¨‹å‘ç”Ÿé”™è¯¯ï¼š{str(e)}"
             return result
         
-        # Step 6: ç”Ÿæˆé‡‡è®¿æ‘˜è¦
         if result.interviews:
             result.summary = self._generate_interview_summary(
                 interviews=result.interviews,
@@ -1507,7 +1287,6 @@ class ZepToolsService:
         import os
         import csv
         
-        # æž„å»ºäººè®¾æ–‡ä»¶è·¯å¾„
         sim_dir = os.path.join(
             os.path.dirname(__file__), 
             f'../../uploads/simulations/{simulation_id}'
@@ -1515,7 +1294,6 @@ class ZepToolsService:
         
         profiles = []
         
-        # ä¼˜å…ˆå°è¯•è¯»å–Reddit JSONæ ¼å¼
         reddit_profile_path = os.path.join(sim_dir, "reddit_profiles.json")
         if os.path.exists(reddit_profile_path):
             try:
@@ -1526,14 +1304,12 @@ class ZepToolsService:
             except Exception as e:
                 logger.warning(t("console.readRedditProfilesFailed", error=e))
         
-        # å°è¯•è¯»å–Twitter CSVæ ¼å¼
         twitter_profile_path = os.path.join(sim_dir, "twitter_profiles.csv")
         if os.path.exists(twitter_profile_path):
             try:
                 with open(twitter_profile_path, 'r', encoding='utf-8') as f:
                     reader = csv.DictReader(f)
                     for row in reader:
-                        # CSVæ ¼å¼è½¬æ¢ä¸ºç»Ÿä¸€æ ¼å¼
                         profiles.append({
                             "realname": row.get("name", ""),
                             "username": row.get("username", ""),
@@ -1556,16 +1332,11 @@ class ZepToolsService:
         max_agents: int
     ) -> tuple:
         """
-        ä½¿ç”¨LLMé€‰æ‹©è¦é‡‡è®¿çš„Agent
         
         Returns:
             tuple: (selected_agents, selected_indices, reasoning)
-                - selected_agents: é€‰ä¸­Agentçš„å®Œæ•´ä¿¡æ¯åˆ—è¡¨
-                - selected_indices: é€‰ä¸­Agentçš„ç´¢å¼•åˆ—è¡¨ï¼ˆç”¨äºŽAPIè°ƒç”¨ï¼‰
-                - reasoning: é€‰æ‹©ç†ç”±
         """
         
-        # æž„å»ºAgentæ‘˜è¦åˆ—è¡¨
         agent_summaries = []
         for i, profile in enumerate(profiles):
             summary = {
@@ -1614,7 +1385,6 @@ class ZepToolsService:
             selected_indices = response.get("selected_indices", [])[:max_agents]
             reasoning = response.get("reasoning", "åŸºäºŽç›¸å…³æ€§è‡ªåŠ¨é€‰æ‹©")
             
-            # èŽ·å–é€‰ä¸­çš„Agentå®Œæ•´ä¿¡æ¯
             selected_agents = []
             valid_indices = []
             for idx in selected_indices:
@@ -1626,7 +1396,6 @@ class ZepToolsService:
             
         except Exception as e:
             logger.warning(t("console.llmSelectAgentFailed", error=e))
-            # é™çº§ï¼šé€‰æ‹©å‰Nä¸ª
             selected = profiles[:max_agents]
             indices = list(range(min(max_agents, len(profiles))))
             return selected, indices, "ä½¿ç”¨é»˜è®¤é€‰æ‹©ç­–ç•¥"
@@ -1690,7 +1459,6 @@ class ZepToolsService:
         if not interviews:
             return "æœªå®Œæˆä»»ä½•é‡‡è®¿"
         
-        # æ”¶é›†æ‰€æœ‰é‡‡è®¿å†…å®¹
         interview_texts = []
         for interview in interviews:
             interview_texts.append(f"ã€{interview.agent_name}ï¼ˆ{interview.agent_role}ï¼‰ã€‘\n{interview.response[:500]}")
@@ -1732,5 +1500,4 @@ class ZepToolsService:
             
         except Exception as e:
             logger.warning(t("console.generateInterviewSummaryFailed", error=e))
-            # é™çº§ï¼šç®€å•æ‹¼æŽ¥
             return f"å…±é‡‡è®¿äº†{len(interviews)}ä½å—è®¿è€…ï¼ŒåŒ…æ‹¬ï¼š" + "ã€".join([i.agent_name for i in interviews])
