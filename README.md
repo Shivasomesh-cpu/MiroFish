@@ -53,8 +53,8 @@ ZEP_API_KEY=your_zep_api_key
 ## Windows
 
 ```powershell
-git clone https://github.com/Shivasomesh-cpu/MiroFish.git
-cd MiroFish
+git clone https://github.com/Shivasomesh-cpu/posiedon.git
+cd posiedon
 copy .env.example .env
 npm run setup:all
 npm run dev
@@ -63,7 +63,7 @@ npm run dev
 ## Notes
 
 - The product branding in this repository is `Posiedon`.
-- The upstream GitHub repository still uses the historical `MiroFish` repository name.
+- The upstream GitHub repository uses the `posiedon` repository name.
 
 ## Contact
 

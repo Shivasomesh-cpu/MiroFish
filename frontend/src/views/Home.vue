@@ -4,7 +4,7 @@
       <div class="nav-brand">POSIEDON</div>
       <div class="nav-links">
         <LanguageSwitcher />
-        <a href="https://github.com/Shivasomesh-cpu/MiroFish" target="_blank" class="github-link">
+        <a href="https://github.com/Shivasomesh-cpu/posiedon" target="_blank" class="github-link">
           {{ $t('nav.visitGithub') }} <span class="arrow">Ã¢â€ â€”</span>
         </a>
       </div>
