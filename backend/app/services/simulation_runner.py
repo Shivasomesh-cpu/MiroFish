@@ -23,6 +23,7 @@ from ..utils.logger import get_logger
 from ..utils.locale import get_locale, set_locale
 from .zep_graph_memory_updater import ZepGraphMemoryManager
 from .simulation_ipc import SimulationIPCClient, CommandType, IPCResponse
+from .hallucination_gate import HallucinationGate, HallucinationScore
 
 logger = get_logger('mirofish.simulation_runner')
 
@@ -57,6 +58,8 @@ class AgentAction:
     action_args: Dict[str, Any] = field(default_factory=dict)
     result: Optional[str] = None
     success: bool = True
+    # Hallucination validation score: 0=clean, 1=corrected, 2=forced_fallback
+    hallucination_score: int = 0
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -69,6 +72,7 @@ class AgentAction:
             "action_args": self.action_args,
             "result": self.result,
             "success": self.success,
+            "hallucination_score": self.hallucination_score,
         }
 
 
@@ -434,18 +438,27 @@ class SimulationRunner:
             env['PYTHONIOENCODING'] = 'utf-8'  # 确保 stdout/stderr 使用 UTF-8
             
             # 设置工作目录为模拟目录（数据库等文件会生成在此）
-            # 使用 start_new_session=True 创建新的进程组，确保可以通过 os.killpg 终止所有子进程
-            process = subprocess.Popen(
-                cmd,
-                cwd=sim_dir,
-                stdout=main_log_file,
-                stderr=subprocess.STDOUT,  # stderr 也写入同一个文件
-                text=True,
-                encoding='utf-8',  # 显式指定编码
-                bufsize=1,
-                env=env,  # 传递带有 UTF-8 设置的环境变量
-                start_new_session=True,  # 创建新进程组，确保服务器关闭时能终止所有相关进程
-            )
+            # Cross-platform process creation:
+            # - Unix: start_new_session=True creates new process group for os.killpg
+            # - Windows: CREATE_NEW_PROCESS_GROUP flag for job control
+            popen_kwargs = {
+                'cwd': sim_dir,
+                'stdout': main_log_file,
+                'stderr': subprocess.STDOUT,  # stderr 也写入同一个文件
+                'text': True,
+                'encoding': 'utf-8',  # 显式指定编码
+                'bufsize': 1,
+                'env': env,  # 传递带有 UTF-8 设置的环境变量
+            }
+            
+            if IS_WINDOWS:
+                # Windows: CREATE_NEW_PROCESS_GROUP allows sending CTRL_BREAK_EVENT
+                popen_kwargs['creationflags'] = subprocess.CREATE_NEW_PROCESS_GROUP
+            else:
+                # Unix: start_new_session creates new process group for os.killpg
+                popen_kwargs['start_new_session'] = True
+            
+            process = subprocess.Popen(cmd, **popen_kwargs)
             
             # 保存文件句柄以便后续关闭
             cls._stdout_files[simulation_id] = main_log_file
@@ -659,6 +672,12 @@ class SimulationRunner:
                                         state.current_round = round_num
                                     # 总体时间取两个平台的最大值
                                     state.simulated_hours = max(state.twitter_simulated_hours, state.reddit_simulated_hours)
+                                    
+                                    # Trigger opinion drift processing at end of round
+                                    try:
+                                        cls._process_opinion_drift(state, platform, round_num)
+                                    except Exception as drift_err:
+                                        logger.warning(f"Opinion drift processing failed for round {round_num}: {drift_err}")
                                 
                                 continue
                             
@@ -672,6 +691,7 @@ class SimulationRunner:
                                 action_args=action_data.get("action_args", {}),
                                 result=action_data.get("result"),
                                 success=action_data.get("success", True),
+                                hallucination_score=action_data.get("hallucination_score", 0),
                             )
                             state.add_action(action)
                             
@@ -716,6 +736,109 @@ class SimulationRunner:
         
         # 至少有一个平台被启用且已完成
         return twitter_enabled or reddit_enabled
+    
+    # Opinion drift state - track last processed round per simulation/platform
+    _opinion_drift_last_round: Dict[str, Dict[str, int]] = {}
+    
+    @classmethod
+    def _process_opinion_drift(cls, state: SimulationRunState, platform: str, round_number: int):
+        """
+        Process opinion drift for agents after a round completes.
+        
+        This updates agent opinion states based on their exposure to content
+        during the round.
+        
+        Args:
+            state: Current simulation run state
+            platform: Platform that completed the round (twitter/reddit)
+            round_number: The round number that just completed
+        """
+        from .opinion_drift import OpinionDriftProcessor
+        
+        sim_id = state.simulation_id
+        
+        # Track last processed round to avoid duplicate processing
+        if sim_id not in cls._opinion_drift_last_round:
+            cls._opinion_drift_last_round[sim_id] = {}
+        
+        platform_last_round = cls._opinion_drift_last_round[sim_id].get(platform, 0)
+        if round_number <= platform_last_round:
+            return  # Already processed
+        
+        cls._opinion_drift_last_round[sim_id][platform] = round_number
+        
+        logger.info(f"Processing opinion drift: simulation={sim_id}, platform={platform}, round={round_number}")
+        
+        try:
+            # Load agent profiles
+            sim_dir = os.path.join(cls.RUN_STATE_DIR, sim_id)
+            profiles_path = os.path.join(sim_dir, platform, "agent_profiles.json")
+            
+            if not os.path.exists(profiles_path):
+                # Try alternate location
+                profiles_path = os.path.join(sim_dir, f"{platform}_profiles.json")
+            
+            if not os.path.exists(profiles_path):
+                logger.debug(f"No agent profiles found for opinion drift: {profiles_path}")
+                return
+            
+            with open(profiles_path, 'r', encoding='utf-8') as f:
+                agent_profiles = json.load(f)
+            
+            if not isinstance(agent_profiles, list):
+                agent_profiles = [agent_profiles]
+            
+            # Collect actions from this round
+            actions_path = os.path.join(sim_dir, platform, "actions.jsonl")
+            round_actions = []
+            
+            if os.path.exists(actions_path):
+                with open(actions_path, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            try:
+                                action = json.loads(line)
+                                if action.get('round', action.get('round_num', 0)) == round_number:
+                                    round_actions.append(action)
+                            except json.JSONDecodeError:
+                                pass
+            
+            if not round_actions:
+                logger.debug(f"No actions found for round {round_number}")
+                return
+            
+            # Initialize processor and update opinions
+            processor = OpinionDriftProcessor()
+            
+            # Extract topics from simulation config if available
+            config_path = os.path.join(sim_dir, "simulation_config.json")
+            topics = None
+            if os.path.exists(config_path):
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                    topics = config.get('opinion_topics')
+            
+            # Process opinion drift
+            updated_profiles = processor.process_round(
+                agent_profiles,
+                round_actions,
+                round_number,
+                topics
+            )
+            
+            # Save updated profiles
+            # Use a separate file to track opinion evolution without modifying original
+            opinion_state_path = os.path.join(sim_dir, platform, "agent_opinion_state.json")
+            with open(opinion_state_path, 'w', encoding='utf-8') as f:
+                json.dump(updated_profiles, f, indent=2, ensure_ascii=False)
+            
+            logger.info(f"Opinion drift processed: {len(updated_profiles)} agents updated for round {round_number}")
+            
+        except Exception as e:
+            logger.error(f"Opinion drift processing error: {e}")
+            import traceback
+            logger.debug(traceback.format_exc())
     
     @classmethod
     def _terminate_process(cls, process: subprocess.Popen, simulation_id: str, timeout: int = 10):
@@ -883,6 +1006,7 @@ class SimulationRunner:
                         action_args=data.get("action_args", {}),
                         result=data.get("result"),
                         success=data.get("success", True),
+                        hallucination_score=data.get("hallucination_score", 0),
                     ))
                     
                 except json.JSONDecodeError:

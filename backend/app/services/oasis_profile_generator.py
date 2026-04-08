@@ -52,6 +52,21 @@ class OasisAgentProfile:
     profession: Optional[str] = None
     interested_topics: List[str] = field(default_factory=list)
     
+    # Opinion drift fields
+    # opinion_state: Maps topic -> opinion value [-1.0 to 1.0]
+    # -1.0 = strongly against, 0 = neutral, 1.0 = strongly for
+    opinion_state: Dict[str, float] = field(default_factory=dict)
+    
+    # susceptibility: How easily opinions change (0.0 = unchangeable, 1.0 = highly malleable)
+    # Correlates with openness trait if MBTI is available
+    susceptibility: float = 0.5
+    
+    # opinion_history: List of {round, topic, value} tuples tracking opinion changes
+    opinion_history: List[Dict[str, Any]] = field(default_factory=list)
+    
+    # Big Five openness trait (derived from MBTI or set directly)
+    openness: Optional[float] = None
+    
     # 来源实体信息
     source_entity_uuid: Optional[str] = None
     source_entity_type: Optional[str] = None
@@ -84,6 +99,13 @@ class OasisAgentProfile:
         if self.interested_topics:
             profile["interested_topics"] = self.interested_topics
         
+        # Opinion drift fields
+        profile["opinion_state"] = self.opinion_state
+        profile["susceptibility"] = self.susceptibility
+        profile["opinion_history"] = self.opinion_history
+        if self.openness is not None:
+            profile["openness"] = self.openness
+        
         return profile
     
     def to_twitter_format(self) -> Dict[str, Any]:
@@ -114,6 +136,13 @@ class OasisAgentProfile:
         if self.interested_topics:
             profile["interested_topics"] = self.interested_topics
         
+        # Opinion drift fields
+        profile["opinion_state"] = self.opinion_state
+        profile["susceptibility"] = self.susceptibility
+        profile["opinion_history"] = self.opinion_history
+        if self.openness is not None:
+            profile["openness"] = self.openness
+        
         return profile
     
     def to_dict(self) -> Dict[str, Any]:
@@ -137,7 +166,69 @@ class OasisAgentProfile:
             "source_entity_uuid": self.source_entity_uuid,
             "source_entity_type": self.source_entity_type,
             "created_at": self.created_at,
+            # Opinion drift fields
+            "opinion_state": self.opinion_state,
+            "susceptibility": self.susceptibility,
+            "opinion_history": self.opinion_history,
+            "openness": self.openness,
         }
+    
+    def update_opinion(self, topic: str, new_value: float, round_number: int) -> None:
+        """
+        Update opinion on a topic and record in history.
+        
+        Args:
+            topic: The topic/issue to update opinion on
+            new_value: New opinion value (-1.0 to 1.0)
+            round_number: Current simulation round
+        """
+        # Clamp value to valid range
+        new_value = max(-1.0, min(1.0, new_value))
+        
+        # Update current state
+        self.opinion_state[topic] = new_value
+        
+        # Record in history
+        self.opinion_history.append({
+            "round": round_number,
+            "topic": topic,
+            "value": new_value
+        })
+    
+    def get_opinion(self, topic: str) -> float:
+        """Get current opinion on a topic (0.0 if not set)."""
+        return self.opinion_state.get(topic, 0.0)
+    
+    @staticmethod
+    def calculate_susceptibility_from_mbti(mbti: str) -> float:
+        """
+        Calculate susceptibility based on MBTI type.
+        
+        Higher openness (N types, especially NP) = higher susceptibility.
+        """
+        if not mbti or len(mbti) != 4:
+            return 0.5  # Default
+        
+        susceptibility = 0.5
+        
+        # Intuitive (N) types are more open to new ideas
+        if mbti[1] == 'N':
+            susceptibility += 0.15
+        else:  # Sensing (S) types are more traditional
+            susceptibility -= 0.1
+        
+        # Perceiving (P) types are more flexible
+        if mbti[3] == 'P':
+            susceptibility += 0.1
+        else:  # Judging (J) types are more set in their ways
+            susceptibility -= 0.05
+        
+        # Feeling (F) types may be more influenced by others
+        if mbti[2] == 'F':
+            susceptibility += 0.05
+        
+        # Clamp to valid range
+        return max(0.0, min(1.0, susceptibility))
 
 
 class OasisProfileGenerator:

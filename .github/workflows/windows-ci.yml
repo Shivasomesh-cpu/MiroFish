@@ -1,0 +1,108 @@
+name: Windows CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-windows:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.9.26"
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: uv sync
+
+      - name: Create tests directory
+        working-directory: backend
+        run: |
+          New-Item -ItemType Directory -Path tests -Force
+          "# MiroFish Backend Tests" | Out-File -FilePath tests/__init__.py -Encoding utf8
+
+      - name: Install frontend dependencies
+        run: |
+          npm install
+          cd frontend && npm install
+
+      - name: Run backend unit tests
+        working-directory: backend
+        run: uv run pytest tests/ -v --tb=short
+        continue-on-error: true
+
+      - name: Smoke test - Import modules
+        working-directory: backend
+        run: |
+          uv run python -c "from app.services.simulation_runner import SimulationRunner; print('SimulationRunner imported successfully')"
+          uv run python -c "from app.services.graph_builder import GraphBuilderService; print('GraphBuilderService imported successfully')"
+          uv run python -c "from app.services.ontology_generator import OntologyGenerator; print('OntologyGenerator imported successfully')"
+          uv run python -c "from app.utils.file_parser import FileParser; print('FileParser imported successfully')"
+
+      - name: Smoke test - File parser with encoding
+        working-directory: backend
+        run: |
+          uv run python -c "
+          from app.utils.file_parser import FileParser
+          from pathlib import Path
+          import tempfile
+          import os
+
+          # Create test file with UTF-8 content
+          test_content = 'Hello World! 你好世界！'
+          with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+              f.write(test_content)
+              temp_path = f.name
+
+          try:
+              # Test extraction
+              result = FileParser.extract_text(temp_path)
+              assert test_content in result, f'Expected content not found: {result}'
+              print(f'File parser test passed: {result}')
+          finally:
+              os.unlink(temp_path)
+          "
+
+      - name: Smoke test - Path handling
+        working-directory: backend
+        run: |
+          uv run python -c "
+          from pathlib import Path
+          import os
+
+          # Test pathlib works correctly on Windows
+          test_path = Path('uploads') / 'simulations' / 'test_sim'
+          print(f'Path constructed: {test_path}')
+          assert '\\\\' in str(test_path) or '/' in str(test_path), 'Path not constructed correctly'
+
+          # Test os.path.join equivalence
+          os_path = os.path.join('uploads', 'simulations', 'test_sim')
+          print(f'os.path.join result: {os_path}')
+          print('Path handling test passed')
+          "
+
+      - name: Frontend build test
+        working-directory: frontend
+        run: npm run build

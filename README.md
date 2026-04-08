@@ -176,6 +176,40 @@ Reads `.env` from root directory by default, maps ports `3000 (frontend) / 5001 
 
 > Mirror address for faster pulling is provided as comments in `docker-compose.yml`, replace if needed.
 
+### Windows-Specific Setup (PowerShell)
+
+MiroFish fully supports Windows. Here are the steps using PowerShell:
+
+```powershell
+# 1. Clone the repository
+git clone https://github.com/666ghj/MiroFish.git
+cd MiroFish
+
+# 2. Configure environment variables
+Copy-Item .env.example .env
+# Edit .env with your favorite editor (notepad, VS Code, etc.)
+notepad .env
+
+# 3. Install uv (Python package manager) if not already installed
+# Option A: Using winget
+winget install astral-sh.uv
+
+# Option B: Using PowerShell installer
+irm https://astral.sh/uv/install.ps1 | iex
+
+# 4. Install all dependencies
+npm run setup:all
+
+# 5. Start the application
+npm run dev
+```
+
+**Windows Notes:**
+- Python 3.11 or 3.12 is required (3.13+ not yet supported by some dependencies)
+- All file operations use UTF-8 encoding automatically
+- Process management uses Windows-native APIs (no WSL required)
+- If you encounter encoding issues, ensure your terminal uses UTF-8: `[Console]::OutputEncoding = [System.Text.Encoding]::UTF8`
+
 ## 📬 Join the Conversation
 
 <div align="center">

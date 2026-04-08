@@ -4,6 +4,7 @@ Step2: Zep实体读取与过滤、OASIS模拟准备与运行（全程自动化�
 """
 
 import os
+import json
 import traceback
 from flask import request, jsonify, send_file
 
@@ -13,6 +14,7 @@ from ..services.zep_entity_reader import ZepEntityReader
 from ..services.oasis_profile_generator import OasisProfileGenerator
 from ..services.simulation_manager import SimulationManager, SimulationStatus
 from ..services.simulation_runner import SimulationRunner, RunnerStatus
+from ..services.job_queue import JobQueue, JobStatus
 from ..utils.logger import get_logger
 from ..utils.locale import t, get_locale, set_locale
 from ..models.project import ProjectManager
@@ -1700,6 +1702,479 @@ def stop_simulation():
         }), 500
 
 
+# ============== Pause/Resume/Checkpoint API ==============
+
+from ..services.checkpoint_manager import CheckpointManager, CheckpointMetadata
+
+
+@simulation_bp.route('/<simulation_id>/pause', methods=['POST'])
+def pause_simulation(simulation_id: str):
+    """
+    Pause a running simulation and create a checkpoint.
+    
+    The simulation will finish its current round, save state, then halt.
+    
+    Request (JSON):
+        {
+            "description": "Optional checkpoint description"
+        }
+    
+    Returns:
+        {
+            "success": true,
+            "data": {
+                "simulation_id": "sim_xxx",
+                "status": "paused",
+                "checkpoint": { checkpoint metadata }
+            }
+        }
+    """
+    try:
+        data = request.get_json() or {}
+        description = data.get('description')
+        
+        # Get current run state
+        run_state = SimulationRunner.get_run_state(simulation_id)
+        if not run_state:
+            return jsonify({
+                "success": False,
+                "error": f"Simulation not found: {simulation_id}"
+            }), 404
+        
+        if run_state.runner_status != RunnerStatus.RUNNING:
+            return jsonify({
+                "success": False,
+                "error": f"Simulation is not running (status: {run_state.runner_status.value})"
+            }), 400
+        
+        # Load simulation config for checkpoint
+        sim_dir = os.path.join(Config.OASIS_SIMULATION_DATA_DIR, simulation_id)
+        config_path = os.path.join(sim_dir, "simulation_config.json")
+        
+        config = {}
+        if os.path.exists(config_path):
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+        
+        # Get agent personas
+        agent_personas = config.get("agent_configs", [])
+        
+        # Create checkpoint before stopping
+        checkpoint = CheckpointManager.create_checkpoint(
+            simulation_id=simulation_id,
+            round_number=run_state.current_round,
+            simulated_hours=run_state.simulated_hours,
+            agent_personas=agent_personas,
+            config=config,
+            graph_id=None,  # TODO: Get from config
+            description=description or f"Pause at round {run_state.current_round}"
+        )
+        
+        # Stop the simulation
+        SimulationRunner.stop_simulation(simulation_id)
+        
+        # Update job queue status
+        job = JobQueue.get_job_by_simulation(simulation_id)
+        if job:
+            JobQueue.update_job(
+                job.job_id,
+                status=JobStatus.PAUSED,
+                checkpoint_round=run_state.current_round
+            )
+        
+        # Update simulation manager state
+        manager = SimulationManager()
+        state = manager.get_simulation(simulation_id)
+        if state:
+            state.status = SimulationStatus.PAUSED
+            manager._save_simulation_state(state)
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "simulation_id": simulation_id,
+                "status": "paused",
+                "checkpoint": checkpoint.to_dict()
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Failed to pause simulation: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
+
+
+@simulation_bp.route('/<simulation_id>/resume', methods=['POST'])
+def resume_simulation(simulation_id: str):
+    """
+    Resume a paused simulation from a checkpoint.
+    
+    Request (JSON):
+        {
+            "checkpoint_id": "chkpt_r10_xxx",  // Optional, uses latest if not provided
+            "max_rounds": null                  // Optional, override max rounds
+        }
+    
+    Returns:
+        {
+            "success": true,
+            "data": {
+                "simulation_id": "sim_xxx",
+                "status": "running",
+                "resumed_from_round": 10,
+                "checkpoint_id": "chkpt_r10_xxx"
+            }
+        }
+    """
+    try:
+        data = request.get_json() or {}
+        checkpoint_id = data.get('checkpoint_id')
+        max_rounds = data.get('max_rounds')
+        
+        # If no checkpoint specified, get the latest one
+        if not checkpoint_id:
+            checkpoints = CheckpointManager.list_checkpoints(simulation_id)
+            if not checkpoints:
+                return jsonify({
+                    "success": False,
+                    "error": "No checkpoints found for simulation"
+                }), 404
+            checkpoint_id = checkpoints[0].checkpoint_id
+        
+        # Load checkpoint
+        checkpoint = CheckpointManager.load_checkpoint(simulation_id, checkpoint_id)
+        if not checkpoint:
+            return jsonify({
+                "success": False,
+                "error": f"Checkpoint not found: {checkpoint_id}"
+            }), 404
+        
+        # Restore from checkpoint
+        restore_result = CheckpointManager.restore_from_checkpoint(simulation_id, checkpoint_id)
+        if not restore_result:
+            return jsonify({
+                "success": False,
+                "error": "Failed to restore from checkpoint"
+            }), 500
+        
+        # Start simulation from checkpoint round
+        run_state = SimulationRunner.start_simulation(
+            simulation_id=simulation_id,
+            platform=checkpoint.config.get("platform", "parallel"),
+            max_rounds=max_rounds,
+            enable_graph_memory_update=False,
+            graph_id=checkpoint.metadata.graph_id
+        )
+        
+        # Update job queue
+        job = JobQueue.get_job_by_simulation(simulation_id)
+        if job:
+            JobQueue.update_job(
+                job.job_id,
+                status=JobStatus.RUNNING,
+                pid=run_state.process_pid,
+                step_current=checkpoint.metadata.round_number
+            )
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "simulation_id": simulation_id,
+                "status": "running",
+                "resumed_from_round": checkpoint.metadata.round_number,
+                "checkpoint_id": checkpoint_id,
+                "pid": run_state.process_pid
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Failed to resume simulation: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
+
+
+@simulation_bp.route('/<simulation_id>/checkpoints', methods=['GET'])
+def list_checkpoints(simulation_id: str):
+    """
+    List all checkpoints for a simulation.
+    
+    Returns:
+        {
+            "success": true,
+            "data": {
+                "checkpoints": [
+                    { checkpoint metadata },
+                    ...
+                ]
+            }
+        }
+    """
+    try:
+        checkpoints = CheckpointManager.list_checkpoints(simulation_id)
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "checkpoints": [cp.to_dict() for cp in checkpoints]
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Failed to list checkpoints: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@simulation_bp.route('/<simulation_id>/checkpoints/<checkpoint_id>', methods=['GET'])
+def get_checkpoint(simulation_id: str, checkpoint_id: str):
+    """
+    Get details of a specific checkpoint.
+    
+    Returns:
+        {
+            "success": true,
+            "data": { checkpoint data }
+        }
+    """
+    try:
+        checkpoint = CheckpointManager.load_checkpoint(simulation_id, checkpoint_id)
+        
+        if not checkpoint:
+            return jsonify({
+                "success": False,
+                "error": f"Checkpoint not found: {checkpoint_id}"
+            }), 404
+        
+        return jsonify({
+            "success": True,
+            "data": checkpoint.to_dict()
+        })
+        
+    except Exception as e:
+        logger.error(f"Failed to get checkpoint: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@simulation_bp.route('/<simulation_id>/checkpoints/<checkpoint_id>', methods=['DELETE'])
+def delete_checkpoint(simulation_id: str, checkpoint_id: str):
+    """
+    Delete a checkpoint.
+    
+    Returns:
+        {
+            "success": true,
+            "message": "Checkpoint deleted"
+        }
+    """
+    try:
+        deleted = CheckpointManager.delete_checkpoint(simulation_id, checkpoint_id)
+        
+        if not deleted:
+            return jsonify({
+                "success": False,
+                "error": f"Checkpoint not found: {checkpoint_id}"
+            }), 404
+        
+        return jsonify({
+            "success": True,
+            "message": "Checkpoint deleted"
+        })
+        
+    except Exception as e:
+        logger.error(f"Failed to delete checkpoint: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@simulation_bp.route('/<simulation_id>/checkpoints', methods=['POST'])
+def create_checkpoint(simulation_id: str):
+    """
+    Manually create a checkpoint for a running or paused simulation.
+    
+    Request (JSON):
+        {
+            "description": "Optional description"
+        }
+    
+    Returns:
+        {
+            "success": true,
+            "data": { checkpoint metadata }
+        }
+    """
+    try:
+        data = request.get_json() or {}
+        description = data.get('description')
+        
+        # Get current state
+        run_state = SimulationRunner.get_run_state(simulation_id)
+        if not run_state:
+            return jsonify({
+                "success": False,
+                "error": f"Simulation not found: {simulation_id}"
+            }), 404
+        
+        # Load config
+        sim_dir = os.path.join(Config.OASIS_SIMULATION_DATA_DIR, simulation_id)
+        config_path = os.path.join(sim_dir, "simulation_config.json")
+        
+        config = {}
+        if os.path.exists(config_path):
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+        
+        agent_personas = config.get("agent_configs", [])
+        
+        # Create checkpoint
+        checkpoint = CheckpointManager.create_checkpoint(
+            simulation_id=simulation_id,
+            round_number=run_state.current_round,
+            simulated_hours=run_state.simulated_hours,
+            agent_personas=agent_personas,
+            config=config,
+            description=description or f"Manual checkpoint at round {run_state.current_round}"
+        )
+        
+        # Update job queue checkpoint round
+        job = JobQueue.get_job_by_simulation(simulation_id)
+        if job:
+            JobQueue.update_job(
+                job.job_id,
+                checkpoint_round=run_state.current_round
+            )
+        
+        return jsonify({
+            "success": True,
+            "data": checkpoint.to_dict()
+        })
+        
+    except Exception as e:
+        logger.error(f"Failed to create checkpoint: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
+
+
+# ============== Cost Estimation & Tracking API ==============
+
+from ..services.cost_tracker import get_cost_tracker, estimate_simulation_cost
+
+
+@simulation_bp.route('/cost/estimate', methods=['POST'])
+def estimate_cost():
+    """
+    Estimate the cost of running a simulation before starting.
+    
+    Request (JSON):
+        {
+            "num_agents": 10,
+            "num_rounds": 100,
+            "model_name": "gpt-4o"  // Optional, uses config default
+        }
+    
+    Returns:
+        {
+            "success": true,
+            "data": {
+                "num_agents": 10,
+                "num_rounds": 100,
+                "model_name": "gpt-4o",
+                "estimated_input_tokens": 375000,
+                "estimated_output_tokens": 125000,
+                "estimated_total_tokens": 500000,
+                "low_cost_usd": 0.875,
+                "high_cost_usd": 1.625,
+                "average_cost_usd": 1.25,
+                "estimation_variance": 0.3
+            }
+        }
+    """
+    try:
+        data = request.get_json() or {}
+        
+        num_agents = data.get('num_agents')
+        num_rounds = data.get('num_rounds')
+        model_name = data.get('model_name')
+        
+        if not num_agents or not num_rounds:
+            return jsonify({
+                "success": False,
+                "error": "num_agents and num_rounds are required"
+            }), 400
+        
+        estimate = estimate_simulation_cost(
+            num_agents=int(num_agents),
+            num_rounds=int(num_rounds),
+            model_name=model_name
+        )
+        
+        return jsonify({
+            "success": True,
+            "data": estimate.to_dict()
+        })
+        
+    except Exception as e:
+        logger.error(f"Cost estimation failed: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@simulation_bp.route('/<simulation_id>/cost', methods=['GET'])
+def get_simulation_cost(simulation_id: str):
+    """
+    Get current cost tracking for a running simulation.
+    
+    Returns:
+        {
+            "success": true,
+            "data": {
+                "simulation_id": "sim_xxx",
+                "status": "tracked",
+                "usage": {
+                    "input_tokens": 10000,
+                    "output_tokens": 5000,
+                    "total_tokens": 15000,
+                    "estimated_cost_usd": 0.05,
+                    "request_count": 50,
+                    "limit_exceeded": false
+                }
+            }
+        }
+    """
+    try:
+        tracker = get_cost_tracker()
+        summary = tracker.get_summary(simulation_id)
+        
+        return jsonify({
+            "success": True,
+            "data": summary
+        })
+        
+    except Exception as e:
+        logger.error(f"Failed to get cost: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
 # ============== 实时状态监控接口 ==============
 
 @simulation_bp.route('/<simulation_id>/run-status', methods=['GET'])
@@ -2713,4 +3188,271 @@ def close_simulation_env():
             "success": False,
             "error": str(e),
             "traceback": traceback.format_exc()
+        }), 500
+
+
+# ============== Job Queue API (Subprocess Resilience) ==============
+
+from ..services.job_queue import JobQueue, JobStatus, JobRecord
+
+
+@simulation_bp.route('/jobs', methods=['GET'])
+def list_jobs():
+    """
+    List all simulation jobs with optional filtering.
+    
+    Query Parameters:
+        limit: Maximum number of jobs (default 100)
+        offset: Pagination offset (default 0)
+        status: Filter by status (pending, running, completed, failed, interrupted)
+    
+    Returns:
+        {
+            "success": true,
+            "data": {
+                "jobs": [...],
+                "total": 50
+            }
+        }
+    """
+    try:
+        limit = request.args.get('limit', 100, type=int)
+        offset = request.args.get('offset', 0, type=int)
+        status_filter = request.args.get('status')
+        
+        status_list = None
+        if status_filter:
+            try:
+                status_list = [JobStatus(status_filter)]
+            except ValueError:
+                pass
+        
+        jobs = JobQueue.get_all_jobs(limit=limit, offset=offset, status_filter=status_list)
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "jobs": [job.to_dict() for job in jobs],
+                "count": len(jobs)
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Failed to list jobs: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@simulation_bp.route('/jobs/<job_id>', methods=['GET'])
+def get_job(job_id: str):
+    """
+    Get a specific job by ID.
+    
+    Returns:
+        {
+            "success": true,
+            "data": { job details }
+        }
+    """
+    try:
+        job = JobQueue.get_job(job_id)
+        
+        if not job:
+            return jsonify({
+                "success": False,
+                "error": f"Job not found: {job_id}"
+            }), 404
+        
+        return jsonify({
+            "success": True,
+            "data": job.to_dict()
+        })
+        
+    except Exception as e:
+        logger.error(f"Failed to get job {job_id}: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@simulation_bp.route('/jobs/interrupted', methods=['GET'])
+def get_interrupted_jobs():
+    """
+    Get all jobs that were interrupted and can be restarted.
+    
+    Returns:
+        {
+            "success": true,
+            "data": {
+                "interrupted_jobs": [...],
+                "restartable_jobs": [...]
+            }
+        }
+    """
+    try:
+        # Detect any newly interrupted jobs
+        interrupted = JobQueue.detect_interrupted_jobs()
+        
+        # Get all restartable jobs
+        restartable = JobQueue.get_restartable_jobs()
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "interrupted_jobs": [job.to_dict() for job in interrupted],
+                "restartable_jobs": [job.to_dict() for job in restartable]
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Failed to get interrupted jobs: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@simulation_bp.route('/jobs/<job_id>/restart', methods=['POST'])
+def restart_job(job_id: str):
+    """
+    Restart an interrupted or failed job from the last checkpoint.
+    
+    Request (JSON):
+        {
+            "from_checkpoint": true,  // Optional, default true - resume from checkpoint
+            "max_rounds": null        // Optional, override max rounds
+        }
+    
+    Returns:
+        {
+            "success": true,
+            "data": {
+                "job_id": "...",
+                "simulation_id": "...",
+                "resumed_from_round": 5,
+                "status": "running"
+            }
+        }
+    """
+    try:
+        data = request.get_json() or {}
+        from_checkpoint = data.get('from_checkpoint', True)
+        max_rounds = data.get('max_rounds')
+        
+        # Get the job
+        job = JobQueue.get_job(job_id)
+        if not job:
+            return jsonify({
+                "success": False,
+                "error": f"Job not found: {job_id}"
+            }), 404
+        
+        # Check if job can be restarted
+        if job.status not in [JobStatus.INTERRUPTED, JobStatus.FAILED, JobStatus.PAUSED, JobStatus.STOPPED]:
+            return jsonify({
+                "success": False,
+                "error": f"Job cannot be restarted (status: {job.status.value})"
+            }), 400
+        
+        # Determine starting round
+        start_round = job.checkpoint_round if from_checkpoint else 0
+        
+        # Update job status to pending
+        JobQueue.update_job(
+            job_id,
+            status=JobStatus.PENDING,
+            error_msg=None
+        )
+        
+        # Start the simulation from the checkpoint
+        # This reuses the existing simulation config
+        try:
+            import json as json_module
+            config = json_module.loads(job.config_json) if job.config_json else {}
+            
+            state = SimulationRunner.start_simulation(
+                simulation_id=job.simulation_id,
+                platform=job.platform,
+                max_rounds=max_rounds,
+                enable_graph_memory_update=bool(job.graph_id),
+                graph_id=job.graph_id
+            )
+            
+            # Update job with new PID
+            JobQueue.update_job(
+                job_id,
+                status=JobStatus.RUNNING,
+                pid=state.process_pid,
+                step_current=start_round
+            )
+            
+            return jsonify({
+                "success": True,
+                "data": {
+                    "job_id": job_id,
+                    "simulation_id": job.simulation_id,
+                    "resumed_from_round": start_round,
+                    "status": "running",
+                    "pid": state.process_pid
+                }
+            })
+            
+        except Exception as e:
+            JobQueue.update_job(
+                job_id,
+                status=JobStatus.FAILED,
+                error_msg=str(e)
+            )
+            raise
+        
+    except ValueError as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 400
+        
+    except Exception as e:
+        logger.error(f"Failed to restart job {job_id}: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
+
+
+@simulation_bp.route('/jobs/<job_id>', methods=['DELETE'])
+def delete_job(job_id: str):
+    """
+    Delete a job record.
+    
+    Note: This only deletes the job tracking record, not the simulation data.
+    
+    Returns:
+        {
+            "success": true,
+            "message": "Job deleted"
+        }
+    """
+    try:
+        deleted = JobQueue.delete_job(job_id)
+        
+        if not deleted:
+            return jsonify({
+                "success": False,
+                "error": f"Job not found: {job_id}"
+            }), 404
+        
+        return jsonify({
+            "success": True,
+            "message": "Job deleted"
+        })
+        
+    except Exception as e:
+        logger.error(f"Failed to delete job {job_id}: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
         }), 500

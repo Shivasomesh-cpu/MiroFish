@@ -48,6 +48,14 @@ def create_app(config_class=Config):
     if should_log_startup:
         logger.info("已注册模拟进程清理函数")
     
+    # Check for interrupted jobs on startup
+    from .services.job_queue import check_and_recover_interrupted_jobs
+    if should_log_startup:
+        interrupted = check_and_recover_interrupted_jobs()
+        if interrupted:
+            logger.warning(f"Found {len(interrupted)} interrupted jobs - "
+                          "use /api/simulation/jobs/interrupted to view and restart them")
+    
     # 请求日志中间件
     @app.before_request
     def log_request():
@@ -64,9 +72,16 @@ def create_app(config_class=Config):
     
     # 注册蓝图
     from .api import graph_bp, simulation_bp, report_bp
+    from .api.stream import stream_bp, SimulationStatePoller
     app.register_blueprint(graph_bp, url_prefix='/api/graph')
     app.register_blueprint(simulation_bp, url_prefix='/api/simulation')
     app.register_blueprint(report_bp, url_prefix='/api/report')
+    app.register_blueprint(stream_bp, url_prefix='/api/stream')
+    
+    # Start SSE state poller for real-time updates
+    if should_log_startup:
+        SimulationStatePoller.start()
+        logger.info("SSE state poller started")
     
     # 健康检查
     @app.route('/health')

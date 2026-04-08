@@ -91,9 +91,39 @@
       </div>
 
       <div class="action-controls">
+        <!-- Pause button (visible when running) -->
+        <button 
+          v-if="phase === 1"
+          class="action-btn warning"
+          :disabled="isPausing"
+          @click="handlePauseSimulation"
+        >
+          <span v-if="isPausing" class="loading-spinner-small"></span>
+          {{ isPausing ? 'Pausing...' : 'Pause' }}
+          <svg v-if="!isPausing" class="btn-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <rect x="6" y="4" width="4" height="16"></rect>
+            <rect x="14" y="4" width="4" height="16"></rect>
+          </svg>
+        </button>
+        
+        <!-- Resume button (visible when paused) -->
+        <button 
+          v-if="phase === 3"
+          class="action-btn success"
+          :disabled="isResuming"
+          @click="handleResumeSimulation"
+        >
+          <span v-if="isResuming" class="loading-spinner-small"></span>
+          {{ isResuming ? 'Resuming...' : 'Resume' }}
+          <svg v-if="!isResuming" class="btn-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+        </button>
+        
+        <!-- Generate report button -->
         <button 
           class="action-btn primary"
-          :disabled="phase !== 2 || isGeneratingReport"
+          :disabled="(phase !== 2 && phase !== 3) || isGeneratingReport"
           @click="handleNextStep"
         >
           <span v-if="isGeneratingReport" class="loading-spinner-small"></span>
@@ -292,6 +322,8 @@ import { useI18n } from 'vue-i18n'
 import {
   startSimulation,
   stopSimulation,
+  pauseSimulation,
+  resumeSimulation,
   getRunStatus,
   getRunStatusDetail
 } from '../api/simulation'
@@ -317,9 +349,11 @@ const router = useRouter()
 
 // State
 const isGeneratingReport = ref(false)
-const phase = ref(0) // 0: 未开始, 1: 运行中, 2: 已完成
+const phase = ref(0) // 0: 未开始, 1: 运行中, 2: 已完成, 3: 已暂停
 const isStarting = ref(false)
 const isStopping = ref(false)
+const isPausing = ref(false)
+const isResuming = ref(false)
 const startError = ref(null)
 const runStatus = ref({})
 const allActions = ref([]) // 所有动作（增量累积）
@@ -376,6 +410,8 @@ const resetAllState = () => {
   startError.value = null
   isStarting.value = false
   isStopping.value = false
+  isPausing.value = false
+  isResuming.value = false
   stopPolling()  // 停止之前可能存在的轮询
 }
 
@@ -459,6 +495,59 @@ const handleStopSimulation = async () => {
     addLog(t('log.stopException', { error: err.message }))
   } finally {
     isStopping.value = false
+  }
+}
+
+// Pause simulation (creates checkpoint)
+const handlePauseSimulation = async () => {
+  if (!props.simulationId) return
+  
+  isPausing.value = true
+  addLog('Pausing simulation (will checkpoint after current round)...')
+  
+  try {
+    const res = await pauseSimulation(props.simulationId, {
+      description: `Paused at round ${runStatus.value.twitter_current_round || runStatus.value.reddit_current_round || 0}`
+    })
+    
+    if (res.success) {
+      addLog(`Simulation paused. Checkpoint created: ${res.data.checkpoint?.checkpoint_id || 'unknown'}`)
+      phase.value = 3 // Paused state
+      stopPolling()
+      emit('update-status', 'paused')
+    } else {
+      addLog(`Pause failed: ${res.error || 'Unknown error'}`)
+    }
+  } catch (err) {
+    addLog(`Pause exception: ${err.message}`)
+  } finally {
+    isPausing.value = false
+  }
+}
+
+// Resume simulation from checkpoint
+const handleResumeSimulation = async () => {
+  if (!props.simulationId) return
+  
+  isResuming.value = true
+  addLog('Resuming simulation from checkpoint...')
+  
+  try {
+    const res = await resumeSimulation(props.simulationId)
+    
+    if (res.success) {
+      addLog(`Simulation resumed from round ${res.data.resumed_from_round}`)
+      phase.value = 1 // Running
+      startStatusPolling()
+      startDetailPolling()
+      emit('update-status', 'processing')
+    } else {
+      addLog(`Resume failed: ${res.error || 'Unknown error'}`)
+    }
+  } catch (err) {
+    addLog(`Resume exception: ${err.message}`)
+  } finally {
+    isResuming.value = false
   }
 }
 
@@ -897,6 +986,30 @@ onUnmounted(() => {
 .action-btn.primary:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+}
+
+.action-btn.warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}
+
+.action-btn.warning:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+}
+
+.action-btn.success {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.action-btn.success:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+}
+
+.btn-icon {
+  flex-shrink: 0;
 }
 
 .action-btn:disabled {
